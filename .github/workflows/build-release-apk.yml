@@ -40,23 +40,29 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build Release APKs
+        env:
+          GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx5g -XX:MaxMetaspaceSize=1g
         run: |
           set -o pipefail
-          {
-            if [[ "${{ github.ref_name }}" == beta-* ]]; then
-              ./gradlew assembleStandardfullRelease
-            else
-              ./gradlew assembleStandardRelease assembleStandardfullRelease assembleOfflineRelease assembleOfflineliteRelease
-            fi
-          } 2>&1 | tee gradle-build.log
+          if [[ "${{ github.ref_name }}" == beta-* ]]; then
+            FLAVORS="assembleStandardfullRelease"
+          else
+            FLAVORS="assembleStandardRelease assembleOfflineRelease assembleStandardfullRelease assembleOfflineliteRelease"
+          fi
+          for T in $FLAVORS; do
+            echo "=== building $T ==="
+            ./gradlew --max-workers=2 "$T" 2>&1 | tee -a gradle-build.log
+          done
 
       - name: Report build failure
         if: failure()
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          grep -n "error\|FAILURE\|Caused by" gradle-build.log | tail -n 40 > err-index.txt || true
-          tail -n 150 gradle-build.log > tail.txt
+          grep -in "e: \|error:\|FAILURE\|Caused by\|OutOfMemory\|Killed\|daemon disappeared\|Execution failed" gradle-build.log | tail -n 60 > err-index.txt || true
+          grep -i -B2 -A25 "FAILURE: Build failed\|Execution failed\|daemon disappeared" gradle-build.log | head -n 120 > ctx.txt || true
+          tail -n 80 gradle-build.log > tail.txt
+          cat ctx.txt tail.txt > combined.txt && mv combined.txt tail.txt
           BODY="$(printf 'Error index:\n```\n%s\n```\nLog tail:\n```\n%s\n```' "$(cat err-index.txt)" "$(cat tail.txt)")"
           gh api "repos/${{ github.repository }}/issues" -f title="Release build failure (run ${{ github.run_id }})" -f body="$BODY" || true
 
