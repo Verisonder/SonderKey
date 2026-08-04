@@ -1,0 +1,14 @@
+[
+    [
+        { "label": "1", "popup": { "relevant": [{ "label": "!" }, { "label": "¹" }, { "label": "½" }, { "label": "⅓" }, { "label": "¼" }, { "label": "⅛" }] } },
+        { "label": "2", "popup": { "relevant": [{ "label": "@" }, { "label": "²" }, { "label": "⅔" }] } },
+        { "label": "3", "popup": { "relevant": [{ "label": "#" }, { "label": "³" }, { "label": "¾" }, { "label": "⅜" }] } },
+        { "label": "4", "popup": { "relevant": [{ "label": "$" }, { "label": "⁴" }] } },
+        { "label": "5", "popup": { "relevant": [{ "label": "%" }, { "label": "⁵" }, { "label": "⅝" }] } },
+        { "label": "6", "popup": { "relevant": [{ "label": "^" }, { "label": "⁶" }] } },
+        { "label": "7", "popup": { "relevant": [{ "label": "&" }, { "label": "⁷" }, { "label": "⅞" }] } },
+        { "label": "8", "popup": { "relevant": [{ "label": "*" }, { "label": "⁸" }] } },
+        { "label": "9", "popup": { "relevant": [{ "label": "(" }, { "label": "⁹" }] } },
+        { "label": "0", "popup": { "relevant": [{ "label": ")" }, { "label": "⁰" }, { "label": "ⁿ" }, { "label": "∅" }] } }
+    ]
+]

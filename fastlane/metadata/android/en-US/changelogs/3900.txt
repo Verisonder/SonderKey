@@ -1,0 +1,5 @@
+- 5x4 grid text editing panel with selection modifiers & custom max tokens/colors
+- Contrast fixes using WCAG ratio, minimal long-press dots & uniform icon padding
+- Fix duplicate clipboard events resetting dismissed suggestion strip
+- Exit handwriting via bottom row clear key long-press
+- Fixed dictionary toggles, list UI bugs, and robust downloads

@@ -1,0 +1,9 @@
+include ':app'
+include ':tools:make-emoji-keys'
+
+// Explicitly disable R8 Full Mode programmatically to guarantee reproducible builds
+gradle.projectsLoaded { gradle ->
+    gradle.rootProject.allprojects { project ->
+        project.ext.set("android.enableR8.fullMode", "false")
+    }
+}

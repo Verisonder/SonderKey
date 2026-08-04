@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    SPDX-License-Identifier: GPL-3.0-only
+-->
+<helium314.keyboard.keyboard.clipboard.ClipboardHistoryView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="bottom"
+    android:orientation="vertical"
+    android:visibility="gone"
+    android:background="@android:color/transparent"
+    style="?attr/clipboardHistoryViewStyle">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- Modal Search Overlay: Visible only during search mode -->
+        <LinearLayout
+            android:id="@+id/clipboard_search_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:visibility="gone"
+            android:background="@android:color/transparent"
+            android:paddingHorizontal="0dp"
+            android:paddingVertical="4dp">
+
+            <ImageButton
+                android:id="@+id/clipboard_search_back"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_arrow_back"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:padding="10dp"
+                android:contentDescription="Back" />
+
+            <EditText
+                android:id="@+id/clipboard_search_bar"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="@string/clipboard_search_hint"
+                android:imeOptions="actionSearch|flagNoExtractUi"
+                android:inputType="text"
+                android:maxLines="1"
+                android:background="@android:color/transparent"
+                android:padding="6dp"
+                android:textSize="16sp"
+                android:textColor="?android:attr/colorAccent"
+                android:textColorHint="?android:attr/textColorHint" />
+
+            <ImageButton
+                android:id="@+id/clipboard_clear_search"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_close"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:visibility="gone"
+                android:padding="10dp"
+                android:contentDescription="Clear search" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <LinearLayout
+                android:id="@+id/clipboard_empty_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:visibility="invisible">
+
+                <ImageView
+                    android:id="@+id/clipboard_empty_icon"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:src="@drawable/sym_keyboard_paste_rounded"
+                    android:alpha="0.5"
+                    android:contentDescription="No items" />
+
+                <TextView
+                    android:id="@+id/clipboard_empty_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="No clipboard items found"
+                    android:textSize="16sp"
+                    android:alpha="0.7"
+                    tools:ignore="HardcodedText" />
+            </LinearLayout>
+
+            <helium314.keyboard.keyboard.clipboard.ClipboardHistoryRecyclerView
+                android:id="@+id/clipboard_list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"/>
+
+            <!-- Undo bar shown after swipe-to-delete -->
+            <LinearLayout
+                android:id="@+id/clipboard_undo_bar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="10dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/clipboard_undo_text"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/clipboard_item_deleted"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/clipboard_undo_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/undo"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="6dp"
+                    android:background="?android:attr/selectableItemBackground" />
+            </LinearLayout>
+
+            <!-- Confirmation bar shown after pressing clear all -->
+            <LinearLayout
+                android:id="@+id/clipboard_confirmation_bar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="10dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/clipboard_confirmation_text"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/clipboard_clear_all_confirmation"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/clipboard_confirmation_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/clear_all"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="6dp"
+                    android:background="?android:attr/selectableItemBackground" />
+            </LinearLayout>
+
+        </FrameLayout>
+    </LinearLayout>
+
+    <helium314.keyboard.keyboard.MainKeyboardView
+        android:id="@+id/bottom_row_keyboard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+</helium314.keyboard.keyboard.clipboard.ClipboardHistoryView>

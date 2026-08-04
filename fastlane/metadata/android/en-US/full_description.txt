@@ -1,0 +1,29 @@
+SonderKey is a privacy-conscious, customizable open-source Android keyboard. Based on the robust foundations of AOSP and HeliBoard.
+SonderKey (Standard) offers a hybrid experience: a private, secure offline core for everyday typing, with powerful AI capabilities available whenever you choose to enable them.
+
+Key Features:
+<ul>
+  <li><b>AI Proofreading & Translation:</b> Instantly fix grammar, rewrite text, or translate sentences using powerful AI. Choose between Gemini, Groq, or OpenAI-compatible backends.</li>
+  <li><b>Floating Keyboard:</b> Detach the keyboard into a draggable window for seamless multitasking and improved accessibility.</li>
+  <li><b>Clipboard Power-tools:</b> Search your clipboard history directly, enjoy visual previews, and undo accidental clip deletions.</li>
+  <li><b>Screenshot Suggestions:</b> Instantly paste recently taken screenshots directly from your keyboard suggestions.</li>
+  <li><b>Custom AI Keys:</b> Program up to 10 customizable toolbar keys with distinct AI behaviors (e.g., #editor, #proofread, #toneshift) to quickly transform your text on demand.</li>
+  <li><b>Touchpad Mode:</b> Swipe up on the spacebar to control your screen cursor like a trackpad.</li>
+  <li><b>Split Toolbar & Suggestions:</b> Dual-layer interface allowing simultaneous access to suggestions and utility keys.</li>
+</ul>
+
+Standard Features:
+<ul>
+  <li>Multilingual typing with auto-correction</li>
+  <li>Import dictionaries from Gboard/Google</li>
+  <li>Fully customizable themes (Colors, backgrounds, Day/Night integration, Material You dynamic colors)</li>
+  <li>Customizable special layouts (NumPads, Symbol layouts)</li>
+  <li>Glide typing support (Requires external library)</li>
+  <li>One-handed mode and Split keyboard</li>
+  <li>Backup & restore for all your settings and learned words</li>
+</ul>
+
+Privacy Policy:
+We believe your keyboard shouldn't spy on you. SonderKey is fully open-source and respects your data. While this version includes Internet permission to support AI features, network access is only ever used if you explicitly provide an API key and actively trigger an AI request. Your keystrokes are never logged or sent anywhere without your direct action.
+
+Built with ❤️ by LeanBitLab.

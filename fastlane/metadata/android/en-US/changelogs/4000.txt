@@ -1,0 +1,7 @@
+- Comprehensive JNI & memory stability fixes (prevented native crashes, ANRs & View leaks).
+- Optimized fallback gesture indexer to run in managed thread pool.
+- Emoji dictionary detection & regional dictionary aggregation fixes.
+- AI proofreading anti-answering guard & clean translation output parser.
+- User setting toggle for first-word predictions.
+- Physical keyboard mode to show toolbar only.
+- Thai text expansion & word segmentation fix.

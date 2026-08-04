@@ -1,0 +1,10 @@
+* Real-time screenshot suggestions in toolbar
+* Auto-save recent screenshots to clipboard
+* Clipboard item delete undo feature
+* Improved Emoji search with visual indicators
+* Refined clipboard image preview styling
+* Re-styled toolbar keys with modern ripple effects
+* Enhanced Caps Lock indicator visibility
+* Smoother scale/fade animations for popups
+* Fixed screenshot pasting bugs
+* General performance and stability improvements

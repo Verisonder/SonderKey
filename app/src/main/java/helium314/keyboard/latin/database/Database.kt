@@ -1,0 +1,68 @@
+// SPDX-License-Identifier: GPL-3.0-only
+package helium314.keyboard.latin.database
+
+import android.content.Context
+import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteOpenHelper
+import helium314.keyboard.latin.utils.Log
+import java.io.File
+
+class Database private constructor(context: Context, name: String = NAME) : SQLiteOpenHelper(context, name, null, VERSION) {
+    override fun onCreate(db: SQLiteDatabase) {
+        db.execSQL(ClipboardDao.CREATE_TABLE)
+    }
+
+    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        if (oldVersion < 2) {
+            db.execSQL("ALTER TABLE CLIPBOARD ADD COLUMN IMAGE_URI TEXT")
+        }
+    }
+
+    companion object {
+        private val TAG = Database::class.java.simpleName
+        private const val VERSION = 2
+        const val NAME = "sonderkey.db"
+        private var instance: Database? = null
+        fun getInstance(context: Context): Database {
+            if (instance == null)
+                instance = Database(context)
+            return instance!!
+        }
+
+        // needs to be in sync with db version
+        fun copyFromDb(file: File, context: Context) {
+            if (!file.exists())
+                return
+            val otherDb = Database(context, file.name)
+            val clipDao = ClipboardDao.getInstance(context) // insert to dao because of cache
+            if (clipDao == null) {
+                Log.e(TAG, "can't transfer clipboard data because ClipboardDao is null")
+                return
+            }
+            val hasImageUri = otherDb.readableDatabase.rawQuery("PRAGMA table_info(CLIPBOARD)", null).use {
+                var hasIt = false
+                while(it.moveToNext()) {
+                    if (it.getString(1) == "IMAGE_URI") hasIt = true
+                }
+                hasIt
+            }
+            val query = if (hasImageUri) "SELECT TIMESTAMP, PINNED, TEXT, IMAGE_URI FROM CLIPBOARD" else "SELECT TIMESTAMP, PINNED, TEXT FROM CLIPBOARD"
+            otherDb.readableDatabase.rawQuery(query, null)
+                .use {
+                    clipDao.clear()
+                    while (it.moveToNext()) {
+                        val imageUri = if (hasImageUri && !it.isNull(3)) it.getString(3) else null
+                        clipDao.addClip(it.getLong(0), it.getInt(1) != 0, it.getString(2) ?: "", imageUri)
+                    }
+                }
+            otherDb.close()
+            file.delete()
+        }
+
+        @Synchronized
+        fun closeInstance() {
+            instance?.close()
+            instance = null
+        }
+    }
+}

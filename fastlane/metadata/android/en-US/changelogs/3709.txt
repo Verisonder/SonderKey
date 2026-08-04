@@ -1,0 +1,6 @@
+- Optimize settings container filter loop
+- Refactor binary dictionary lock naming
+- Extract hardcoded API endpoints to strings.xml
+- Fix User-Agent header for AI services
+- Stability improvements for floating keyboard and emoji bar
+- Add translation model selection

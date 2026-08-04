@@ -1,0 +1,6 @@
+- Removed experimental Java gesture engine in favor of native C++ gesture library with crash protection.
+- Added long-press deletion and persistent history for translation target languages.
+- Fixed always-on suggestions in Google Translate and non-standard text fields.
+- Fixed BadTokenException on keyboard dialogs.
+- Fixed emoji dictionary detection and custom emoji typeface support in suggestion strip.
+- Improved IME lifecycle and Android 14+ compatibility.

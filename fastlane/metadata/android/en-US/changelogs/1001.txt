@@ -1,0 +1,10 @@
+* New icon & better trackpad / language switch
+* Added Kaitag and Probhat layouts
+* Optionally reverse toolbar for RTL
+* Customize special layouts (numpad, phone, etc.)
+* Updated spellchecker locales
+* Upgraded NDK & inline autofill code
+* Fixed Turkish layout & recent emojis
+* Fixed switch states & toolbar key dialog
+* Add % to shift symbols layout
+* Minor fixes and translation updates

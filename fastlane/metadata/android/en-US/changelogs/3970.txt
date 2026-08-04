@@ -1,0 +1,8 @@
+- Optimized app startup & focus latency on Android 17.
+- Fixed Turkish dotless 'ı' and dotted 'i' word blacklisting.
+- Fixed horizontal button layout and translation UI text contrast.
+- Fixed F-Droid R8 fullMode reproducible build output mismatch.
+- Added swipe-to-dismiss gesture on keyboard toolbar.
+- Sorted translation target languages by last used first.
+- Support dictionary upgrades & protect downloaded dicts.
+- Fixed multilingual settings and immediate download status refresh.

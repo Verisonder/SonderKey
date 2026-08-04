@@ -1,0 +1,14 @@
+- Support custom sampling and prompts in offline AI settings
+- Switch offline AI backend from ONNX Runtime to llama.cpp
+- Add rich touchpad gestures: double tap to select word, two-finger drag to navigate word-by-word, two-finger tap to insert space, two-finger double tap to copy/paste, two-finger triple tap to cut/select all, two-finger swipe up/down for undo/redo, and two-finger hold to backspace word/selection
+- Add regex expansion support to Text Expander
+- Add option to automatically read and suggest OTP from SMS
+- Add Blocked Words screen with case-insensitive and regex blacklist support
+- Align Arabic diacritics spacing and update layout popup options
+- Fix dictionary crashes and emoji popup preview issues
+- Add support for dynamic handwriting input via plugin APK
+- Add selective backup and restore options
+- Automatically strip spaces before punctuation marks
+- Allow personal dictionary shortcut entries for the same word
+- Add network settings toggle for insecure HTTP/self-signed AI endpoints
+- Add auto-repeat support when holding toolbar arrow keys

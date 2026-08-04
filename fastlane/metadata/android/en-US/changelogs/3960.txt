@@ -1,0 +1,6 @@
+- Added setting to use system emoji font instead of default compatibility font.
+- Added app language option to settings (independent of system language).
+- Fixed direct IME switch targeting on the language key.
+- Disabled gesture typing by default.
+- Optimized spellcheck performance using cache lookups and personal dictionary checks.
+- Added layout support for multi-row number rows.

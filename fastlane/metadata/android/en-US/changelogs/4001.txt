@@ -1,0 +1,3 @@
+- Fixed TimerProxy NullPointerException crash on key press / long press.
+- Fixed key listener state drop across memory trims to preserve long press and key events.
+- Fixed character dropping in fields with disabled suggestions (e.g. Launcher search).

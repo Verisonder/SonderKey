@@ -1,0 +1,7 @@
+- Removed experimental Kotlin gesture typing engine, settings, and unused toolbar keys.
+- Fixed translation target language list layout and visibility in split/dual toolbar mode.
+- Kept the top toolbar visible when selecting translation target languages in split mode.
+- Fixed database restore read-only error (SQLITE_READONLY_DBMOVED) by properly closing database helper connections.
+- Fixed native SIGSEGV crash in dictionary traversal.
+- Fixed Welcome Wizard crash (ConcurrentModificationException) during subtype updates.
+- Set pure Java fallback gesture engine as the default out-of-the-box engine.

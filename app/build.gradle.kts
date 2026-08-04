@@ -1,0 +1,290 @@
+import com.android.build.api.variant.ApplicationVariant
+import java.util.Properties
+
+plugins {
+    id("com.android.application")
+    kotlin("android")
+    kotlin("plugin.serialization") version "2.2.21"
+    kotlin("plugin.compose") version "2.2.21"
+}
+
+// Load keystore properties
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(keystorePropertiesFile.inputStream())
+}
+
+android {
+    compileSdk = 36
+
+    defaultConfig {
+        applicationId = "com.verisonder.sonderkey"
+        minSdk = 21
+        targetSdk = 35
+        // SonderKey initial release
+        versionCode = 1
+        versionName = "1.0.0"
+
+        proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        
+        ndk {
+            abiFilters.addAll(arrayOf("armeabi-v7a", "arm64-v8a"))
+        }
+    }
+
+    // ONNX Runtime is used instead of llama.cpp native build
+
+    flavorDimensions += "privacy"
+    productFlavors {
+        create("standard") {
+            dimension = "privacy"
+            minSdk = 23
+        }
+        create("standardfull") {
+            dimension = "privacy"
+            minSdk = 23
+        }
+        create("offline") {
+            dimension = "privacy"
+            applicationIdSuffix = ".offline"
+            minSdk = 26
+        }
+        create("offlinelite") {
+            dimension = "privacy"
+            applicationIdSuffix = ".offlinelite"
+        }
+    }
+
+    signingConfigs {
+        if (keystorePropertiesFile.exists()) {
+            create("release") {
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+                storeFile = rootProject.file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+                enableV1Signing = true
+                enableV2Signing = true
+                enableV3Signing = true
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true  // Enable resource shrinking to reduce APK size and memory usage
+            isDebuggable = false
+            isJniDebuggable = false
+            if (keystorePropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
+        }
+        create("nouserlib") { // same as release, but does not allow the user to provide a library
+            isMinifyEnabled = true
+            isShrinkResources = true  // Enable resource shrinking to reduce APK size
+            isDebuggable = false
+            isJniDebuggable = false
+        }
+        debug {
+            // "normal" debug has minify for smaller APK to fit the GitHub 25 MB limit when zipped
+            // and for better performance in case users want to install a debug APK
+            isMinifyEnabled = false
+            isJniDebuggable = false
+            applicationIdSuffix = ".debug"
+        }
+        create("runTests") { // build variant for running tests on CI that skips tests known to fail
+            isMinifyEnabled = false
+            isJniDebuggable = false
+        }
+        create("debugNoMinify") { // for faster builds in IDE
+            isDebuggable = true
+            isMinifyEnabled = false
+            isJniDebuggable = false
+            signingConfig = signingConfigs.getByName("debug")
+            applicationIdSuffix = ".debug"
+        }
+        // base.archivesBaseName = "HeliboardL_" + defaultConfig.versionName // replaced by dynamic naming below
+        applicationVariants.all {
+            val flavor = productFlavors.firstOrNull()?.name ?: ""
+            val number = when(flavor) {
+                "standard" -> "1"
+                "standardfull" -> "1"
+                "offline" -> "2"
+                "offlinelite" -> "3"
+                else -> ""
+            }
+            if (number.isNotEmpty()) {
+                outputs.all {
+                    val output = this as? com.android.build.gradle.api.ApkVariantOutput
+                    output?.outputFileName = "$number-SonderKey_${defaultConfig.versionName}-${flavor}-${buildType.name}.apk"
+                }
+            }
+
+        }
+        // got a little too big for GitHub after some dependency upgrades, so we remove the largest dictionary
+        androidComponents.onVariants { variant: ApplicationVariant ->
+            val patterns = mutableListOf<String>()
+            if (variant.buildType == "debug") {
+                patterns.add("main_ro.dict")
+                variant.proguardFiles = emptyList()
+                //noinspection ProguardAndroidTxtUsage we intentionally use the "normal" file here
+                variant.proguardFiles.add(project.layout.buildDirectory.file(getDefaultProguardFile("proguard-android.txt").absolutePath))
+                variant.proguardFiles.add(project.layout.buildDirectory.file(project.buildFile.parent + "/proguard-rules.pro"))
+            }
+            if (variant.flavorName == "standard" || variant.flavorName == "standardfull") {
+                // Ignore all dictionary assets in standard/standardfull flavors
+                val dictsDir = project.file("src/main/assets/dicts")
+                if (dictsDir.exists() && dictsDir.isDirectory) {
+                    dictsDir.listFiles()?.forEach { file ->
+                        if (file.name.endsWith(".dict")) {
+                            patterns.add(file.name)
+                        }
+                    }
+                }
+            }
+            if (patterns.isNotEmpty()) {
+                variant.androidResources.ignoreAssetsPatterns = patterns
+            }
+        }
+    }
+
+    buildFeatures {
+        viewBinding = true
+        buildConfig = true
+        compose = true
+    }
+
+    externalNativeBuild {
+        ndkBuild {
+            path = File("src/main/jni/Android.mk")
+        }
+    }
+    ndkVersion = "28.0.13004108"
+
+    packaging {
+        jniLibs {
+            // false is required for Android 16+ 16-KB page alignment compatibility on prebuilts.
+            useLegacyPackaging = false
+        }
+        resources {
+            excludes += "assets/dexopt/baseline.prof"
+            excludes += "assets/dexopt/baseline.profm"
+            excludes += "META-INF/DEPENDENCIES"
+            excludes += "META-INF/LICENSE"
+            excludes += "META-INF/LICENSE.txt"
+            excludes += "META-INF/license.txt"
+            excludes += "META-INF/NOTICE"
+            excludes += "META-INF/NOTICE.txt"
+            excludes += "META-INF/notice.txt"
+            excludes += "META-INF/ASL2.0"
+            excludes += "META-INF/*.kotlin_module"
+            excludes += "META-INF/kotlin-project-structure-metadata.json"
+            excludes += "**/*.proto"
+        }
+    }
+
+
+
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_17.toString()
+    }
+
+    // see https://github.com/Helium314/HeliBoard/issues/477
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
+
+    namespace = "helium314.keyboard.latin"
+    lint {
+        abortOnError = true
+        // Upstream Heliboard translations reference strings not in LeanType's base strings.xml;
+        // these orphaned strings are harmlessly stripped by R8 during minification.
+        disable += "ExtraTranslation"
+    }
+
+    sourceSets {
+        getByName("standardfull") {
+            java.srcDirs("src/standard/java")
+        }
+    }
+}
+
+dependencies {
+
+    // androidx
+    implementation("androidx.core:core-ktx:1.16.0") // 1.17 requires SDK 36
+    implementation("androidx.recyclerview:recyclerview:1.4.0")
+    implementation("androidx.autofill:autofill:1.3.0")
+    implementation("androidx.viewpager2:viewpager2:1.1.0")
+    implementation("androidx.emoji2:emoji2:1.4.0")
+
+    // kotlin
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
+
+    // compose
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+    // newer than 2025.11.01 contains androidx.compose.material:material-android:1.10.0, which requires minSdk 23
+    // maybe it's possible to use tools:overrideLibrary="androidx.compose.material" as it's not used explicitly, but probably this is just going to crash
+    implementation(platform("androidx.compose:compose-bom:2025.11.01"))
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    debugImplementation("androidx.compose.ui:ui-tooling")
+    implementation("androidx.navigation:navigation-compose:2.9.6")
+    implementation("sh.calvin.reorderable:reorderable:2.4.3") // for easier re-ordering, todo: check 3.0.0
+    implementation("com.github.skydoves:colorpicker-compose:1.1.3") // for user-defined colors
+
+    // gemini ai proofreading
+    "standardImplementation"("com.google.ai.client.generativeai:generativeai:0.9.0")
+    "standardImplementation"("androidx.security:security-crypto:1.1.0-alpha06") // for encrypted API key storage
+    "standardfullImplementation"("com.google.ai.client.generativeai:generativeai:0.9.0")
+    "standardfullImplementation"("androidx.security:security-crypto:1.1.0-alpha06")
+
+    // local llm proofreading (offline)
+    "offlineImplementation"("io.github.ljcamargo:llamacpp-kotlin:0.4.0")
+
+    // Force 16 KB page-aligned version of graphics-path
+    implementation("androidx.graphics:graphics-path:1.1.0")
+
+    // WorkManager — required by ML Kit Digital Ink plugin (loaded via DexClassLoader).
+    // ML Kit internally calls WorkManager.getInstance(context) using the host app context,
+    // so the host app must have WorkManagerInitializer registered in its manifest.
+    implementation("androidx.work:work-runtime-ktx:2.10.1")
+
+    // ML Kit Digital Ink Recognition — required by the handwriting plugin.
+    // ML Kit's internal asset manager and native library loader use the host app context,
+    // so the host app must compile and include the client library resources/libraries.
+    "standardfullImplementation"("com.google.mlkit:digital-ink-recognition:19.0.0")
+
+    // test
+    testImplementation(kotlin("test"))
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.mockito:mockito-core:5.17.0")
+    testImplementation("org.robolectric:robolectric:4.14.1")
+    testImplementation("androidx.test:runner:1.6.2")
+    testImplementation("androidx.test:core:1.6.1")
+}
+dependencies {
+    testImplementation("androidx.test.ext:junit:1.1.5")
+    testImplementation("androidx.compose.ui:ui-test-junit4")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
+}
+
+// Disable baseline/ART profile tasks to guarantee deterministic reproducible builds
+tasks.configureEach {
+    if (name.contains("ArtProfile", ignoreCase = true)) {
+        enabled = false
+    }
+}

@@ -1,0 +1,8 @@
+- Experimental pure-Java fallback swipe gesture typing engine & toggle
+- Swipe self-learning via user history & dictionaries
+- Enhanced gesture ranking, endpoint scoring & L2 shape penalty
+- Sped up index building & memory optimization to avoid ANRs
+- Fix manual space deletion before punctuation symbols
+- Toggle to disable toolbar long-press hint dots
+- Persistent text edit mode toggle & blocked words counter
+- Select language layout & gesture engine in setup wizard

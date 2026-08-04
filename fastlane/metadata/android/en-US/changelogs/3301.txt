@@ -1,0 +1,11 @@
+* Capitalize suggestions when pressing shift
+* Add keycodes for broadcasting intents
+* Optionally display emoji descriptions (needs dict)
+* Improve hardware keyboard handling
+* Add "hide keyboard" option on vertical space swipe
+* Add latin subtype
+* Allow turning off emoji suggestions when adding dict
+* Fix missing emojis in split keyboard
+* Remove standalone-only emojis
+* Fix blacklist issues
+* Fix backspace behavior with some emojis

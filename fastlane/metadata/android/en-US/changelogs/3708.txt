@@ -1,0 +1,4 @@
+* Refresh welcome wizard aesthetics and logic
+* Add 5-step narrow key gaps
+* Add dynamic AI model fetching
+* Sync target language setting to ProofreadService

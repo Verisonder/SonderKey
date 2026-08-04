@@ -1,0 +1,35 @@
+apply plugin: 'java'
+apply plugin: 'kotlin'
+
+version 'unspecified'
+
+jar {
+    manifest {
+        attributes["Main-Class"] = 'com/majeur/inputmethod/tools/emoji/MakeEmojiKeys'
+    }
+    from {
+        configurations.runtimeClasspath.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+    from("src/main/ressources")
+
+}
+
+tasks.register('makeEmoji', JavaExec) {
+    dependsOn['jar']
+    main = '-jar'
+    args jar.archiveFile.get()
+    args '-assets'
+    args project.rootProject.project('app').projectDir.path + File.separator + 'src' +
+        File.separator + 'main' + File.separator + 'assets' + File.separator + 'emoji'
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:2.3.20"
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}

@@ -1,0 +1,15 @@
+[popup_keys]
+a à
+e è é
+i í ï
+o ò ó
+u ú ü
+c ç
+l l·l
+punctuation !autoOrder!9 \, ? ! · # ) ( / ; ' @ : - " + \% &
+
+[extra_keys]
+2: ç
+
+[tlds]
+cat es

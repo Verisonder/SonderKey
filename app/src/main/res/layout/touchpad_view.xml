@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Touchpad mode overlay layout - replaces keyboard with a laptop-style touchpad
+    SPDX-License-Identifier: GPL-3.0-only
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Touchpad surface area -->
+    <View
+        android:id="@+id/touchpad_surface"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="6dp"
+        android:layout_marginBottom="6dp" />
+
+    <!-- Close button in the bottom right corner -->
+    <ImageView
+        android:id="@+id/btn_close_touchpad"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:padding="12dp"
+        android:contentDescription="Close touchpad mode"
+        android:scaleType="fitCenter"
+        android:clickable="true"
+        android:focusable="true" />
+
+</FrameLayout>

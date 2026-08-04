@@ -1,0 +1,4 @@
+- Fixed native SIGABRT crash caused by concurrent dictionary iteration in JNI/LatinIME library.
+- Fixed UI freezes and ANR crashes by running the fallback gesture indexer asynchronously.
+- Fixed UI freeze/stutter during language switches by cleaning up old dictionaries asynchronously.
+- Fixed automatic deletion of manually imported/replaced dictionaries on app upgrades.
