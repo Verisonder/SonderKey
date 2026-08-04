@@ -29,10 +29,10 @@ jobs:
           RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE }}
         if: ${{ env.RELEASE_KEYSTORE != '' }}
         run: |
-          echo "${{ secrets.RELEASE_KEYSTORE }}" | base64 -d > leantype-release.jks
+          echo "${{ secrets.RELEASE_KEYSTORE }}" | base64 -d > sonderkey-release.jks
           echo "keyAlias=${{ secrets.RELEASE_KEY_ALIAS }}" > keystore.properties
           echo "keyPassword=${{ secrets.RELEASE_KEY_PASSWORD }}" >> keystore.properties
-          echo "storeFile=leantype-release.jks" >> keystore.properties
+          echo "storeFile=sonderkey-release.jks" >> keystore.properties
           echo "storePassword=${{ secrets.RELEASE_STORE_PASSWORD }}" >> keystore.properties
 
       - name: Grant execute permission for gradlew
@@ -53,7 +53,7 @@ jobs:
       - name: Upload APKs and Release Notes
         uses: actions/upload-artifact@v4
         with:
-          name: LeanType-Release-APKs
+          name: SonderKey-Release-APKs
           path: |
             app/build/outputs/apk/**/*.apk
             docs/releasenote/release_notes_v*.md

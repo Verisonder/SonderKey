@@ -51,14 +51,14 @@ Full documentation: **[docs/FEATURES.md](docs/FEATURES.md)**
 This fork exists to push further than its upstream in three directions:
 
 1. **🎨 Sonder design language** — a new key style with modern squircle keys, press animations, gradient & glass themes, and shareable `.sonderkey` theme files
-2. **🇲🇦 Darija-first typing** — an Arabizi-aware layout (3, 7, 9…) with real Moroccan Darija suggestions and autocorrect, fully offline. No mainstream keyboard takes Darija seriously. SonderKey will.
+2. **🎙️ Offline voice typing** — private, on-device speech recognition. Your voice never leaves your phone — something mainstream keyboards structurally cannot offer.
 3. **🔍 Privacy dashboard** — see exactly which permissions are active and prove to yourself that nothing leaves the device
 
 Follow the [releases](https://github.com/Verisonder/SonderKey/releases) to watch it happen.
 
 ## 📥 Download
 
-First public release coming soon — debug builds are available now from [GitHub Actions](https://github.com/Verisonder/SonderKey/actions) artifacts.
+Grab the latest APK from **[Releases](https://github.com/Verisonder/SonderKey/releases)**. Development builds are available from [GitHub Actions](https://github.com/Verisonder/SonderKey/actions) artifacts.
 
 ## 🛠️ Building
 
@@ -81,5 +81,5 @@ Built on the shoulders of:
 All original copyright notices are preserved.
 
 <div align="center">
-<sub>Made with care by <a href="https://github.com/Verisonder">Verisonder</a> 🇲🇦</sub>
+<sub>Made with care by <a href="https://github.com/Verisonder">Verisonder</a></sub>
 </div>
