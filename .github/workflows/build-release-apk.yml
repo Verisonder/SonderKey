@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      issues: write
     steps:
       - uses: actions/checkout@v4
 
@@ -40,11 +41,24 @@ jobs:
 
       - name: Build Release APKs
         run: |
-          if [[ "${{ github.ref_name }}" == beta-* ]]; then
-            ./gradlew assembleStandardfullRelease
-          else
-            ./gradlew assembleStandardRelease assembleStandardfullRelease assembleOfflineRelease assembleOfflineliteRelease
-          fi
+          set -o pipefail
+          {
+            if [[ "${{ github.ref_name }}" == beta-* ]]; then
+              ./gradlew assembleStandardfullRelease
+            else
+              ./gradlew assembleStandardRelease assembleStandardfullRelease assembleOfflineRelease assembleOfflineliteRelease
+            fi
+          } 2>&1 | tee gradle-build.log
+
+      - name: Report build failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          grep -n "error\|FAILURE\|Caused by" gradle-build.log | tail -n 40 > err-index.txt || true
+          tail -n 150 gradle-build.log > tail.txt
+          BODY="$(printf 'Error index:\n```\n%s\n```\nLog tail:\n```\n%s\n```' "$(cat err-index.txt)" "$(cat tail.txt)")"
+          gh api "repos/${{ github.repository }}/issues" -f title="Release build failure (run ${{ github.run_id }})" -f body="$BODY" || true
 
       - name: Generate Release Notes
         # ponytail: generate release notes from changelog during build
