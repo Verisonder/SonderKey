@@ -1,0 +1,18 @@
+<svg width="900" height="220" viewBox="0 0 900 220" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7ED89B"/>
+      <stop offset="100%" stop-color="#2FB8A6"/>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="220" rx="24" fill="#f5f6f8"/>
+  <!-- mini keyboard -->
+  <g fill="#dfe2e8">
+    <rect x="60" y="78" width="34" height="26" rx="7"/><rect x="100" y="78" width="34" height="26" rx="7"/><rect x="140" y="78" width="34" height="26" rx="7"/>
+    <rect x="78" y="110" width="34" height="26" rx="7"/><rect x="118" y="110" width="34" height="26" rx="7"/>
+    <rect x="60" y="142" width="26" height="26" rx="7"/><rect x="92" y="142" width="62" height="26" rx="7"/><rect x="160" y="142" width="26" height="26" rx="7"/>
+    <rect x="180" y="78" width="34" height="26" rx="7"/><rect x="158" y="110" width="34" height="26" rx="7"/>
+  </g>
+  <text x="250" y="122" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="64" font-weight="700" fill="url(#g)">SonderKey</text>
+  <text x="252" y="162" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="22" fill="#5f6368">Your keyboard. Your data. Nobody else's.</text>
+</svg>
