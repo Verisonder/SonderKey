@@ -65,7 +65,7 @@ object Defaults {
     @JvmField
     val PREF_THEME_COLORS = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) KeyboardTheme.THEME_DYNAMIC else KeyboardTheme.THEME_LIGHT
     @JvmField
-    val PREF_THEME_COLORS_NIGHT = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) KeyboardTheme.THEME_DYNAMIC else KeyboardTheme.THEME_DARK
+    val PREF_THEME_COLORS_NIGHT = KeyboardTheme.THEME_DARKER
     const val PREF_THEME_KEY_BORDERS = true
     @JvmField
     val PREF_THEME_DAY_NIGHT = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
@@ -88,7 +88,7 @@ object Defaults {
     const val PREF_BACKSPACE_REVERTS_AUTOCORRECT = true
     const val PREF_CENTER_SUGGESTION_TEXT_TO_ENTER = false
     const val PREF_SHOW_SUGGESTIONS = true
-    const val PREF_ALWAYS_SHOW_SUGGESTIONS = false
+    const val PREF_ALWAYS_SHOW_SUGGESTIONS = true
     const val PREF_ALWAYS_SHOW_SUGGESTIONS_EXCEPT_WEB_TEXT = true
     const val PREF_KEY_USE_PERSONALIZED_DICTS = true
     const val PREF_KEY_USE_DOUBLE_SPACE_PERIOD = true
@@ -104,7 +104,7 @@ object Defaults {
             "fr${Separators.SET}${ExtraValue.KEYBOARD_LAYOUT_SET}=MAIN:qwertz${Separators.SETS}" +
             "hu${Separators.SET}${ExtraValue.KEYBOARD_LAYOUT_SET}=MAIN:qwerty"
     const val PREF_ENABLE_SPLIT_KEYBOARD = false
-    const val PREF_ENABLE_SPLIT_KEYBOARD_LANDSCAPE = false
+    const val PREF_ENABLE_SPLIT_KEYBOARD_LANDSCAPE = true
     const val PREF_PERSIST_FLOATING_KEYBOARD = false
     // ponytail: persist text edit mode default
     const val PREF_PERSIST_TEXT_EDIT_MODE = false
@@ -123,7 +123,7 @@ object Defaults {
     const val PREF_EMOJI_KEY_FIT = true
     const val PREF_EMOJI_SKIN_TONE = ""
     const val PREF_SPACE_HORIZONTAL_SWIPE = "move_cursor"
-    const val PREF_SPACE_VERTICAL_SWIPE = "touchpad_mode"
+    const val PREF_SPACE_VERTICAL_SWIPE = "toggle_numpad"
     const val PREF_DELETE_SWIPE = true
     const val PREF_AUTOSPACE_AFTER_PUNCTUATION = false
     const val PREF_AUTOSPACE_AFTER_EMOJI = false
@@ -150,7 +150,7 @@ object Defaults {
     const val PREF_VIBRATION_DURATION_SETTINGS = -1
     const val PREF_VIBRATION_AMPLITUDE_SETTINGS = -1
     const val PREF_KEYPRESS_SOUND_VOLUME = -0.01f
-    const val PREF_KEY_LONGPRESS_TIMEOUT = 300
+    const val PREF_KEY_LONGPRESS_TIMEOUT = 200
     const val PREF_ENABLE_EMOJI_ALT_PHYSICAL_KEY = true
     const val PREF_GESTURE_PREVIEW_TRAIL = true
     const val PREF_GESTURE_FLOATING_PREVIEW_TEXT = true
@@ -163,7 +163,7 @@ object Defaults {
     const val PREF_SHOW_SETUP_WIZARD_ICON = true
     const val PREF_USE_CONTACTS = false
     const val PREF_USE_APPS = false
-    const val PREFS_LONG_PRESS_SYMBOLS_FOR_NUMPAD = false
+    const val PREFS_LONG_PRESS_SYMBOLS_FOR_NUMPAD = true
     const val PREF_ONE_HANDED_MODE = false
     @SuppressLint("RtlHardcoded")
     const val PREF_ONE_HANDED_GRAVITY = Gravity.LEFT
@@ -243,6 +243,6 @@ object Defaults {
     const val PREF_USER_MORE_COLORS = 0
     const val PREF_USER_ALL_COLORS = ""
     const val PREF_SAVE_SUBTYPE_PER_APP = false
-    const val PREF_DONT_SHOW_SPONSOR_DIALOG = false
+    const val PREF_DONT_SHOW_SPONSOR_DIALOG = true
     const val PREF_LAST_SPONSOR_DIALOG_SHOWN = 0L
 }

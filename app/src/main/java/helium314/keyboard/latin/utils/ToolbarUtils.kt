@@ -326,7 +326,7 @@ val defaultToolbarPref by lazy {
     val default = when (helium314.keyboard.latin.BuildConfig.FLAVOR) {
         "offline" -> listOf(SETTINGS, VOICE, CLIPBOARD, CUSTOM_AI_1, CUSTOM_AI_2, CUSTOM_AI_3, UNDO, INCOGNITO, COPY, PASTE, PROOFREAD, TRANSLATE, TEXT_EDIT)
         "offlinelite" -> listOf(SETTINGS, VOICE, CLIPBOARD, UNDO, INCOGNITO, COPY, PASTE)
-        else -> listOf(SETTINGS, VOICE, CLIPBOARD, HANDWRITING, CUSTOM_AI_1, CUSTOM_AI_2, CUSTOM_AI_3, UNDO, PROOFREAD, TRANSLATE, INCOGNITO, TOUCHPAD, TEXT_EDIT, FLOATING, NUMPAD, COPY, PASTE, SELECT_ALL, SELECT_MODE)
+        else -> listOf(SETTINGS, VOICE, CLIPBOARD, UNDO, TRANSLATE, INCOGNITO, COPY, PASTE, HANDWRITING, TEXT_EDIT, SELECT_MODE)
     }
         
     val others = entries.filterNot { it in default || it in excludedKeys }
@@ -337,7 +337,7 @@ val defaultToolbarPref by lazy {
 val defaultPinnedToolbarPref by lazy {
     val pinnedDefault = when (helium314.keyboard.latin.BuildConfig.FLAVOR) {
         "offlinelite" -> listOf(CLIPBOARD)
-        else -> listOf(CLIPBOARD, PROOFREAD, TOUCHPAD, TEXT_EDIT, FLOATING)
+        else -> listOf(PROOFREAD, TEXT_EDIT)
     }
 
     entries.filterNot { it in excludedKeys }.joinToString(Separators.ENTRY) {
