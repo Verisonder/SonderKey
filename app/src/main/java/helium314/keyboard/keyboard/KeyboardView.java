@@ -190,6 +190,7 @@ public class KeyboardView extends View {
      */
     public void setKeyboard(@NonNull final Keyboard keyboard) {
         mKeyCustomBgColors.clear();
+        mPressAnimations.clear();
         if (keyboard instanceof MoreSuggestions) {
             mColors.setBackground(this, ColorType.MORE_SUGGESTIONS_BACKGROUND);
         } else if (keyboard instanceof PopupKeysKeyboard) {
@@ -239,6 +240,34 @@ public class KeyboardView extends View {
     @NonNull
     protected KeyDrawParams getKeyDrawParams() {
         return mKeyDrawParams;
+    }
+
+    // Key press scale animation
+    private static final long PRESS_ANIM_DURATION_MS = 110;
+    private static final float PRESS_ANIM_SCALE = 0.93f;
+    private final java.util.HashMap<Key, long[]> mPressAnimations = new java.util.HashMap<>();
+
+    /** Starts (pressed = true) or reverses (pressed = false) the press scale animation for a key. */
+    public void startKeyPressAnimation(@NonNull final Key key, final boolean pressed) {
+        mPressAnimations.put(key, new long[] { android.os.SystemClock.uptimeMillis(), pressed ? 1L : 0L });
+        invalidateKey(key);
+    }
+
+    private float getKeyPressScale(@NonNull final Key key) {
+        final long[] anim = mPressAnimations.get(key);
+        if (anim == null) return 1f;
+        final float t = Math.min(1f,
+                (android.os.SystemClock.uptimeMillis() - anim[0]) / (float) PRESS_ANIM_DURATION_MS);
+        final boolean pressing = anim[1] == 1L;
+        final float scale = pressing
+                ? 1f + (PRESS_ANIM_SCALE - 1f) * t
+                : PRESS_ANIM_SCALE + (1f - PRESS_ANIM_SCALE) * t;
+        if (t >= 1f) {
+            if (!pressing) mPressAnimations.remove(key);
+        } else {
+            postDelayed(() -> invalidateKey(key), 16);
+        }
+        return scale;
     }
 
     protected void updateKeyDrawParams(final int keyHeight) {
@@ -359,6 +388,13 @@ public class KeyboardView extends View {
         final int keyDrawY = key.getY() + getPaddingTop();
         canvas.translate(keyDrawX, keyDrawY);
 
+        final float pressScale = getKeyPressScale(key);
+        final boolean scaled = pressScale != 1f && !key.isSpacer();
+        if (scaled) {
+            canvas.save();
+            canvas.scale(pressScale, pressScale, key.getDrawWidth() / 2f, key.getHeight() / 2f);
+        }
+
         final KeyVisualAttributes attr = key.getVisualAttributes();
         // don't use the raw key height, linear font scaling with height is too extreme
         final KeyDrawParams params = mKeyDrawParams.mayCloneAndUpdateParams((int) (key.getHeight() * mKeyScaleForText),
@@ -372,6 +408,9 @@ public class KeyboardView extends View {
         }
         onDrawKeyTopVisuals(key, canvas, paint, params);
 
+        if (scaled) {
+            canvas.restore();
+        }
         canvas.translate(-keyDrawX, -keyDrawY);
     }
 

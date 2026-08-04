@@ -162,25 +162,25 @@ private constructor(val themeId: Int, @JvmField val mStyleId: Int) {
                 THEME_SONDER_LIGHT -> DefaultColors(
                     themeStyle,
                     hasBorders,
-                    "#9AA0A6".toColorInt(), // Accent (Google Grey 500) - Darker than functional (#DADCE0)
-                    "#F1F3F4".toColorInt(), // Background (Google Light Grey)
+                    "#2FB8A6".toColorInt(), // Accent — SonderKey teal
+                    "#F2F5F4".toColorInt(), // Background — cool off-white
                     "#FFFFFF".toColorInt(), // Key Bg
-                    "#DADCE0".toColorInt(), // Functional Key (Google Grey)
+                    "#DCE5E2".toColorInt(), // Functional Key — teal-tinted grey
                     "#FFFFFF".toColorInt(), // Spacebar
-                    "#000000".toColorInt(), // Text
-                    "#B3000000".toColorInt(), // Hint
+                    "#15201D".toColorInt(), // Text — near-black green
+                    "#8015201D".toColorInt(), // Hint
                     keyboardBackground = backgroundImage
                 )
                 THEME_SONDER_DARK -> DefaultColors(
                     themeStyle,
                     hasBorders,
-                    "#5F6368".toColorInt(), // Accent (Google Grey 700) - Lighter than functional (#3C4043)
-                    "#202124".toColorInt(), // Background (Google Dark)
-                    "#303134".toColorInt(), // Key Bg (Google Dark Key)
-                    "#3C4043".toColorInt(), // Functional Key (Google Dark Lighter)
-                    "#303134".toColorInt(), // Spacebar
-                    "#FFFFFF".toColorInt(), // Text
-                    "#B3FFFFFF".toColorInt(), // Hint
+                    "#2FB8A6".toColorInt(), // Accent — SonderKey teal
+                    "#111215".toColorInt(), // Background — icon black
+                    "#1E2126".toColorInt(), // Key Bg — soft graphite
+                    "#282C33".toColorInt(), // Functional Key — lifted graphite
+                    "#1E2126".toColorInt(), // Spacebar
+                    "#ECF2F0".toColorInt(), // Text — soft white
+                    "#80ECF2F0".toColorInt(), // Hint
                     keyboardBackground = backgroundImage
                 )
                 THEME_LIGHT -> DefaultColors(
