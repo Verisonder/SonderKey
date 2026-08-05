@@ -119,7 +119,7 @@ fun SearchSettingsScreen(
                             ) {
                                 Column {
                                     if (titleRes != null) {
-                                        PreferenceCategory(stringResource(titleRes))
+                                        PreferenceCategory(stringResource(titleRes), icon = categoryIcon(titleRes))
                                     }
                                     
                                     keys.forEach { key ->
@@ -309,4 +309,18 @@ fun ExpandableSearchField(
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search)
         )
     }
+}
+
+
+/** Monotone icons for settings category headers, for faster visual scanning. */
+fun categoryIcon(titleRes: Int): Int? = when (titleRes) {
+    helium314.keyboard.latin.R.string.settings_category_input -> helium314.keyboard.latin.R.drawable.ic_settings_preferences
+    helium314.keyboard.latin.R.string.settings_category_additional_keys -> helium314.keyboard.latin.R.drawable.ic_settings_toolbar
+    helium314.keyboard.latin.R.string.settings_category_clipboard_history -> helium314.keyboard.latin.R.drawable.ic_clipboard_pin_rounded
+    helium314.keyboard.latin.R.string.settings_category_correction -> helium314.keyboard.latin.R.drawable.ic_settings_correction
+    helium314.keyboard.latin.R.string.settings_category_suggestions -> helium314.keyboard.latin.R.drawable.ic_autocorrect_rounded
+    helium314.keyboard.latin.R.string.settings_category_space -> helium314.keyboard.latin.R.drawable.ic_arrow_horizontal_rounded
+    helium314.keyboard.latin.R.string.settings_category_experimental -> helium314.keyboard.latin.R.drawable.ic_settings_advanced
+    helium314.keyboard.latin.R.string.settings_category_miscellaneous -> helium314.keyboard.latin.R.drawable.ic_settings_default
+    else -> null
 }

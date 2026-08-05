@@ -42,15 +42,28 @@ import helium314.keyboard.settings.previewDark
 fun PreferenceCategory(
     title: String,
     modifier: Modifier = Modifier,
+    @DrawableRes icon: Int? = null,
 ) {
     Column {
         // Divider removed as cards provide separation
-        Text(
-            text = title,
+        Row(
             modifier = modifier.padding(top = 16.dp, start = 16.dp, end = 16.dp, bottom = 4.dp),
-            color = MaterialTheme.colorScheme.primary,
-            style = MaterialTheme.typography.titleSmall
-        )
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (icon != null) {
+                CompositionLocalProvider(
+                    LocalContentColor provides MaterialTheme.colorScheme.primary
+                ) {
+                    IconOrImage(icon, title, 18)
+                }
+            }
+            Text(
+                text = title,
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.titleSmall
+            )
+        }
     }
 }
 
