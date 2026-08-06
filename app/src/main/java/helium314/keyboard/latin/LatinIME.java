@@ -1676,12 +1676,37 @@ public class LatinIME extends InputMethodService implements
             return;
         }
         if (KeyCode.VOICE_INPUT == event.getKeyCode()) {
-            mRichImm.switchToShortcutIme(this);
+            // SonderKey transcribes on the device when it is set up; otherwise fall back to
+            // whichever voice input method the system provides, so the key is never dead.
+            if (helium314.keyboard.latin.voice.VoiceTyping.INSTANCE.isReady(this)) {
+                onVoiceKeyPressed();
+            } else {
+                mRichImm.switchToShortcutIme(this);
+            }
+            return;
         }
         final InputTransaction completeInputTransaction = mInputLogic.onCodeInput(mSettings.getCurrent(), event,
                 mKeyboardSwitcher.getKeyboardShiftMode(), mHandler);
         updateStateAfterInputTransaction(completeInputTransaction);
         mKeyboardSwitcher.onEvent(event, getCurrentAutoCapsState(), getCurrentRecapitalizeState());
+    }
+
+    /** Toggles on-device voice typing: first press records, second press transcribes. */
+    private void onVoiceKeyPressed() {
+        final helium314.keyboard.latin.voice.VoiceTyping voice = helium314.keyboard.latin.voice.VoiceTyping.INSTANCE;
+        if (voice.isRecording()) {
+            android.widget.Toast.makeText(this, R.string.voice_typing_working, android.widget.Toast.LENGTH_SHORT).show();
+            voice.stopAndTranscribe(this, text -> {
+                if (text == null || text.isEmpty()) {
+                    android.widget.Toast.makeText(this, R.string.voice_typing_nothing_heard, android.widget.Toast.LENGTH_SHORT).show();
+                } else {
+                    onTextInput(text);
+                }
+                return kotlin.Unit.INSTANCE;
+            });
+        } else if (voice.start(this, null)) {
+            android.widget.Toast.makeText(this, R.string.voice_typing_listening, android.widget.Toast.LENGTH_SHORT).show();
+        }
     }
 
     public void onTextInput(final String rawText) {

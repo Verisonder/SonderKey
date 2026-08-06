@@ -39,6 +39,7 @@ import helium314.keyboard.latin.utils.prefs
 import helium314.keyboard.latin.settings.Defaults
 import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.settings.NextScreenIcon
+import helium314.keyboard.settings.SettingsDestination
 import helium314.keyboard.settings.SearchSettingsScreen
 import helium314.keyboard.settings.Theme
 import helium314.keyboard.settings.dialogs.SponsorDialog
@@ -200,6 +201,12 @@ fun MainSettingsScreen(
                             name = stringResource(R.string.settings_screen_correction),
                             onClick = onClickTextCorrection,
                             icon = R.drawable.ic_settings_correction
+                        ) { NextScreenIcon() }
+                        Preference(
+                            name = stringResource(R.string.settings_screen_voice_typing),
+                            description = stringResource(R.string.settings_screen_voice_typing_summary),
+                            onClick = { SettingsDestination.navigateTo(SettingsDestination.VoiceTyping) },
+                            icon = R.drawable.sym_keyboard_voice_rounded
                         ) { NextScreenIcon() }
                         Preference(
                             name = stringResource(R.string.settings_screen_text_expander),

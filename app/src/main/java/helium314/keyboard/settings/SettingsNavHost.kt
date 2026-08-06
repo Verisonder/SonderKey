@@ -25,6 +25,7 @@ import helium314.keyboard.settings.screens.DebugScreen
 import helium314.keyboard.settings.screens.CustomAIKeysScreen
 import helium314.keyboard.settings.screens.SonderThemeScreen
 import helium314.keyboard.settings.screens.TextExpanderScreen
+import helium314.keyboard.settings.screens.VoiceTypingScreen
 import helium314.keyboard.settings.screens.DictionaryScreen
 import helium314.keyboard.settings.screens.LibrariesHubScreen
 import helium314.keyboard.settings.screens.GestureTypingScreen
@@ -169,6 +170,9 @@ fun SettingsNavHost(
         composable(SettingsDestination.Subtype + "{subtype}") {
             SubtypeScreen(initialSubtype = it.arguments?.getString("subtype")!!.toSettingsSubtype(), onClickBack = ::goBack)
         }
+        composable(SettingsDestination.VoiceTyping) {
+            VoiceTypingScreen(onClickBack = ::goBack)
+        }
         composable(SettingsDestination.SonderTheme) {
             SonderThemeScreen(onClickBack = ::goBack)
         }
@@ -208,6 +212,7 @@ object SettingsDestination {
     const val CustomAIKeys = "custom_ai_keys"
     const val CustomAIKeyConfig = "custom_ai_key_config/"
     const val SonderTheme = "sonder_theme"
+    const val VoiceTyping = "voice_typing"
     const val TextExpander = "text_expander"
     const val BackgroundServices = "background_services"
     val navTarget = MutableStateFlow(Settings)
