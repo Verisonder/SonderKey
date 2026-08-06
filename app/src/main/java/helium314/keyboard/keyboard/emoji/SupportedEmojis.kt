@@ -22,19 +22,45 @@ object SupportedEmojis {
         }
     }
 
+    /**
+     * Identifies the font the emoji set was last probed against. Detection used to run exactly
+     * once and never again, so swapping the font — importing one, or SonderKey starting to ship
+     * its own — left the old, lower result cached forever and the newer emoji stayed hidden.
+     */
+    private fun fontSignature(context: Context): String {
+        val s = Settings.getInstance()
+        return when {
+            s.useSystemEmoji() -> "system:${Build.VERSION.SDK_INT}"
+            Settings.getCustomEmojiFontFile(context).exists() ->
+                "custom:${Settings.getCustomEmojiFontFile(context).lastModified()}"
+            s.useBundledEmojiFont() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ->
+                "bundled:${Settings.BUNDLED_EMOJI_FONT_VERSION}"
+            else -> "system:${Build.VERSION.SDK_INT}"
+        }
+    }
+
     private fun determineMaxSdk(context: Context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
-        if (context.prefs().contains(Settings.PREF_EMOJI_MAX_SDK)) return
+        val prefs = context.prefs()
+        val signature = fontSignature(context)
+        if (prefs.contains(Settings.PREF_EMOJI_MAX_SDK)
+            && prefs.getString(Settings.PREF_EMOJI_MAX_SDK_FONT, null) == signature) return
+
         val paint = Paint()
         (Settings.getInstance().customEmojiTypeface ?: Settings.getInstance().customTypeface)
             ?.let { paint.setTypeface(it) }
         val maxApi = context.assets.open("emoji/minApi.txt").reader().readLines().maxOf {
             val s = it.split(" ")
-            val supported = paint.hasGlyph(s[1])
+            // probe every entry in the tier, not just the first: a single missing glyph in an
+            // otherwise supported set used to disqualify the whole tier
+            val supported = s.drop(1).count { e -> paint.hasGlyph(e) } * 2 >= s.size - 1
             if (supported) s.first().toInt() else 0
         }
         val newMax = maxApi.coerceAtLeast(Build.VERSION.SDK_INT)
-        context.prefs().edit { putInt(Settings.PREF_EMOJI_MAX_SDK, newMax) }
+        prefs.edit {
+            putInt(Settings.PREF_EMOJI_MAX_SDK, newMax)
+            putString(Settings.PREF_EMOJI_MAX_SDK_FONT, signature)
+        }
     }
 
     fun isUnsupported(emoji: String) = emoji in unsupportedEmojis

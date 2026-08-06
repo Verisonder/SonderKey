@@ -242,6 +242,7 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static final String PREF_EMOJI_MAX_SDK = "emoji_max_sdk";
     public static final String PREF_USE_BUNDLED_EMOJI_FONT = "use_bundled_emoji_font";
     public static final String PREF_SONDER_SEED_COLOR = "sonder_seed_color";
+    public static final String PREF_EMOJI_MAX_SDK_FONT = "emoji_max_sdk_font";
     public static final String PREF_EMOJI_RECENT_KEYS = "emoji_recent_keys";
     public static final String PREF_LAST_SHOWN_EMOJI_CATEGORY_ID = "last_shown_emoji_category_id";
     public static final String PREF_LAST_SHOWN_EMOJI_CATEGORY_PAGE_ID = "last_shown_emoji_category_page_id";
@@ -735,6 +736,8 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     }
 
     public static final String BUNDLED_EMOJI_FONT = "fonts/sonderkey_emoji.ttf";
+    /** bump when the bundled font is replaced, so emoji support is probed again */
+    public static final String BUNDLED_EMOJI_FONT_VERSION = "noto-colrv1-2.051";
 
     public static void clearCachedTypeface() {
         sCachedTypeface = null;

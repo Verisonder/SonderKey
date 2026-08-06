@@ -660,11 +660,10 @@ object AppUpgrade {
         }
         // SonderKey ships its own emoji font; the cached "max supported emoji SDK" was detected
         // against whatever font was active before, so drop it once and let it be detected again.
-        if (!prefs.contains(EMOJI_FONT_MIGRATION_MARKER)) {
-            prefs.edit {
-                remove(Settings.PREF_EMOJI_MAX_SDK)
-                putBoolean(EMOJI_FONT_MIGRATION_MARKER, true)
-            }
+        prefs.edit {
+            remove(Settings.PREF_EMOJI_MAX_SDK)
+            remove(Settings.PREF_EMOJI_MAX_SDK_FONT)
+            putBoolean(EMOJI_FONT_MIGRATION_MARKER, true)
         }
         upgradeToolbarPrefs(prefs)
         LayoutUtilsCustom.onLayoutFileChanged() // just to be sure
