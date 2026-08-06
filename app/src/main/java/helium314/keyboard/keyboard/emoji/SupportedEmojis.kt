@@ -10,6 +10,18 @@ import helium314.keyboard.latin.utils.prefs
 object SupportedEmojis {
     private val unsupportedEmojis = hashSetOf<String>()
 
+    /**
+     * Emoji the bundled font maps to a placeholder rather than real artwork.
+     *
+     * These cannot be caught by probing: the font has a glyph and a colour record for them, so
+     * hasGlyph reports success, but what gets drawn is a "NO GLYPH" box. Google ships these for
+     * characters whose artwork is not finished yet. The character itself is fine — typing it works
+     * — so only the palette entry is hidden.
+     */
+    private val placeholderInBundledFont = setOf(
+        "\uD83E\uDEEA" // U+1FAEA distorted face (Emoji 17.0)
+    )
+
     fun load(context: Context) {
         determineMaxSdk(context)
         val prefs = context.prefs()
@@ -27,6 +39,9 @@ object SupportedEmojis {
         prefs.getString(Settings.PREF_EMOJI_UNRENDERABLE, "")
             ?.split(" ")?.filter { it.isNotEmpty() }
             ?.let { unsupportedEmojis.addAll(it) }
+        val settings = Settings.getInstance()
+        if (!settings.useSystemEmoji() && settings.useBundledEmojiFont())
+            unsupportedEmojis.addAll(placeholderInBundledFont)
     }
 
     /**
