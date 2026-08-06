@@ -66,6 +66,7 @@ fun MainSettingsScreen(
     onClickGestureTyping: () -> Unit,
     onClickAdvanced: () -> Unit,
     onClickAppearance: () -> Unit,
+    onClickSonderTheme: () -> Unit,
     onClickLanguage: () -> Unit,
     onClickGesture: () -> Unit,
     onClickLibraries: () -> Unit,
@@ -169,6 +170,12 @@ fun MainSettingsScreen(
                             icon = R.drawable.ic_settings_preferences
                         ) { NextScreenIcon() }
                         Preference(
+                            name = stringResource(R.string.settings_screen_sonder_theme),
+                            description = stringResource(R.string.settings_screen_sonder_theme_summary),
+                            onClick = onClickSonderTheme,
+                            icon = R.drawable.ic_settings_appearance
+                        ) { NextScreenIcon() }
+                        Preference(
                             name = stringResource(R.string.settings_screen_appearance),
                             onClick = onClickAppearance,
                             icon = R.drawable.ic_settings_appearance
@@ -244,7 +251,7 @@ private fun PreviewScreen() {
     initPreview(LocalContext.current)
     Theme(previewDark) {
         Surface {
-            MainSettingsScreen({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
+            MainSettingsScreen({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
         }
     }
 }

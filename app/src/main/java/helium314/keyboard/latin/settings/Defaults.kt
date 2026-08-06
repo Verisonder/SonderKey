@@ -8,6 +8,7 @@ import android.view.Gravity
 import helium314.keyboard.keyboard.KeyboardTheme
 import helium314.keyboard.latin.BuildConfig
 import helium314.keyboard.latin.common.Constants.Separators
+import helium314.keyboard.latin.common.SonderPalette
 import helium314.keyboard.latin.common.Constants.Subtype.ExtraValue
 import helium314.keyboard.latin.utils.LayoutType
 import helium314.keyboard.latin.utils.POPUP_KEYS_LABEL_DEFAULT
@@ -52,6 +53,7 @@ object Defaults {
     const val PREF_SHOW_DOWNLOAD_BUTTON_IN_TOOLBAR = true
     const val PREF_USE_SYSTEM_EMOJI = false
     const val PREF_USE_BUNDLED_EMOJI_FONT = true
+    const val PREF_SONDER_SEED_COLOR = SonderPalette.DEFAULT_SEED
 
     const val PREF_ENABLE_SPELL_CHECKER_SERVICE = true
     const val PREF_ENABLE_CONTACTS_OBSERVER = false

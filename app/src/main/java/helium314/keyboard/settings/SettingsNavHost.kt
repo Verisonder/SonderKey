@@ -23,6 +23,7 @@ import helium314.keyboard.settings.screens.AppearanceScreen
 import helium314.keyboard.settings.screens.ColorsScreen
 import helium314.keyboard.settings.screens.DebugScreen
 import helium314.keyboard.settings.screens.CustomAIKeysScreen
+import helium314.keyboard.settings.screens.SonderThemeScreen
 import helium314.keyboard.settings.screens.TextExpanderScreen
 import helium314.keyboard.settings.screens.DictionaryScreen
 import helium314.keyboard.settings.screens.LibrariesHubScreen
@@ -79,6 +80,7 @@ fun SettingsNavHost(
                 onClickLibraries = { navController.navigate(SettingsDestination.Libraries) },
                 onClickAdvanced = { navController.navigate(SettingsDestination.Advanced) },
                 onClickAppearance = { navController.navigate(SettingsDestination.Appearance) },
+                onClickSonderTheme = { navController.navigate(SettingsDestination.SonderTheme) },
                 onClickLanguage = { navController.navigate(SettingsDestination.Languages) },
                 onClickDictionaries = { navController.navigate(SettingsDestination.Dictionaries) },
                 onClickAIIntegration = { navController.navigate(SettingsDestination.AIIntegration) },
@@ -168,6 +170,9 @@ fun SettingsNavHost(
         composable(SettingsDestination.Subtype + "{subtype}") {
             SubtypeScreen(initialSubtype = it.arguments?.getString("subtype")!!.toSettingsSubtype(), onClickBack = ::goBack)
         }
+        composable(SettingsDestination.SonderTheme) {
+            SonderThemeScreen(onClickBack = ::goBack)
+        }
         composable(SettingsDestination.TextExpander) {
             TextExpanderScreen(onClickBack = ::goBack)
         }
@@ -203,6 +208,7 @@ object SettingsDestination {
     const val Dictionaries = "dictionaries"
     const val CustomAIKeys = "custom_ai_keys"
     const val CustomAIKeyConfig = "custom_ai_key_config/"
+    const val SonderTheme = "sonder_theme"
     const val TextExpander = "text_expander"
     const val BackgroundServices = "background_services"
     val navTarget = MutableStateFlow(Settings)

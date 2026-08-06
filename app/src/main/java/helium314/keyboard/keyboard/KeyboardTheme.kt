@@ -21,6 +21,7 @@ import helium314.keyboard.latin.common.Colors
 import helium314.keyboard.latin.common.DefaultColors
 import helium314.keyboard.latin.common.DynamicColors
 import helium314.keyboard.latin.settings.Defaults
+import helium314.keyboard.latin.common.SonderPalette
 import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.latin.utils.ResourceUtils
 import helium314.keyboard.latin.utils.brightenOrDarken
@@ -166,30 +167,23 @@ private constructor(val themeId: Int, @JvmField val mStyleId: Int) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) DynamicColors(context, themeStyle, hasBorders, backgroundImage)
                     else getThemeColors(THEME_LIGHT, themeStyle, context, prefs, isNight)
                 }
-                THEME_SONDER_LIGHT -> DefaultColors(
-                    themeStyle,
-                    hasBorders,
-                    "#2FB8A6".toColorInt(), // Accent — SonderKey teal
-                    "#F2F5F4".toColorInt(), // Background — cool off-white
-                    "#FFFFFF".toColorInt(), // Key Bg
-                    "#DCE5E2".toColorInt(), // Functional Key — teal-tinted grey
-                    "#FFFFFF".toColorInt(), // Spacebar
-                    "#15201D".toColorInt(), // Text — near-black green
-                    "#8015201D".toColorInt(), // Hint
-                    keyboardBackground = backgroundImage
-                )
-                THEME_SONDER_DARK -> DefaultColors(
-                    themeStyle,
-                    hasBorders,
-                    "#2FB8A6".toColorInt(), // Accent — SonderKey teal
-                    "#111215".toColorInt(), // Background — icon black
-                    "#1E2126".toColorInt(), // Key Bg — soft graphite
-                    "#282C33".toColorInt(), // Functional Key — lifted graphite
-                    "#1E2126".toColorInt(), // Spacebar
-                    "#ECF2F0".toColorInt(), // Text — soft white
-                    "#80ECF2F0".toColorInt(), // Hint
-                    keyboardBackground = backgroundImage
-                )
+                THEME_SONDER_LIGHT, THEME_SONDER_DARK -> {
+                    val dark = themeName == THEME_SONDER_DARK
+                    val seed = prefs.getInt(Settings.PREF_SONDER_SEED_COLOR, Defaults.PREF_SONDER_SEED_COLOR)
+                    val p = SonderPalette.Keyboard(seed, dark)
+                    DefaultColors(
+                        themeStyle,
+                        hasBorders,
+                        p.accent,
+                        p.background,
+                        p.keyBackground,
+                        p.functionalKey,
+                        p.spaceBar,
+                        p.keyText,
+                        p.keyHintText,
+                        keyboardBackground = backgroundImage
+                    )
+                }
                 THEME_LIGHT -> DefaultColors(
                     themeStyle,
                     hasBorders,
