@@ -390,8 +390,8 @@ fun WelcomeWizard(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                     Text(
-                                        text = if (voiceReady) "Installed"
-                                               else "Speech engine and English model, about 151 MB. Transcribed on this device.",
+                                        text = if (voiceReady) "Installed \u00b7 English only"
+                                               else "English only. Speech engine and model, about 151 MB. Transcribed on this device.",
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                                     )
