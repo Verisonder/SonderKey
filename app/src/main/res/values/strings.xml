@@ -1010,6 +1010,10 @@ New dictionary:
     <!-- Style name for Rounded style -->
     <string name="style_name_Rounded" tools:keep="@string/style_name_Rounded">Rounded</string>
     <string name="style_name_Sonder" tools:keep="@string/style_name_Sonder">Sonder</string>
+    <string name="settings_group_general">General</string>
+    <string name="settings_group_typing">Typing</string>
+    <string name="settings_group_system">System</string>
+    <string name="settings_screen_text_expander">Text Expander</string>
     <string name="prefs_use_bundled_emoji_font">Use bundled emoji font</string>
     <string name="prefs_use_bundled_emoji_font_summary">Render emoji with the font shipped inside SonderKey instead of the system font, so newer emoji show up on older Android versions (restarts app)</string>
     <!-- Option for choosing colors -->

@@ -12,6 +12,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,6 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import helium314.keyboard.latin.BuildConfig
@@ -43,6 +45,17 @@ import helium314.keyboard.settings.dialogs.SponsorDialog
 import helium314.keyboard.settings.initPreview
 import helium314.keyboard.settings.preferences.Preference
 import helium314.keyboard.settings.previewDark
+
+@Composable
+private fun SectionLabel(text: String) {
+    Text(
+        text = text.uppercase(),
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.primary,
+        fontSize = 12.sp,
+        modifier = Modifier.padding(start = 28.dp, end = 16.dp, top = 12.dp, bottom = 2.dp)
+    )
+}
 
 @Composable
 fun MainSettingsScreen(
@@ -122,6 +135,7 @@ fun MainSettingsScreen(
                     .padding(vertical = 8.dp)
             ) {
                 // Group 1: General (AI, Languages, Preferences, Appearance, Toolbar)
+                SectionLabel(stringResource(R.string.settings_group_general))
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -168,6 +182,7 @@ fun MainSettingsScreen(
                 }
 
                 // Group 2: Typing (Gesture, Correction, Dictionaries)
+                SectionLabel(stringResource(R.string.settings_group_typing))
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -188,7 +203,7 @@ fun MainSettingsScreen(
                             icon = R.drawable.ic_settings_correction
                         ) { NextScreenIcon() }
                         Preference(
-                            name = "Text Expander",
+                            name = stringResource(R.string.settings_screen_text_expander),
                             onClick = { helium314.keyboard.settings.SettingsDestination.navigateTo(helium314.keyboard.settings.SettingsDestination.TextExpander) },
                             icon = R.drawable.ic_edit
                         ) { NextScreenIcon() }
@@ -196,6 +211,7 @@ fun MainSettingsScreen(
                 }
 
                 // Group 3: Other (Advanced, About)
+                SectionLabel(stringResource(R.string.settings_group_system))
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
