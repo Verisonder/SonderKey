@@ -1033,6 +1033,7 @@ New dictionary:
     <string name="voice_typing_mic_unavailable">The microphone is not available right now</string>
     <string name="voice_typing_listening">Listening\u2026 tap the microphone again to stop</string>
     <string name="voice_typing_working">Transcribing\u2026</string>
+    <string name="voice_typing_listening_short">Listening</string>
     <string name="voice_typing_nothing_heard">Nothing was heard</string>
     <string name="sonder_theme_which">Editing</string>
     <string name="sonder_theme_accent">Accent</string>

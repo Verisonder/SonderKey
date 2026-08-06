@@ -1678,7 +1678,10 @@ public class LatinIME extends InputMethodService implements
         if (KeyCode.VOICE_INPUT == event.getKeyCode()) {
             // SonderKey transcribes on the device when it is set up; otherwise fall back to
             // whichever voice input method the system provides, so the key is never dead.
-            if (helium314.keyboard.latin.voice.VoiceTyping.INSTANCE.isReady(this)) {
+            if (helium314.keyboard.latin.voice.VoiceTyping.INSTANCE.isReady(this)
+                    || !mRichImm.isShortcutImeReady()) {
+                // Prefer our own transcription. If it is not set up and the system has nothing
+                // either, still route here so the key explains itself instead of doing nothing.
                 onVoiceKeyPressed();
             } else {
                 mRichImm.switchToShortcutIme(this);
@@ -1691,12 +1694,15 @@ public class LatinIME extends InputMethodService implements
         mKeyboardSwitcher.onEvent(event, getCurrentAutoCapsState(), getCurrentRecapitalizeState());
     }
 
+    private helium314.keyboard.latin.voice.VoiceStatusView mVoiceStatusView;
+
     /** Toggles on-device voice typing: first press records, second press transcribes. */
     private void onVoiceKeyPressed() {
         final helium314.keyboard.latin.voice.VoiceTyping voice = helium314.keyboard.latin.voice.VoiceTyping.INSTANCE;
         if (voice.isRecording()) {
-            android.widget.Toast.makeText(this, R.string.voice_typing_working, android.widget.Toast.LENGTH_SHORT).show();
+            if (mVoiceStatusView != null) mVoiceStatusView.showTranscribing();
             voice.stopAndTranscribe(this, text -> {
+                hideVoiceStatus();
                 if (text == null || text.isEmpty()) {
                     android.widget.Toast.makeText(this, R.string.voice_typing_nothing_heard, android.widget.Toast.LENGTH_SHORT).show();
                 } else {
@@ -1704,9 +1710,27 @@ public class LatinIME extends InputMethodService implements
                 }
                 return kotlin.Unit.INSTANCE;
             });
-        } else if (voice.start(this, null)) {
-            android.widget.Toast.makeText(this, R.string.voice_typing_listening, android.widget.Toast.LENGTH_SHORT).show();
+            return;
         }
+        // Show the indicator first, so the level meter is already on screen when audio starts.
+        showVoiceStatus();
+        final boolean started = voice.start(this, level -> {
+            final helium314.keyboard.latin.voice.VoiceStatusView view = mVoiceStatusView;
+            if (view != null) view.post(() -> view.setLevel(level));
+            return kotlin.Unit.INSTANCE;
+        });
+        if (!started) hideVoiceStatus();
+    }
+
+    private void showVoiceStatus() {
+        if (!hasSuggestionStripView()) return;
+        mVoiceStatusView = new helium314.keyboard.latin.voice.VoiceStatusView(this);
+        mSuggestionStripView.setExternalSuggestionView(mVoiceStatusView, false);
+    }
+
+    private void hideVoiceStatus() {
+        mVoiceStatusView = null;
+        if (hasSuggestionStripView()) mSuggestionStripView.setExternalSuggestionView(null, false);
     }
 
     public void onTextInput(final String rawText) {
