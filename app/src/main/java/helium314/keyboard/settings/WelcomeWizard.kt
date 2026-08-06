@@ -349,6 +349,81 @@ fun WelcomeWizard(
                             }
                         }
                         Spacer(Modifier.height(8.dp))
+
+                        // Voice typing needs two downloads and the microphone; offer all of it
+                        // here rather than leaving it to be discovered later.
+                        val voiceReady = helium314.keyboard.latin.voice.VoiceEngine.areLibrariesPresent(ctx) &&
+                                helium314.keyboard.latin.voice.VoiceModel.PARAKEET_110M_EN.isDownloaded(ctx)
+                        var voiceBusy by remember { mutableStateOf(false) }
+                        var voiceProgress by remember { mutableIntStateOf(0) }
+                        val voiceScope = rememberCoroutineScope()
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.shapes.medium)
+                                .padding(horizontal = 16.dp, vertical = 12.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Voice Typing",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = if (voiceReady) "Installed"
+                                               else "Speech engine and English model, about 151 MB. Transcribed on this device.",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                    )
+                                }
+                                if (voiceReady) {
+                                    Icon(painterResource(R.drawable.ic_setup_check), null, tint = MaterialTheme.colorScheme.primary)
+                                } else {
+                                    androidx.compose.material3.TextButton(
+                                        onClick = {
+                                            voiceBusy = true
+                                            voiceScope.launch {
+                                                if (!helium314.keyboard.latin.voice.VoiceEngine.areLibrariesPresent(ctx))
+                                                    helium314.keyboard.latin.voice.VoiceEngineDownloader.download(ctx) { voiceProgress = it }
+                                                helium314.keyboard.latin.voice.VoiceModelDownloader
+                                                    .download(ctx, helium314.keyboard.latin.voice.VoiceModel.PARAKEET_110M_EN) { voiceProgress = it }
+                                                voiceBusy = false
+                                                refreshTrigger++
+                                            }
+                                        },
+                                        enabled = !voiceBusy
+                                    ) { Text(if (voiceBusy) "$voiceProgress%" else "Download") }
+                                }
+                            }
+                            if (voiceBusy) {
+                                Spacer(Modifier.height(8.dp))
+                                androidx.compose.material3.LinearProgressIndicator(
+                                    progress = { voiceProgress / 100f },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                            if (voiceReady && !helium314.keyboard.latin.voice.VoiceRecorder.hasPermission(ctx)) {
+                                Spacer(Modifier.height(8.dp))
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "Microphone access is needed to dictate",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    androidx.compose.material3.TextButton(onClick = {
+                                        (ctx as? android.app.Activity)?.let {
+                                            androidx.core.app.ActivityCompat.requestPermissions(
+                                                it, arrayOf(android.Manifest.permission.RECORD_AUDIO), 4321
+                                            )
+                                        }
+                                    }) { Text("Allow") }
+                                }
+                            }
+                        }
+
+                        Spacer(Modifier.height(8.dp))
                         var gestureEnabled by remember {
                             mutableStateOf(ctx.prefs().getBoolean(Settings.PREF_GESTURE_INPUT, helium314.keyboard.latin.settings.Defaults.PREF_GESTURE_INPUT))
                         }

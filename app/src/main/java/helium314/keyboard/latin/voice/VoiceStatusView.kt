@@ -31,6 +31,9 @@ class VoiceStatusView(context: Context) : LinearLayout(context) {
     init {
         orientation = HORIZONTAL
         gravity = Gravity.CENTER_VERTICAL
+        // Fill the strip so the contents centre against its full height; wrapping made the row
+        // sit high with the spare space collecting underneath.
+        layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
         val colors = Settings.getValues().mColors
         val pad = (10 * resources.displayMetrics.density).toInt()
         setPadding(pad, 0, pad, 0)
@@ -38,9 +41,12 @@ class VoiceStatusView(context: Context) : LinearLayout(context) {
         label.text = context.getString(R.string.voice_typing_listening_short)
         label.setTextColor(colors.get(helium314.keyboard.latin.common.ColorType.KEY_TEXT))
         label.textSize = 15f
-        addView(label, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT))
+        addView(label, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply {
+            gravity = Gravity.CENTER_VERTICAL
+        })
 
         val meterParams = LayoutParams(0, (18 * resources.displayMetrics.density).toInt(), 1f)
+        meterParams.gravity = Gravity.CENTER_VERTICAL
         meterParams.leftMargin = pad
         addView(meter, meterParams)
     }

@@ -42,6 +42,7 @@ import androidx.compose.material3.Switch
 import helium314.keyboard.latin.voice.VoiceEngine
 import helium314.keyboard.latin.voice.VoiceEngineDownloader
 import helium314.keyboard.latin.voice.VoiceModel
+import helium314.keyboard.latin.voice.VoiceRecorder
 import helium314.keyboard.latin.voice.VoiceModelDownloader
 import helium314.keyboard.settings.SearchSettingsScreen
 import kotlinx.coroutines.launch
@@ -154,6 +155,35 @@ fun VoiceTypingScreen(onClickBack: () -> Unit) {
                 },
                 onDelete = { model.delete(ctx); modelReady = false }
             )
+
+            if (engineReady && modelReady && !VoiceRecorder.hasPermission(ctx)) {
+                Spacer(Modifier.height(16.dp))
+                Card(
+                    shape = MaterialTheme.shapes.large,
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(Modifier.padding(20.dp)) {
+                        Text(
+                            stringResource(R.string.voice_typing_permission_title),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Text(
+                            stringResource(R.string.voice_typing_permission_detail),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
+                        )
+                        Button(onClick = {
+                            (ctx as? android.app.Activity)?.let {
+                                androidx.core.app.ActivityCompat.requestPermissions(
+                                    it, arrayOf(android.Manifest.permission.RECORD_AUDIO), 4321
+                                )
+                            }
+                        }) { Text(stringResource(R.string.voice_typing_permission_allow)) }
+                    }
+                }
+            }
 
             Spacer(Modifier.height(22.dp))
             Text(

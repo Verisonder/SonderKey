@@ -153,7 +153,12 @@ open class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPre
                             androidx.compose.foundation.layout.Box(Modifier.padding(scaffoldPadding)) { 
                                 SettingsNavHost(onClickBack = { this@SettingsActivity.finish() }, startDestination = startScreen)
                                 if (showWelcomeWizard) {
-                                    WelcomeWizard(close = { showWelcomeWizard = false }, finish = this@SettingsActivity::finish)
+                                    WelcomeWizard(
+                                        close = { showWelcomeWizard = false },
+                                        // Land in the settings rather than dropping the user back
+                                        // on the home screen with nothing to show for the setup.
+                                        finish = { showWelcomeWizard = false }
+                                    )
                                 } else if (crashReports.isNotEmpty()) {
                                     ConfirmationDialog(
                                         cancelButtonText = "ignore",
