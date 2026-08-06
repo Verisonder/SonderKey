@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Copyright (C) 2015 The Android Open Source Project
+    modified
+    SPDX-License-Identifier: Apache-2.0 AND GPL-3.0-only
+-->
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+    <style name="KeyboardTheme.Sonder_Base_Border"
+        parent="KeyboardTheme.Sonder_Base">
+        <item name="keyboardStyle">@style/Keyboard.Sonder_Base_Border</item>
+        <item name="keyboardViewStyle">@style/KeyboardView.Sonder_Base_Border</item>
+        <item name="mainKeyboardViewStyle">@style/MainKeyboardView.Sonder_Base_Border</item>
+        <item name="emojiPalettesViewStyle">@style/EmojiPalettesView.Sonder_Base_Border</item>
+        <item name="clipboardHistoryViewStyle">@style/ClipboardHistoryView.Sonder_Base_Border</item>
+        <item name="popupKeysKeyboardViewStyle">@style/PopupKeysKeyboardView.Sonder_Base_Border</item>
+        <item name="suggestionStripViewStyle">@style/SuggestionStripView.Sonder_Base_Border</item>
+    </style>
+    <style
+        name="Keyboard.Sonder_Base_Border"
+        parent="Keyboard"
+        >
+        <!-- This should be aligned with KeyboardTheme.THEME_ID_* -->
+        <item name="themeId">SonderBaseBorder</item>
+    </style>
+    <style
+        name="KeyboardView.Sonder_Base_Border"
+        parent="KeyboardView.Sonder_Base">
+        <item name="android:background">@drawable/keyboard_background_lxx_base_border</item>
+        <item name="keyBackground">@drawable/btn_keyboard_key_sonder_base_border</item>
+        <item name="functionalKeyBackground">@drawable/btn_keyboard_key_functional_sonder_base_border</item>
+        <item name="spacebarBackground">@drawable/btn_keyboard_key_sonder_base_border</item>
+    </style>
+
+    <style
+        name="MainKeyboardView.Sonder_Base_Border"
+        parent="MainKeyboardView.Sonder_Base">
+        <item name="android:background">@drawable/keyboard_background_lxx_base_border</item>
+        <item name="keyBackground">@drawable/btn_keyboard_key_sonder_base_border</item>
+        <item name="functionalKeyBackground">@drawable/btn_keyboard_key_functional_sonder_base_border</item>
+        <item name="spacebarBackground">@drawable/btn_keyboard_key_sonder_base_border</item>
+    </style>
+
+    <style
+        name="EmojiPalettesView.Sonder_Base_Border"
+        parent="EmojiPalettesView.Sonder_Base">
+        <item name="categoryPageIndicatorBackground">@color/emoji_tab_page_indicator_background_lxx_base_border</item>
+        <item name="android:background">@drawable/keyboard_background_lxx_base_border</item>
+        <item name="keyBackground">@drawable/btn_keyboard_key_sonder_base_border</item>
+        <item name="functionalKeyBackground">@drawable/btn_keyboard_key_functional_sonder_base_border</item>
+        <item name="spacebarBackground">@drawable/btn_keyboard_key_sonder_base_border</item>
+    </style>
+
+    <style
+        name="ClipboardHistoryView.Sonder_Base_Border"
+        parent="ClipboardHistoryView.Sonder_Base">
+        <item name="android:background">@drawable/keyboard_background_lxx_base_border</item>
+        <item name="keyBackground">@drawable/btn_keyboard_key_sonder_base_border</item>
+        <item name="functionalKeyBackground">@drawable/btn_keyboard_key_functional_sonder_base_border</item>
+    </style>
+
+    <style
+        name="PopupKeysKeyboardView.Sonder_Base_Border"
+        parent="PopupKeysKeyboardView.Sonder_Base">
+        <item name="android:background">@drawable/keyboard_popup_panel_background_rounded_base</item>
+        <item name="keyBackground">@drawable/btn_keyboard_key_popup_sonder_base</item>
+    </style>
+
+    <style
+        name="SuggestionStripView.Sonder_Base_Border"
+        parent="SuggestionStripView.Sonder_Base">
+        <item name="android:background">@drawable/keyboard_suggest_strip_lxx_base_border</item>
+    </style>
+
+</resources>

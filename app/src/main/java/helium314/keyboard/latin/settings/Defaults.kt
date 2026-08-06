@@ -51,6 +51,7 @@ object Defaults {
     const val PREF_AUTO_SPAN_TOOLBAR_KEYS = true
     const val PREF_SHOW_DOWNLOAD_BUTTON_IN_TOOLBAR = true
     const val PREF_USE_SYSTEM_EMOJI = false
+    const val PREF_USE_BUNDLED_EMOJI_FONT = true
 
     const val PREF_ENABLE_SPELL_CHECKER_SERVICE = true
     const val PREF_ENABLE_CONTACTS_OBSERVER = false
@@ -60,12 +61,12 @@ object Defaults {
 
 
     private const val DEFAULT_SIZE_SCALE = 1.0f // 100%
-    const val PREF_THEME_STYLE = KeyboardTheme.STYLE_ROUNDED
-    const val PREF_ICON_STYLE = KeyboardTheme.STYLE_ROUNDED
+    const val PREF_THEME_STYLE = KeyboardTheme.STYLE_SONDER
+    const val PREF_ICON_STYLE = KeyboardTheme.STYLE_SONDER
     @JvmField
-    val PREF_THEME_COLORS = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) KeyboardTheme.THEME_DYNAMIC else KeyboardTheme.THEME_LIGHT
+    val PREF_THEME_COLORS = KeyboardTheme.THEME_SONDER_LIGHT
     @JvmField
-    val PREF_THEME_COLORS_NIGHT = KeyboardTheme.THEME_DARKER
+    val PREF_THEME_COLORS_NIGHT = KeyboardTheme.THEME_SONDER_DARK
     const val PREF_THEME_KEY_BORDERS = true
     @JvmField
     val PREF_THEME_DAY_NIGHT = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
@@ -113,11 +114,11 @@ object Defaults {
     @JvmField
     val PREF_SPLIT_SPACER_SCALE = Array(2) { DEFAULT_SIZE_SCALE }
     @JvmField
-    val PREF_KEYBOARD_HEIGHT_SCALE = Array(2) { 0.77f }
+    val PREF_KEYBOARD_HEIGHT_SCALE = arrayOf(1.00f, 0.77f) // [portrait, landscape]
     @JvmField
-    val PREF_BOTTOM_PADDING_SCALE = arrayOf(1.05f, 0f)
+    val PREF_BOTTOM_PADDING_SCALE = arrayOf(1.04f, 0f) // [portrait, landscape]
     @JvmField
-    val PREF_SIDE_PADDING_SCALE = Array(4) { 0.15f }
+    val PREF_SIDE_PADDING_SCALE = arrayOf(0.15f, 0.14f, 0.15f, 0.15f) // [default, landscape, split, landscape+split]
     const val PREF_FONT_SCALE = 0.85f
     const val PREF_EMOJI_FONT_SCALE = DEFAULT_SIZE_SCALE
     const val PREF_EMOJI_KEY_FIT = true
@@ -204,7 +205,7 @@ object Defaults {
     const val PREF_ADD_TO_PERSONAL_DICTIONARY = true
     @JvmField
     val PREF_NAVBAR_COLOR = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
-    const val PREF_NARROW_KEY_GAPS = true
+    const val PREF_NARROW_KEY_GAPS = false
     const val PREF_NARROW_KEY_GAPS_LEVEL = 1
     const val PREF_ENABLED_SUBTYPES = ""
     const val PREF_SELECTED_SUBTYPE = ""

@@ -239,6 +239,7 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
 
     // Emoji
     public static final String PREF_EMOJI_MAX_SDK = "emoji_max_sdk";
+    public static final String PREF_USE_BUNDLED_EMOJI_FONT = "use_bundled_emoji_font";
     public static final String PREF_EMOJI_RECENT_KEYS = "emoji_recent_keys";
     public static final String PREF_LAST_SHOWN_EMOJI_CATEGORY_ID = "last_shown_emoji_category_id";
     public static final String PREF_LAST_SHOWN_EMOJI_CATEGORY_PAGE_ID = "last_shown_emoji_category_page_id";
@@ -687,6 +688,10 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
         return mPrefs.getBoolean(PREF_USE_SYSTEM_EMOJI, Defaults.PREF_USE_SYSTEM_EMOJI);
     }
 
+    public boolean useBundledEmojiFont() {
+        return mPrefs.getBoolean(PREF_USE_BUNDLED_EMOJI_FONT, Defaults.PREF_USE_BUNDLED_EMOJI_FONT);
+    }
+
     @Nullable
     public Typeface getCustomTypeface() {
         if (!sCustomTypefaceLoaded) {
@@ -705,14 +710,25 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
             return null;
         }
         if (!sCustomEmojiTypefaceLoaded) {
+            // a user-supplied font always wins
             try {
                 sCachedEmojiTypeface = Typeface.createFromFile(getCustomEmojiFontFile(mContext));
             } catch (Exception ignored) {
+            }
+            // otherwise fall back to the emoji font shipped with SonderKey, so the emoji set
+            // does not depend on how old the device's system font is
+            if (sCachedEmojiTypeface == null && useBundledEmojiFont()) {
+                try {
+                    sCachedEmojiTypeface = Typeface.createFromAsset(mContext.getAssets(), BUNDLED_EMOJI_FONT);
+                } catch (Exception ignored) {
+                }
             }
         }
         sCustomEmojiTypefaceLoaded = true;
         return sCachedEmojiTypeface;
     }
+
+    public static final String BUNDLED_EMOJI_FONT = "fonts/sonderkey_emoji.ttf";
 
     public static void clearCachedTypeface() {
         sCachedTypeface = null;

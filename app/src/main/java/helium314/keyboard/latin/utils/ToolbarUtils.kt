@@ -323,14 +323,21 @@ private val excludedKeys by lazy {
 }
 
 val defaultToolbarPref by lazy {
-    val default = when (helium314.keyboard.latin.BuildConfig.FLAVOR) {
+    // `order` fixes the position of the keys in the toolbar customiser.
+    // `enabled` is the subset of `order` that is switched on out of the box.
+    val order = when (helium314.keyboard.latin.BuildConfig.FLAVOR) {
         "offline" -> listOf(SETTINGS, VOICE, CLIPBOARD, CUSTOM_AI_1, CUSTOM_AI_2, CUSTOM_AI_3, UNDO, INCOGNITO, COPY, PASTE, PROOFREAD, TRANSLATE, TEXT_EDIT)
         "offlinelite" -> listOf(SETTINGS, VOICE, CLIPBOARD, UNDO, INCOGNITO, COPY, PASTE)
         else -> listOf(SETTINGS, VOICE, CLIPBOARD, UNDO, TRANSLATE, INCOGNITO, COPY, PASTE, HANDWRITING, TEXT_EDIT, SELECT_MODE)
     }
-        
-    val others = entries.filterNot { it in default || it in excludedKeys }
-    default.joinToString(Separators.ENTRY) { it.name + Separators.KV + true } + Separators.ENTRY +
+    val enabled = when (helium314.keyboard.latin.BuildConfig.FLAVOR) {
+        "offline" -> listOf(SETTINGS, VOICE, CLIPBOARD, TRANSLATE, INCOGNITO, PROOFREAD, TEXT_EDIT)
+        "offlinelite" -> listOf(SETTINGS, VOICE, CLIPBOARD, INCOGNITO)
+        else -> listOf(SETTINGS, VOICE, CLIPBOARD, TRANSLATE, INCOGNITO, HANDWRITING, TEXT_EDIT)
+    }
+
+    val others = entries.filterNot { it in order || it in excludedKeys }
+    order.joinToString(Separators.ENTRY) { it.name + Separators.KV + (it in enabled) } + Separators.ENTRY +
             others.joinToString(Separators.ENTRY) { it.name + Separators.KV + false }
 }
 

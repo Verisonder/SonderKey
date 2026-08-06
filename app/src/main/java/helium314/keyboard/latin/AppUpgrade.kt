@@ -50,6 +50,8 @@ import kotlin.collections.component2
 import kotlin.collections.set
 
 object AppUpgrade {
+    private const val EMOJI_FONT_MIGRATION_MARKER = "sonderkey_bundled_emoji_font_applied"
+
     fun checkVersionUpgrade(context: Context) {
         val prefs = context.prefs()
         val oldVersion = prefs.getInt(Settings.PREF_VERSION_CODE, 0)
@@ -640,6 +642,14 @@ object AppUpgrade {
             prefs.edit {
                 putBoolean(Settings.PREF_SUGGEST_PUNCTUATION,
                     !prefs.getBoolean(Settings.PREF_BIGRAM_PREDICTIONS, Defaults.PREF_BIGRAM_PREDICTIONS))
+            }
+        }
+        // SonderKey ships its own emoji font; the cached "max supported emoji SDK" was detected
+        // against whatever font was active before, so drop it once and let it be detected again.
+        if (!prefs.contains(EMOJI_FONT_MIGRATION_MARKER)) {
+            prefs.edit {
+                remove(Settings.PREF_EMOJI_MAX_SDK)
+                putBoolean(EMOJI_FONT_MIGRATION_MARKER, true)
             }
         }
         upgradeToolbarPrefs(prefs)

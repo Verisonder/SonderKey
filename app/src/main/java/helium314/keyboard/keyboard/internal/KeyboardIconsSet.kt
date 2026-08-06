@@ -24,21 +24,21 @@ class KeyboardIconsSet private constructor() {
         val iconStyle = prefs.getString(Settings.PREF_ICON_STYLE, Defaults.PREF_ICON_STYLE)
         val defaultIds = when (iconStyle) {
             KeyboardTheme.STYLE_HOLO -> keyboardIconsHolo
-            KeyboardTheme.STYLE_ROUNDED -> keyboardIconsRounded
+            KeyboardTheme.STYLE_ROUNDED, KeyboardTheme.STYLE_SONDER -> keyboardIconsRounded
             else -> keyboardIconsMaterial
         }
         val clearClipboardIconPref = prefs.getString(Settings.PREF_CLEAR_CLIPBOARD_ICON, Defaults.PREF_CLEAR_CLIPBOARD_ICON) ?: Defaults.PREF_CLEAR_CLIPBOARD_ICON
         val clearClipboardResId = when (clearClipboardIconPref) {
             "legacy" -> when (iconStyle) {
                 KeyboardTheme.STYLE_HOLO -> R.drawable.sym_keyboard_clear_clipboard_holo
-                KeyboardTheme.STYLE_ROUNDED -> R.drawable.sym_keyboard_clear_clipboard_rounded
+                KeyboardTheme.STYLE_ROUNDED, KeyboardTheme.STYLE_SONDER -> R.drawable.sym_keyboard_clear_clipboard_rounded
                 else -> R.drawable.sym_keyboard_clear_clipboard_lxx
             }
             "sweep" -> R.drawable.ic_clear_all
             "sweep_slanted" -> R.drawable.ic_clear_all_slanted
             "clipboard_slash" -> R.drawable.ic_clipboard_slash
             else -> when (iconStyle) {
-                KeyboardTheme.STYLE_ROUNDED -> R.drawable.ic_bin_rounded
+                KeyboardTheme.STYLE_ROUNDED, KeyboardTheme.STYLE_SONDER -> R.drawable.ic_bin_rounded
                 else -> R.drawable.ic_bin
             }
         }
@@ -361,7 +361,7 @@ class KeyboardIconsSet private constructor() {
             return keyboardIconsMaterial.entries.associate { (name, id) ->
                 name to when (iconStyle) {
                     KeyboardTheme.STYLE_HOLO -> listOfNotNull(keyboardIconsHolo[name], keyboardIconsRounded[name], id)
-                    KeyboardTheme.STYLE_ROUNDED -> listOfNotNull(keyboardIconsRounded[name], id, keyboardIconsHolo[name])
+                    KeyboardTheme.STYLE_ROUNDED, KeyboardTheme.STYLE_SONDER -> listOfNotNull(keyboardIconsRounded[name], id, keyboardIconsHolo[name])
                     else -> listOfNotNull(id, keyboardIconsRounded[name], keyboardIconsHolo[name])
                 }
             }

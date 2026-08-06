@@ -198,6 +198,8 @@
             <enum name="LXXBaseBorder" value="2" />
             <enum name="RoundedBase" value="3" />
             <enum name="RoundedBaseBorder" value="4" />
+            <enum name="SonderBase" value="5" />
+            <enum name="SonderBaseBorder" value="6" />
         </attr>
         <!-- Touch position correction -->
         <attr name="touchPositionCorrectionData" format="reference" />
@@ -390,6 +392,8 @@
             <enum name="LXXBaseBorder" value="2" />
             <enum name="RoundedBase" value="3" />
             <enum name="RoundedBaseBorder" value="4" />
+            <enum name="SonderBase" value="5" />
+            <enum name="SonderBaseBorder" value="6" />
         </attr>
         <!-- This should be aligned with
              {@link helium314.keyboard.keyboard.KeyboardId#MODE_TEXT} etc. -->

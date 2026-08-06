@@ -85,6 +85,7 @@ fun AppearanceScreen(
         Settings.PREF_FONT_SCALE,
         SettingsWithoutKey.CUSTOM_EMOJI_FONT,
         Settings.PREF_EMOJI_FONT_SCALE,
+        Settings.PREF_USE_BUNDLED_EMOJI_FONT,
         Settings.PREF_USE_SYSTEM_EMOJI,
         if (prefs.getFloat(Settings.PREF_EMOJI_FONT_SCALE, Defaults.PREF_EMOJI_FONT_SCALE) != 1f)
             Settings.PREF_EMOJI_KEY_FIT else null,
@@ -292,6 +293,18 @@ fun createAppearanceSettings(context: Context) = listOf(
             range = 0.5f..1.5f,
             description = { "${(100 * it).toInt()}%" }
         ) { KeyboardSwitcher.getInstance().setThemeNeedsReload() }
+    },
+    Setting(context, Settings.PREF_USE_BUNDLED_EMOJI_FONT, R.string.prefs_use_bundled_emoji_font,
+        R.string.prefs_use_bundled_emoji_font_summary) { setting ->
+        val ctx = LocalContext.current
+        SwitchPreference(setting, Defaults.PREF_USE_BUNDLED_EMOJI_FONT) { newValue ->
+            ctx.prefs().edit(commit = true) {
+                putBoolean(Settings.PREF_USE_BUNDLED_EMOJI_FONT, newValue)
+                // the set of renderable emoji changes with the font, so re-detect it
+                remove(Settings.PREF_EMOJI_MAX_SDK)
+            }
+            Runtime.getRuntime().exit(0)
+        }
     },
     Setting(context, Settings.PREF_USE_SYSTEM_EMOJI, R.string.prefs_use_system_emoji, R.string.prefs_use_system_emoji_summary) { setting ->
         val ctx = LocalContext.current
