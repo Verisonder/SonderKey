@@ -49,12 +49,6 @@ public final class InputAttributes {
     final private EditorInfo mEditorInfo;
     final private String mPackageNameForPrivateImeOptions;
 
-    /** True when SonderKey can transcribe on its own, so the mic key is worth showing. */
-    private static boolean hasOwnVoiceTyping() {
-        final android.app.Application app = App.Companion.getApp();
-        return app != null && helium314.keyboard.latin.voice.VoiceTyping.INSTANCE.isReady(app);
-    }
-
     public InputAttributes(final EditorInfo editorInfo, final boolean isFullscreenMode,
             final String packageNameForPrivateImeOptions) {
         mEditorInfo = editorInfo;
@@ -108,8 +102,10 @@ public final class InputAttributes {
                 || InputTypeUtils.isEmailVariation(variation)
                 || hasNoMicrophoneKeyOption()
                 || !RichInputMethodManager.isInitialized() // avoid crash when only using spell checker
-                || (!RichInputMethodManager.getInstance().isShortcutImeReady()
-                    && !hasOwnVoiceTyping());
+                ;
+        // Whether a system voice input method exists is no longer relevant: SonderKey transcribes
+        // on its own, and if it has not been set up yet, tapping the key opens the screen where
+        // that is done. Hiding the key made it impossible to discover.
         mShouldShowVoiceInputKey = !noMicrophone;
 
         mDisableGestureFloatingPreviewText = InputAttributes.inPrivateImeOptions(

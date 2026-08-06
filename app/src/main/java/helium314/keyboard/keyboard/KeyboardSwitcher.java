@@ -235,7 +235,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         keyboardView.setKeyboard(newKeyboard);
         mCurrentInputView.setKeyboardTopPadding(newKeyboard.mTopPadding);
         keyboardView.setKeyPreviewPopupEnabled(currentSettingsValues.mKeyPreviewPopupOn);
-        keyboardView.updateShortcutKey(mRichImm.isShortcutImeReady());
+        keyboardView.updateShortcutKey(true); // SonderKey can transcribe without a system voice input method
         final boolean subtypeChanged = (oldKeyboard == null)
                 || !newKeyboard.mId.mSubtype.equals(oldKeyboard.mId.mSubtype);
         final int languageOnSpacebarFormatType = LanguageOnSpacebarUtils
