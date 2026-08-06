@@ -14,6 +14,7 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -90,15 +91,19 @@ fun SonderThemeScreen(onClickBack: () -> Unit) {
     var keyColor by remember {
         mutableIntStateOf(prefs.getInt(Settings.PREF_SONDER_KEY_COLOR, Defaults.PREF_SONDER_KEY_COLOR))
     }
-    // which of the three colours the presets, sliders and hex field are editing
-    var editing by remember { mutableIntStateOf(0) } // 0 accent, 1 keys, 2 background
-    val current = when (editing) { 0 -> seed; 1 -> keyColor; else -> surface }
+    var funcColor by remember {
+        mutableIntStateOf(prefs.getInt(Settings.PREF_SONDER_FUNCTIONAL_COLOR, Defaults.PREF_SONDER_FUNCTIONAL_COLOR))
+    }
+    // which colour the presets, sliders and hex field are editing
+    var editing by remember { mutableIntStateOf(0) } // 0 accent, 1 keys, 2 functional, 3 background
+    val current = when (editing) { 0 -> seed; 1 -> keyColor; 2 -> funcColor; else -> surface }
     var hexField by remember(editing) { mutableStateOf(current.toHex()) }
 
     fun apply(newValue: Int) {
         when (editing) {
             0 -> { seed = newValue; prefs.edit { putInt(Settings.PREF_SONDER_SEED_COLOR, newValue) } }
             1 -> { keyColor = newValue; prefs.edit { putInt(Settings.PREF_SONDER_KEY_COLOR, newValue) } }
+            2 -> { funcColor = newValue; prefs.edit { putInt(Settings.PREF_SONDER_FUNCTIONAL_COLOR, newValue) } }
             else -> { surface = newValue; prefs.edit { putInt(Settings.PREF_SONDER_SURFACE_COLOR, newValue) } }
         }
         hexField = newValue.toHex()
@@ -116,13 +121,18 @@ fun SonderThemeScreen(onClickBack: () -> Unit) {
                 .padding(horizontal = 20.dp)
                 .padding(bottom = 32.dp)
         ) {
-            PreviewCard(seed, surface, keyColor)
+            PreviewCard(seed, surface, keyColor, funcColor)
 
             SectionTitle(stringResource(R.string.sonder_theme_which))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 4.dp)) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.padding(bottom = 4.dp)
+            ) {
                 ChannelChip(stringResource(R.string.sonder_theme_accent), Color(seed), editing == 0) { editing = 0 }
                 ChannelChip(stringResource(R.string.sonder_theme_keys), Color(keyColor), editing == 1) { editing = 1 }
-                ChannelChip(stringResource(R.string.sonder_theme_surface), Color(surface), editing == 2) { editing = 2 }
+                ChannelChip(stringResource(R.string.sonder_theme_functional), Color(funcColor), editing == 2) { editing = 2 }
+                ChannelChip(stringResource(R.string.sonder_theme_surface), Color(surface), editing == 3) { editing = 3 }
             }
 
             SectionTitle(stringResource(R.string.sonder_theme_presets))
@@ -153,6 +163,7 @@ fun SonderThemeScreen(onClickBack: () -> Unit) {
                     apply(when (editing) {
                         0 -> SonderPalette.DEFAULT_SEED
                         1 -> SonderPalette.DEFAULT_KEY
+                        2 -> SonderPalette.DEFAULT_FUNCTIONAL
                         else -> SonderPalette.DEFAULT_SURFACE
                     })
                 }) {
@@ -183,10 +194,10 @@ private fun SectionTitle(text: String) {
 
 /** Live sample of the derived palette — the point of a seed picker is seeing what it produces. */
 @Composable
-private fun PreviewCard(seed: Int, surfaceSeed: Int, keySeed: Int) {
+private fun PreviewCard(seed: Int, surfaceSeed: Int, keySeed: Int, funcSeed: Int) {
     val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
-    val kb = remember(seed, surfaceSeed, keySeed, dark) {
-        SonderPalette.Keyboard(seed, surfaceSeed, keySeed, dark)
+    val kb = remember(seed, surfaceSeed, keySeed, funcSeed, dark) {
+        SonderPalette.Keyboard(seed, surfaceSeed, keySeed, funcSeed, dark)
     }
     val spring = spring<Color>(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMediumLow)
 
@@ -258,6 +269,7 @@ private fun SwatchGrid(seed: Int, editing: Int, onPick: (Int) -> Unit) {
     val presets = when (editing) {
         0 -> SonderPalette.PRESETS
         1 -> SonderPalette.KEY_PRESETS
+        2 -> SonderPalette.FUNCTIONAL_PRESETS
         else -> SonderPalette.SURFACE_PRESETS
     }
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {

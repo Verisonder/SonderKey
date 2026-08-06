@@ -127,6 +127,21 @@ object SonderPalette {
 
     const val DEFAULT_SURFACE = 0xFF111215.toInt()
     const val DEFAULT_KEY = 0xFF3C3C3C.toInt()
+    const val DEFAULT_FUNCTIONAL = 0xFF212121.toInt()
+
+    /** Suggested colours for shift, backspace, symbols and the like. */
+    val FUNCTIONAL_PRESETS = intArrayOf(
+        0xFF212121.toInt(), // near black
+        0xFF282C33.toInt(), // Sonder Dark functional
+        0xFF2F2F2F.toInt(), // dark graphite
+        0xFF1A1F1D.toInt(), // deep green
+        0xFF1C1A28.toInt(), // indigo
+        0xFF261C20.toInt(), // plum
+        0xFF262017.toInt(), // umber
+        0xFF3C3C3C.toInt(), // same as the default keys
+        0xFF4A4A4A.toInt(), // light graphite
+        0xFFDCE5E2.toInt()  // pale (for light themes)
+    )
 
     /** Suggested key colours. */
     val KEY_PRESETS = intArrayOf(
@@ -163,21 +178,15 @@ object SonderPalette {
      * [surfaceSeed] drives the plate the keys sit on. Deriving both from a single colour meant
      * that choosing a strong accent also tinted the whole keyboard, which is rarely what is wanted.
      */
-    class Keyboard(accentSeed: Int, surfaceSeed: Int, keySeed: Int, dark: Boolean) {
+    class Keyboard(accentSeed: Int, surfaceSeed: Int, keySeed: Int, functionalSeed: Int, dark: Boolean) {
         val accent: Int = accentFor(accentSeed, dark)
         val background: Int = if (dark) tone(surfaceSeed, 7) else tone(surfaceSeed, 95)
 
         /** The letter keys use exactly the colour that was picked, with no tone shifting. */
         val keyBackground: Int = keySeed
 
-        /**
-         * Functional keys stay a step away from the letter keys so the two remain distinguishable,
-         * shifted in whichever direction has room.
-         */
-        val functionalKey: Int = if (lightness(keySeed) > 50)
-            tone(keySeed, (lightness(keySeed) - 10).toInt().coerceAtLeast(0))
-        else
-            tone(keySeed, (lightness(keySeed) + 8).toInt().coerceAtMost(100))
+        /** Shift, backspace, symbols and enter — set directly, independent of the letter keys. */
+        val functionalKey: Int = functionalSeed
 
         val spaceBar: Int = keyBackground
         val keyText: Int = if (lightness(keySeed) > 55) tone(keySeed, 10) else tone(keySeed, 95)

@@ -172,7 +172,8 @@ private constructor(val themeId: Int, @JvmField val mStyleId: Int) {
                     val accentSeed = prefs.getInt(Settings.PREF_SONDER_SEED_COLOR, Defaults.PREF_SONDER_SEED_COLOR)
                     val surfaceSeed = prefs.getInt(Settings.PREF_SONDER_SURFACE_COLOR, Defaults.PREF_SONDER_SURFACE_COLOR)
                     val keySeed = prefs.getInt(Settings.PREF_SONDER_KEY_COLOR, Defaults.PREF_SONDER_KEY_COLOR)
-                    val p = SonderPalette.Keyboard(accentSeed, surfaceSeed, keySeed, dark)
+                    val funcSeed = prefs.getInt(Settings.PREF_SONDER_FUNCTIONAL_COLOR, Defaults.PREF_SONDER_FUNCTIONAL_COLOR)
+                    val p = SonderPalette.Keyboard(accentSeed, surfaceSeed, keySeed, funcSeed, dark)
                     DefaultColors(
                         themeStyle,
                         hasBorders,
