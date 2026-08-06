@@ -74,6 +74,19 @@ import helium314.keyboard.settings.preferences.TextInputPreference
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+/** Reopens the settings after the process is killed, so a restart is not a disappearance. */
+private fun restartIntoSettings(ctx: android.content.Context) {
+    val intent = Intent(ctx, SettingsActivity::class.java)
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+    val pending = android.app.PendingIntent.getActivity(
+        ctx, 0x50DE, intent,
+        android.app.PendingIntent.FLAG_CANCEL_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+    )
+    val alarm = ctx.getSystemService(android.content.Context.ALARM_SERVICE) as android.app.AlarmManager
+    alarm.set(android.app.AlarmManager.RTC, System.currentTimeMillis() + 200, pending)
+    Runtime.getRuntime().exit(0)
+}
+
 @Composable
 fun WelcomeWizard(
     close: () -> Unit,
@@ -355,6 +368,12 @@ fun WelcomeWizard(
                         val voiceReady = helium314.keyboard.latin.voice.VoiceEngine.areLibrariesPresent(ctx) &&
                                 helium314.keyboard.latin.voice.VoiceModel.PARAKEET_110M_EN.isDownloaded(ctx)
                         var voiceBusy by remember { mutableStateOf(false) }
+                        var micGranted by remember {
+                            mutableStateOf(helium314.keyboard.latin.voice.VoiceRecorder.hasPermission(ctx))
+                        }
+                        val micPermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+                            androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+                        ) { granted -> micGranted = granted }
                         var voiceProgress by remember { mutableIntStateOf(0) }
                         val voiceScope = rememberCoroutineScope()
                         Column(
@@ -403,7 +422,7 @@ fun WelcomeWizard(
                                     modifier = Modifier.fillMaxWidth()
                                 )
                             }
-                            if (voiceReady && !helium314.keyboard.latin.voice.VoiceRecorder.hasPermission(ctx)) {
+                            if (voiceReady && !micGranted) {
                                 Spacer(Modifier.height(8.dp))
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
@@ -412,13 +431,9 @@ fun WelcomeWizard(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         modifier = Modifier.weight(1f)
                                     )
-                                    androidx.compose.material3.TextButton(onClick = {
-                                        (ctx as? android.app.Activity)?.let {
-                                            androidx.core.app.ActivityCompat.requestPermissions(
-                                                it, arrayOf(android.Manifest.permission.RECORD_AUDIO), 4321
-                                            )
-                                        }
-                                    }) { Text("Allow") }
+                                    androidx.compose.material3.TextButton(
+                                        onClick = { micPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO) }
+                                    ) { Text("Allow") }
                                 }
                             }
                         }
@@ -634,9 +649,13 @@ fun WelcomeWizard(
                                     SubtypeSettings.addEnabledSubtype(ctx.prefs(), subtype)
                                 }
                             }
-                            finish()
                             if (requiresRestart) {
-                                Runtime.getRuntime().exit(0)
+                                // The gesture library is loaded in a static initialiser, so the
+                                // process genuinely has to restart. Schedule the settings to open
+                                // again first, otherwise the app just vanishes to the home screen.
+                                restartIntoSettings(ctx)
+                            } else {
+                                finish()
                             }
                         },
                         { step-- }

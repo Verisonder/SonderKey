@@ -56,6 +56,10 @@ fun VoiceTypingScreen(onClickBack: () -> Unit) {
     var engineReady by remember { mutableStateOf(VoiceEngine.areLibrariesPresent(ctx)) }
     var modelReady by remember { mutableStateOf(model.isDownloaded(ctx)) }
     var busy by remember { mutableStateOf(false) }
+    var micGranted by remember { mutableStateOf(VoiceRecorder.hasPermission(ctx)) }
+    val micPermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { granted -> micGranted = granted }
     val prefs = ctx.prefs()
     var inToolbar by remember {
         mutableStateOf(isToolbarKeyEnabled(prefs, Settings.PREF_TOOLBAR_KEYS, defaultToolbarPref, ToolbarKey.VOICE))
@@ -156,7 +160,7 @@ fun VoiceTypingScreen(onClickBack: () -> Unit) {
                 onDelete = { model.delete(ctx); modelReady = false }
             )
 
-            if (engineReady && modelReady && !VoiceRecorder.hasPermission(ctx)) {
+            if (engineReady && modelReady && !micGranted) {
                 Spacer(Modifier.height(16.dp))
                 Card(
                     shape = MaterialTheme.shapes.large,
@@ -175,11 +179,7 @@ fun VoiceTypingScreen(onClickBack: () -> Unit) {
                             modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
                         )
                         Button(onClick = {
-                            (ctx as? android.app.Activity)?.let {
-                                androidx.core.app.ActivityCompat.requestPermissions(
-                                    it, arrayOf(android.Manifest.permission.RECORD_AUDIO), 4321
-                                )
-                            }
+                            micPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
                         }) { Text(stringResource(R.string.voice_typing_permission_allow)) }
                     }
                 }
