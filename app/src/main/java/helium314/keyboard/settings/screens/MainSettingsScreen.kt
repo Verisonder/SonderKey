@@ -49,11 +49,10 @@ import helium314.keyboard.settings.previewDark
 @Composable
 private fun SectionLabel(text: String) {
     Text(
-        text = text.uppercase(),
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.primary,
-        fontSize = 12.sp,
-        modifier = Modifier.padding(start = 28.dp, end = 16.dp, top = 12.dp, bottom = 2.dp)
+        text = text,
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(start = 28.dp, end = 16.dp, top = 20.dp, bottom = 8.dp)
     )
 }
 
