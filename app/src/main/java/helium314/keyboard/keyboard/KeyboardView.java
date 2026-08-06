@@ -12,6 +12,7 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.RectF;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Align;
@@ -37,6 +38,7 @@ import helium314.keyboard.latin.common.Colors;
 import helium314.keyboard.latin.common.Constants;
 import helium314.keyboard.latin.common.StringUtilsKt;
 import helium314.keyboard.latin.settings.Settings;
+import helium314.keyboard.keyboard.emoji.EmojiArtwork;
 import helium314.keyboard.latin.settings.SettingsValues;
 import helium314.keyboard.latin.suggestions.MoreSuggestions;
 import helium314.keyboard.latin.suggestions.MoreSuggestionsView;
@@ -104,6 +106,7 @@ public class KeyboardView extends View {
     private final Paint.FontMetrics mFontMetrics = new Paint.FontMetrics();
     protected final Typeface mTypeface;
     protected final Typeface mEmojiTypeface;
+    private final RectF mEmojiArtDst = new RectF();
 
     public KeyboardView(final Context context, final AttributeSet attrs) {
         this(context, attrs, R.attr.keyboardViewStyle);
@@ -525,6 +528,23 @@ public class KeyboardView extends View {
         float labelX = centerX;
         float labelBaseline = centerY;
         final String label = key.getLabel();
+        // Some emoji cannot be drawn as text on every device, however new the bundled font is,
+        // because the platform decides which font paints a character. Those few are drawn from a
+        // bundled image so the palette never shows an empty box.
+        if (label != null && EmojiArtwork.INSTANCE.has(label)) {
+            final Bitmap art = EmojiArtwork.INSTANCE.bitmap(getContext(), label);
+            if (art != null) {
+                final float size = Math.min(keyWidth, keyHeight) * 0.72f;
+                final float left = centerX - size / 2f;
+                final float top = centerY - size / 2f;
+                mEmojiArtDst.set(left, top, left + size, top + size);
+                final int savedAlpha = paint.getAlpha();
+                paint.setAlpha(params.mAnimAlpha);
+                canvas.drawBitmap(art, null, mEmojiArtDst, paint);
+                paint.setAlpha(savedAlpha);
+                return;
+            }
+        }
         if (label != null) {
             final Typeface typeface = mEmojiTypeface != null && StringUtilsKt.isEmoji(label) ? mEmojiTypeface
                     : mTypeface;

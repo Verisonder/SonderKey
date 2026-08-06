@@ -10,7 +10,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Paint;
-import android.graphics.Typeface;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.os.Handler;
@@ -181,14 +180,6 @@ public final class EmojiPageKeyboardView extends KeyboardView implements
     @Override
     public void setKeyboard(@NonNull final Keyboard keyboard) {
         super.setKeyboard(keyboard);
-        // The palette grid is drawn by KeyboardView, which uses the keyboard's own typeface. That
-        // meant the emoji font shipped with the app was never used to draw the emoji themselves —
-        // only to decide which ones to offer — so anything the system font lacked appeared as a
-        // box even though the app could supply the artwork.
-        final Typeface emojiTypeface = Settings.getInstance().getCustomEmojiTypeface();
-        if (emojiTypeface != null) {
-            getKeyDrawParams().mTypeface = emojiTypeface;
-        }
         mKeyDetector.setKeyboard(keyboard, 0 /* correctionX */, 0 /* correctionY */);
         mPopupKeysKeyboardCache.clear();
         if (AccessibilityUtils.Companion.getInstance().isAccessibilityEnabled()) {

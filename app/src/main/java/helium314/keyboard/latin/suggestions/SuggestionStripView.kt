@@ -47,6 +47,7 @@ import helium314.keyboard.latin.common.Constants
 import helium314.keyboard.latin.define.DebugFlags
 import helium314.keyboard.latin.settings.DebugSettings
 import helium314.keyboard.latin.settings.Defaults
+import helium314.keyboard.keyboard.emoji.EmojiArtwork
 import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.latin.utils.Log
 import helium314.keyboard.latin.utils.ToolbarKey
@@ -1171,6 +1172,18 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
             emojiView.text = emoji
             emojiView.textSize = 22f
             if (customTypeface != null) emojiView.typeface = customTypeface
+            // emoji with bundled artwork are shown as an image rather than text
+            if (EmojiArtwork.has(emoji)) {
+                EmojiArtwork.bitmap(context, emoji)?.let { art ->
+                    emojiView.text = ""
+                    val d = android.graphics.drawable.BitmapDrawable(resources, art)
+                    val size = (emojiView.textSize * 1.2f).toInt()
+                    d.setBounds(0, 0, size, size)
+                    emojiView.setCompoundDrawables(null, null, null, d)
+                }
+            } else {
+                emojiView.setCompoundDrawables(null, null, null, null)
+            }
             emojiView.gravity = android.view.Gravity.CENTER
             emojiView.setPadding(
                 8.dpToPx(resources), 2.dpToPx(resources), 
