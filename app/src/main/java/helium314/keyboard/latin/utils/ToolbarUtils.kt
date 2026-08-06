@@ -433,6 +433,22 @@ private fun getEnabledToolbarKeys(prefs: SharedPreferences, pref: String, defaul
     }
 }
 
+/** Turns a single toolbar key on or off, preserving the order of everything else. */
+fun setToolbarKeyEnabled(prefs: SharedPreferences, pref: String, default: String, key: ToolbarKey, enabled: Boolean) {
+    val current = prefs.getString(pref, default)!!
+    val entries = current.split(Separators.ENTRY).toMutableList()
+    val index = entries.indexOfFirst { it.split(Separators.KV).firstOrNull() == key.name }
+    val entry = key.name + Separators.KV + enabled
+    if (index >= 0) entries[index] = entry else entries.add(entry)
+    prefs.edit { putString(pref, entries.joinToString(Separators.ENTRY)) }
+}
+
+fun isToolbarKeyEnabled(prefs: SharedPreferences, pref: String, default: String, key: ToolbarKey): Boolean =
+    (prefs.getString(pref, default)!!).split(Separators.ENTRY).any {
+        val split = it.split(Separators.KV)
+        split.firstOrNull() == key.name && split.lastOrNull() == "true"
+    }
+
 fun writeCustomKeyCodes(prefs: SharedPreferences, codes: EnumMap<ToolbarKey, Pair<Int?, Int?>>) {
     val string = codes.mapNotNull { entry -> entry.value?.let { "${entry.key.name},${it.first},${it.second}" } }.joinToString(";")
     prefs.edit { putString(Settings.PREF_TOOLBAR_CUSTOM_KEY_CODES, string) }

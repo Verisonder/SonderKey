@@ -30,6 +30,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import helium314.keyboard.latin.R
+import helium314.keyboard.latin.utils.setToolbarKeyEnabled
+import helium314.keyboard.latin.utils.prefs
+import helium314.keyboard.latin.utils.isToolbarKeyEnabled
+import helium314.keyboard.latin.utils.defaultToolbarPref
+import helium314.keyboard.latin.utils.defaultPinnedToolbarPref
+import helium314.keyboard.latin.utils.ToolbarKey
+import helium314.keyboard.latin.settings.Settings
+import helium314.keyboard.keyboard.KeyboardSwitcher
+import androidx.compose.material3.Switch
 import helium314.keyboard.latin.voice.VoiceEngine
 import helium314.keyboard.latin.voice.VoiceEngineDownloader
 import helium314.keyboard.latin.voice.VoiceModel
@@ -46,6 +55,13 @@ fun VoiceTypingScreen(onClickBack: () -> Unit) {
     var engineReady by remember { mutableStateOf(VoiceEngine.areLibrariesPresent(ctx)) }
     var modelReady by remember { mutableStateOf(model.isDownloaded(ctx)) }
     var busy by remember { mutableStateOf(false) }
+    val prefs = ctx.prefs()
+    var inToolbar by remember {
+        mutableStateOf(isToolbarKeyEnabled(prefs, Settings.PREF_TOOLBAR_KEYS, defaultToolbarPref, ToolbarKey.VOICE))
+    }
+    var pinned by remember {
+        mutableStateOf(isToolbarKeyEnabled(prefs, Settings.PREF_PINNED_TOOLBAR_KEYS, defaultPinnedToolbarPref, ToolbarKey.VOICE))
+    }
     var progress by remember { mutableIntStateOf(0) }
     var status by remember { mutableStateOf<String?>(null) }
 
@@ -139,6 +155,38 @@ fun VoiceTypingScreen(onClickBack: () -> Unit) {
                 onDelete = { model.delete(ctx); modelReady = false }
             )
 
+            Spacer(Modifier.height(22.dp))
+            Text(
+                stringResource(R.string.voice_typing_where),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            Card(
+                shape = MaterialTheme.shapes.large,
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column {
+                    ToggleRow(
+                        title = stringResource(R.string.voice_typing_in_toolbar),
+                        checked = inToolbar
+                    ) {
+                        inToolbar = it
+                        setToolbarKeyEnabled(prefs, Settings.PREF_TOOLBAR_KEYS, defaultToolbarPref, ToolbarKey.VOICE, it)
+                        KeyboardSwitcher.getInstance().setThemeNeedsReload()
+                    }
+                    ToggleRow(
+                        title = stringResource(R.string.voice_typing_pinned),
+                        checked = pinned
+                    ) {
+                        pinned = it
+                        setToolbarKeyEnabled(prefs, Settings.PREF_PINNED_TOOLBAR_KEYS, defaultPinnedToolbarPref, ToolbarKey.VOICE, it)
+                        KeyboardSwitcher.getInstance().setThemeNeedsReload()
+                    }
+                }
+            }
+
             if (busy) {
                 Spacer(Modifier.height(20.dp))
                 LinearProgressIndicator(
@@ -159,6 +207,19 @@ fun VoiceTypingScreen(onClickBack: () -> Unit) {
             }
 
         }
+    }
+}
+
+@Composable
+private fun ToggleRow(title: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 12.dp)
+    ) {
+        Text(title, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+        Switch(checked = checked, onCheckedChange = onChange)
     }
 }
 

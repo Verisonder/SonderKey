@@ -19,7 +19,7 @@ import kotlin.math.roundToInt
  */
 object SonderPalette {
 
-    const val DEFAULT_SEED = 0xFF2FB8A6.toInt()
+    const val DEFAULT_SEED = 0xFF8A8F98.toInt()
 
     /** Suggested seeds shown as swatches. Chosen to stay legible as an accent on both plates. */
     val PRESETS = intArrayOf(
@@ -126,7 +126,7 @@ object SonderPalette {
     // ---------------------------------------------------------------- keyboard plates
 
     const val DEFAULT_SURFACE = 0xFF111215.toInt()
-    const val DEFAULT_KEY = 0xFF3C3C3C.toInt()
+    const val DEFAULT_KEY = 0xFF4D4D4D.toInt()
     const val DEFAULT_FUNCTIONAL = 0xFF212121.toInt()
 
     /** Suggested colours for shift, backspace, symbols and the like. */

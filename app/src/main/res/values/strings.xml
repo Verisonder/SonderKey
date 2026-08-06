@@ -1031,6 +1031,9 @@ New dictionary:
     <string name="voice_typing_status_incomplete_detail">Voice typing needs both parts below before the microphone key will work. About %1$d MB left to download.</string>
     <string name="voice_typing_download_all">Download everything</string>
     <string name="voice_typing_both_required">Both parts are required</string>
+    <string name="voice_typing_where">Where the microphone key appears</string>
+    <string name="voice_typing_in_toolbar">Show in the toolbar</string>
+    <string name="voice_typing_pinned">Pin above the keyboard</string>
     <string name="voice_typing_engine_numbered">1. Speech engine</string>
     <string name="voice_typing_model_numbered">2. %1$s \u00b7 %2$s</string>
     <string name="voice_typing_remove">Remove</string>
