@@ -126,6 +126,21 @@ object SonderPalette {
     // ---------------------------------------------------------------- keyboard plates
 
     const val DEFAULT_SURFACE = 0xFF111215.toInt()
+    const val DEFAULT_KEY = 0xFF3C3C3C.toInt()
+
+    /** Suggested key colours. */
+    val KEY_PRESETS = intArrayOf(
+        0xFF3C3C3C.toInt(), // graphite
+        0xFF1E2126.toInt(), // Sonder Dark
+        0xFF2A2E35.toInt(), // slate
+        0xFF243029.toInt(), // moss
+        0xFF262238.toInt(), // indigo
+        0xFF33262C.toInt(), // plum
+        0xFF332C22.toInt(), // umber
+        0xFF4A4A4A.toInt(), // light graphite
+        0xFF1A1A1A.toInt(), // near black
+        0xFFE8EDEB.toInt()  // pale (for light themes)
+    )
 
     /** Suggested surface tints. Deliberately close to neutral — these are large areas. */
     val SURFACE_PRESETS = intArrayOf(
@@ -148,13 +163,24 @@ object SonderPalette {
      * [surfaceSeed] drives the plate the keys sit on. Deriving both from a single colour meant
      * that choosing a strong accent also tinted the whole keyboard, which is rarely what is wanted.
      */
-    class Keyboard(accentSeed: Int, surfaceSeed: Int, dark: Boolean) {
+    class Keyboard(accentSeed: Int, surfaceSeed: Int, keySeed: Int, dark: Boolean) {
         val accent: Int = accentFor(accentSeed, dark)
         val background: Int = if (dark) tone(surfaceSeed, 7) else tone(surfaceSeed, 95)
-        val keyBackground: Int = if (dark) tone(surfaceSeed, 15) else tone(surfaceSeed, 100)
-        val functionalKey: Int = if (dark) tone(surfaceSeed, 22) else tone(surfaceSeed, 88)
+
+        /** The letter keys use exactly the colour that was picked, with no tone shifting. */
+        val keyBackground: Int = keySeed
+
+        /**
+         * Functional keys stay a step away from the letter keys so the two remain distinguishable,
+         * shifted in whichever direction has room.
+         */
+        val functionalKey: Int = if (lightness(keySeed) > 50)
+            tone(keySeed, (lightness(keySeed) - 10).toInt().coerceAtLeast(0))
+        else
+            tone(keySeed, (lightness(keySeed) + 8).toInt().coerceAtMost(100))
+
         val spaceBar: Int = keyBackground
-        val keyText: Int = if (dark) tone(surfaceSeed, 93) else tone(surfaceSeed, 12)
+        val keyText: Int = if (lightness(keySeed) > 55) tone(keySeed, 10) else tone(keySeed, 95)
         val keyHintText: Int = withAlpha(keyText, 0x80)
     }
 }

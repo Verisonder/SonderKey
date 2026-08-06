@@ -1019,11 +1019,12 @@ New dictionary:
     <string name="sonder_theme_presets">Presets</string>
     <string name="sonder_theme_which">Editing</string>
     <string name="sonder_theme_accent">Accent</string>
+    <string name="sonder_theme_keys">Keys</string>
     <string name="sonder_theme_surface">Background</string>
     <string name="sonder_theme_custom">Custom colour</string>
     <string name="sonder_theme_hex">Hex</string>
     <string name="sonder_theme_reset">Reset</string>
-    <string name="sonder_theme_explainer">Accent colours the highlights; background colours the keys and surfaces. The rest of the palette is derived from the two. They apply to the settings app and to the Sonder Light and Sonder Dark keyboard themes.</string>
+    <string name="sonder_theme_explainer">Accent colours the highlights, Keys colours the letter keys, and Background colours the plate behind them. Functional keys such as shift and backspace stay a step away from the key colour so they remain distinguishable. These apply to the settings app and to the Sonder Light and Sonder Dark keyboard themes.</string>
     <string name="prefs_use_bundled_emoji_font">Use bundled emoji font</string>
     <string name="prefs_use_bundled_emoji_font_summary">Render emoji with the font shipped inside SonderKey instead of the system font, so newer emoji show up on older Android versions (restarts app)</string>
     <!-- Option for choosing colors -->

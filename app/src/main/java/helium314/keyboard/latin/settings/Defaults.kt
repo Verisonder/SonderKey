@@ -55,6 +55,7 @@ object Defaults {
     const val PREF_USE_BUNDLED_EMOJI_FONT = true
     const val PREF_SONDER_SEED_COLOR = SonderPalette.DEFAULT_SEED
     const val PREF_SONDER_SURFACE_COLOR = SonderPalette.DEFAULT_SURFACE
+    const val PREF_SONDER_KEY_COLOR = SonderPalette.DEFAULT_KEY
 
     const val PREF_ENABLE_SPELL_CHECKER_SERVICE = true
     const val PREF_ENABLE_CONTACTS_OBSERVER = false

@@ -87,18 +87,19 @@ fun SonderThemeScreen(onClickBack: () -> Unit) {
     var surface by remember {
         mutableIntStateOf(prefs.getInt(Settings.PREF_SONDER_SURFACE_COLOR, Defaults.PREF_SONDER_SURFACE_COLOR))
     }
-    // which of the two colours the presets, sliders and hex field are editing
-    var editingAccent by remember { mutableStateOf(true) }
-    val current = if (editingAccent) seed else surface
-    var hexField by remember(editingAccent) { mutableStateOf(current.toHex()) }
+    var keyColor by remember {
+        mutableIntStateOf(prefs.getInt(Settings.PREF_SONDER_KEY_COLOR, Defaults.PREF_SONDER_KEY_COLOR))
+    }
+    // which of the three colours the presets, sliders and hex field are editing
+    var editing by remember { mutableIntStateOf(0) } // 0 accent, 1 keys, 2 background
+    val current = when (editing) { 0 -> seed; 1 -> keyColor; else -> surface }
+    var hexField by remember(editing) { mutableStateOf(current.toHex()) }
 
     fun apply(newValue: Int) {
-        if (editingAccent) {
-            seed = newValue
-            prefs.edit { putInt(Settings.PREF_SONDER_SEED_COLOR, newValue) }
-        } else {
-            surface = newValue
-            prefs.edit { putInt(Settings.PREF_SONDER_SURFACE_COLOR, newValue) }
+        when (editing) {
+            0 -> { seed = newValue; prefs.edit { putInt(Settings.PREF_SONDER_SEED_COLOR, newValue) } }
+            1 -> { keyColor = newValue; prefs.edit { putInt(Settings.PREF_SONDER_KEY_COLOR, newValue) } }
+            else -> { surface = newValue; prefs.edit { putInt(Settings.PREF_SONDER_SURFACE_COLOR, newValue) } }
         }
         hexField = newValue.toHex()
         KeyboardSwitcher.getInstance().setThemeNeedsReload()
@@ -115,20 +116,17 @@ fun SonderThemeScreen(onClickBack: () -> Unit) {
                 .padding(horizontal = 20.dp)
                 .padding(bottom = 32.dp)
         ) {
-            PreviewCard(seed, surface)
+            PreviewCard(seed, surface, keyColor)
 
             SectionTitle(stringResource(R.string.sonder_theme_which))
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(bottom = 4.dp)) {
-                ChannelChip(stringResource(R.string.sonder_theme_accent), Color(seed), editingAccent) {
-                    editingAccent = true
-                }
-                ChannelChip(stringResource(R.string.sonder_theme_surface), Color(surface), !editingAccent) {
-                    editingAccent = false
-                }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 4.dp)) {
+                ChannelChip(stringResource(R.string.sonder_theme_accent), Color(seed), editing == 0) { editing = 0 }
+                ChannelChip(stringResource(R.string.sonder_theme_keys), Color(keyColor), editing == 1) { editing = 1 }
+                ChannelChip(stringResource(R.string.sonder_theme_surface), Color(surface), editing == 2) { editing = 2 }
             }
 
             SectionTitle(stringResource(R.string.sonder_theme_presets))
-            SwatchGrid(current, editingAccent) { apply(it) }
+            SwatchGrid(current, editing) { apply(it) }
 
             SectionTitle(stringResource(R.string.sonder_theme_custom))
             val hsv = remember(current) { hsvOf(current) }
@@ -152,7 +150,11 @@ fun SonderThemeScreen(onClickBack: () -> Unit) {
                 )
                 Spacer(Modifier.width(16.dp))
                 TextButton(onClick = {
-                    apply(if (editingAccent) SonderPalette.DEFAULT_SEED else SonderPalette.DEFAULT_SURFACE)
+                    apply(when (editing) {
+                        0 -> SonderPalette.DEFAULT_SEED
+                        1 -> SonderPalette.DEFAULT_KEY
+                        else -> SonderPalette.DEFAULT_SURFACE
+                    })
                 }) {
                     Text(stringResource(R.string.sonder_theme_reset))
                 }
@@ -181,9 +183,11 @@ private fun SectionTitle(text: String) {
 
 /** Live sample of the derived palette — the point of a seed picker is seeing what it produces. */
 @Composable
-private fun PreviewCard(seed: Int, surfaceSeed: Int) {
+private fun PreviewCard(seed: Int, surfaceSeed: Int, keySeed: Int) {
     val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
-    val kb = remember(seed, surfaceSeed, dark) { SonderPalette.Keyboard(seed, surfaceSeed, dark) }
+    val kb = remember(seed, surfaceSeed, keySeed, dark) {
+        SonderPalette.Keyboard(seed, surfaceSeed, keySeed, dark)
+    }
     val spring = spring<Color>(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMediumLow)
 
     val bg by animateColorAsState(Color(kb.background), spring, label = "bg")
@@ -250,8 +254,12 @@ private fun PreviewCard(seed: Int, surfaceSeed: Int) {
 private fun Color.luminance(): Float = 0.2126f * red + 0.7152f * green + 0.0722f * blue
 
 @Composable
-private fun SwatchGrid(seed: Int, accent: Boolean, onPick: (Int) -> Unit) {
-    val presets = if (accent) SonderPalette.PRESETS else SonderPalette.SURFACE_PRESETS
+private fun SwatchGrid(seed: Int, editing: Int, onPick: (Int) -> Unit) {
+    val presets = when (editing) {
+        0 -> SonderPalette.PRESETS
+        1 -> SonderPalette.KEY_PRESETS
+        else -> SonderPalette.SURFACE_PRESETS
+    }
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         presets.toList().chunked(5).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
