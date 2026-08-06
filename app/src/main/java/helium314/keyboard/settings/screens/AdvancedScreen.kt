@@ -255,6 +255,9 @@ fun createAdvancedSettings(context: Context) = listOfNotNull(
                 }
             },
             onConfirmed = {
+                // the manual override changes which tiers are in play, so the cached list of
+                // emoji the font cannot draw has to be worked out again
+                ctx.prefs().edit(commit = true) { remove(Settings.PREF_EMOJI_MAX_SDK_FONT) }
                 SupportedEmojis.load(ctx)
                 KeyboardSwitcher.getInstance().setThemeNeedsReload()
             }

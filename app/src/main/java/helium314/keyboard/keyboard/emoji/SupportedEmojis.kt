@@ -12,7 +12,8 @@ object SupportedEmojis {
 
     fun load(context: Context) {
         determineMaxSdk(context)
-        val maxSdk = context.prefs().getInt(Settings.PREF_EMOJI_MAX_SDK, 0)
+        val prefs = context.prefs()
+        val maxSdk = prefs.getInt(Settings.PREF_EMOJI_MAX_SDK, 0)
         unsupportedEmojis.clear()
         context.assets.open("emoji/minApi.txt").reader().readLines().forEach {
             val s = it.split(" ")
@@ -20,6 +21,12 @@ object SupportedEmojis {
             if (minApi > maxSdk)
                 unsupportedEmojis.addAll(s.drop(1))
         }
+        // Tier filtering alone is not enough: an emoji can sit in a supported tier and still have
+        // no glyph in whichever font is actually active, which draws a tofu box in the palette.
+        // The offenders are worked out once per font and cached.
+        prefs.getString(Settings.PREF_EMOJI_UNRENDERABLE, "")
+            ?.split(" ")?.filter { it.isNotEmpty() }
+            ?.let { unsupportedEmojis.addAll(it) }
     }
 
     /**
@@ -60,9 +67,25 @@ object SupportedEmojis {
             if (supported) s.first().toInt() else 0
         }
         val newMax = maxApi.coerceAtLeast(Build.VERSION.SDK_INT)
+
+        // Walk every emoji this build knows about and note the ones the active font cannot draw,
+        // so the palette shows nothing the device would render as a box.
+        val unrenderable = StringBuilder()
+        context.assets.open("emoji/minApi.txt").reader().readLines().forEach { line ->
+            val parts = line.split(" ")
+            if (parts.first().toInt() > newMax) return@forEach
+            parts.drop(1).forEach { emoji ->
+                if (!paint.hasGlyph(emoji)) {
+                    if (unrenderable.isNotEmpty()) unrenderable.append(" ")
+                    unrenderable.append(emoji)
+                }
+            }
+        }
+
         prefs.edit {
             putInt(Settings.PREF_EMOJI_MAX_SDK, newMax)
             putString(Settings.PREF_EMOJI_MAX_SDK_FONT, signature)
+            putString(Settings.PREF_EMOJI_UNRENDERABLE, unrenderable.toString())
         }
     }
 

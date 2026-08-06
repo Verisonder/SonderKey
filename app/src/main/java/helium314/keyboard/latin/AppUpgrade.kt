@@ -663,6 +663,7 @@ object AppUpgrade {
         prefs.edit {
             remove(Settings.PREF_EMOJI_MAX_SDK)
             remove(Settings.PREF_EMOJI_MAX_SDK_FONT)
+            remove(Settings.PREF_EMOJI_UNRENDERABLE)
             putBoolean(EMOJI_FONT_MIGRATION_MARKER, true)
         }
         upgradeToolbarPrefs(prefs)
