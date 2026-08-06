@@ -12,6 +12,7 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.os.Build;
 import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
@@ -717,7 +718,11 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
             }
             // otherwise fall back to the emoji font shipped with SonderKey, so the emoji set
             // does not depend on how old the device's system font is
-            if (sCachedEmojiTypeface == null && useBundledEmojiFont()) {
+            // The bundled font is COLRv1; Android only learned to render that in 13 (API 33).
+            // On anything older it would draw blank glyphs, so leave those devices on the
+            // system font.
+            if (sCachedEmojiTypeface == null && useBundledEmojiFont()
+                    && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 try {
                     sCachedEmojiTypeface = Typeface.createFromAsset(mContext.getAssets(), BUNDLED_EMOJI_FONT);
                 } catch (Exception ignored) {

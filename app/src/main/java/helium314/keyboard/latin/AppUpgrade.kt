@@ -50,6 +50,11 @@ import kotlin.collections.component2
 import kotlin.collections.set
 
 object AppUpgrade {
+    /** last upstream LeanType versionCode SonderKey was forked from */
+    private const val FORK_UPSTREAM_VERSION_CODE = 3202
+    /** SonderKey versionCodes stay well below this; upstream's lowest migration gate is 1000 */
+    private const val SONDERKEY_VERSION_CODE_CEILING = 1000
+
     private const val EMOJI_FONT_MIGRATION_MARKER = "sonderkey_bundled_emoji_font_applied"
 
     fun checkVersionUpgrade(context: Context) {
@@ -57,6 +62,15 @@ object AppUpgrade {
         val oldVersion = prefs.getInt(Settings.PREF_VERSION_CODE, 0)
         if (oldVersion == BuildConfig.VERSION_CODE)
             return
+        // The migration blocks further down are keyed to upstream (HeliBoard / LeanType) version
+        // codes, which run into the thousands. SonderKey restarted its versionCode at 1, so a plain
+        // `oldVersion <= 3201` comparison is true for every SonderKey release and those blocks
+        // re-run on every single update — silently overwriting settings the user has changed.
+        // A stored version code below the ceiling therefore means "a SonderKey build", which by
+        // definition already sits past the fork point; anything above it is a genuine upstream
+        // value inherited through a restored backup and still needs the migrations.
+        val legacyVersion = if (oldVersion in 1 until SONDERKEY_VERSION_CODE_CEILING)
+            FORK_UPSTREAM_VERSION_CODE else oldVersion
         // clear extracted dictionaries, in case updated version contains newer ones
         val assetsList = DictionaryInfoUtils.getAssetsDictionaryList(context)
         DictionaryInfoUtils.getCacheDirectories(context).forEach { dir ->
@@ -107,7 +121,7 @@ object AppUpgrade {
                 }
             }
         }
-        if (oldVersion <= 1000) { // upgrade old custom layouts name
+        if (legacyVersion <= 1000) { // upgrade old custom layouts name
             val oldShiftSymbolsFile = getCustomLayoutFile("custom.shift_symbols", context)
             if (oldShiftSymbolsFile.exists()) {
                 oldShiftSymbolsFile.renameTo(getCustomLayoutFile("custom.symbols_shifted", context))
@@ -128,7 +142,7 @@ object AppUpgrade {
                 prefs.edit { remove("selected_input_style").putString(Settings.PREF_SELECTED_SUBTYPE, selectedSubtype) }
             }
         }
-        if (oldVersion <= 2000) {
+        if (legacyVersion <= 2000) {
             // upgrade pinned toolbar keys pref
             val oldPinnedKeysPref = prefs.getString(Settings.PREF_PINNED_TOOLBAR_KEYS, "")!!
             val pinnedKeys = oldPinnedKeysPref.split(";").mapNotNull {
@@ -147,7 +161,7 @@ object AppUpgrade {
             if (prefs.contains(Settings.PREF_LANGUAGE_SWITCH_KEY) && prefs.getString(Settings.PREF_LANGUAGE_SWITCH_KEY, "") != "off")
                 prefs.edit { putBoolean(Settings.PREF_SHOW_LANGUAGE_SWITCH_KEY, true) }
         }
-        if (oldVersion <= 2100) {
+        if (legacyVersion <= 2100) {
             if (prefs.contains("show_more_colors")) {
                 val moreColors = prefs.getInt("show_more_colors", 0)
                 prefs.edit {
@@ -158,7 +172,7 @@ object AppUpgrade {
                 }
             }
         }
-        if (oldVersion <= 2201) {
+        if (legacyVersion <= 2201) {
             val additionalSubtypeString = prefs.getString(Settings.PREF_ADDITIONAL_SUBTYPES, Defaults.PREF_ADDITIONAL_SUBTYPES)!!
             if (additionalSubtypeString.contains(".")) { // means there are custom layouts
                 val subtypeStrings = additionalSubtypeString.split(";")
@@ -195,7 +209,7 @@ object AppUpgrade {
                 it.renameTo(newFile)
             }
         }
-        if (oldVersion <= 2301) {
+        if (legacyVersion <= 2301) {
             // upgrade and remove old color prefs
             fun readAllColorsMap(isNight: Boolean): EnumMap<ColorType, Int> {
                 val prefPrefix = if (isNight) "theme_dark_color_" else "theme_color_"
@@ -262,7 +276,7 @@ object AppUpgrade {
             if (prefs.getString(Settings.PREF_THEME_COLORS_NIGHT, Defaults.PREF_THEME_COLORS_NIGHT) == "user_night")
                 prefs.edit { putString(Settings.PREF_THEME_COLORS_NIGHT, themeNameNight) }
         }
-        if (oldVersion <= 2302) {
+        if (legacyVersion <= 2302) {
             fun readCustomKeyCodes(setting: String) =
                 prefs.getString(setting, "")!!
                     .split(";").filter { it.isNotEmpty()}.associate {
@@ -283,7 +297,7 @@ object AppUpgrade {
             } }
             writeCustomKeyCodes(prefs, combined)
         }
-        if (oldVersion <= 2303) {
+        if (legacyVersion <= 2303) {
             File(DeviceProtectedUtils.getFilesDir(context), "layouts").listFiles()?.forEach { file ->
                 val folder = DeviceProtectedUtils.getFilesDir(context)
                 if (file.isDirectory) return@forEach
@@ -399,7 +413,7 @@ object AppUpgrade {
                     )
                 }
         }
-        if (oldVersion <= 2304) {
+        if (legacyVersion <= 2304) {
             // rename layout files for latin scripts, and adjust layouts stored in prefs accordingly
             LayoutUtilsCustom.getLayoutFiles(LayoutType.MAIN, context).forEach {
                 val locale = it.name.substringAfter("custom.").substringBefore(".").constructLocale()
@@ -421,7 +435,7 @@ object AppUpgrade {
                 LayoutUtilsCustom.onLayoutFileChanged()
             }
         }
-        if (oldVersion <= 2305) {
+        if (legacyVersion <= 2305) {
             (prefs.all.keys.filter { it.startsWith(Settings.PREF_POPUP_KEYS_ORDER) || it.startsWith(Settings.PREF_POPUP_KEYS_LABELS_ORDER) } +
                 listOf(Settings.PREF_TOOLBAR_KEYS, Settings.PREF_PINNED_TOOLBAR_KEYS, Settings.PREF_CLIPBOARD_TOOLBAR_KEYS)).forEach {
                 if (!prefs.contains(it)) return@forEach
@@ -438,7 +452,7 @@ object AppUpgrade {
                 prefs.edit { putString(it, newValue) }
             }
         }
-        if (oldVersion <= 2306) {
+        if (legacyVersion <= 2306) {
             // upgrade additional, enabled, and selected subtypes to same format of locale and (filtered) extra value
             if (prefs.contains(Settings.PREF_ADDITIONAL_SUBTYPES)) {
                 val new = prefs.getString(Settings.PREF_ADDITIONAL_SUBTYPES, "")!!
@@ -493,14 +507,14 @@ object AppUpgrade {
                 prefs.edit { putString(key, new) }
             }
         }
-        if (oldVersion <= 2307) {
+        if (legacyVersion <= 2307) {
             prefs.all.keys.forEach {
                 if (!it.startsWith(Settings.PREF_POPUP_KEYS_ORDER) && !it.startsWith(Settings.PREF_POPUP_KEYS_LABELS_ORDER))
                     return@forEach
                 prefs.edit { putString(it, prefs.getString(it, "")!!.replace("popup_keys_", "")) }
             }
         }
-        if (oldVersion <= 2308) {
+        if (legacyVersion <= 2308) {
             SubtypeSettings.reloadEnabledSubtypes(context)
             prefs.all.keys.toList().forEach { key ->
                 if (key.startsWith(Settings.PREF_POPUP_KEYS_ORDER+"_")) {
@@ -554,7 +568,7 @@ object AppUpgrade {
                 }
             }
         }
-        if (oldVersion <= 2309) {
+        if (legacyVersion <= 2309) {
             if (prefs.contains("auto_correction_confidence")) {
                 val value = when (prefs.getString("auto_correction_confidence", "0")) {
                     "1" -> 0.067f
@@ -564,7 +578,7 @@ object AppUpgrade {
                 prefs.edit { remove("auto_correction_confidence").putFloat(Settings.PREF_AUTO_CORRECT_THRESHOLD, value) }
             }
         }
-        if (oldVersion <= 2310) {
+        if (legacyVersion <= 2310) {
             listOf(
                 Settings.PREF_ENABLED_SUBTYPES,
                 Settings.PREF_SELECTED_SUBTYPE,
@@ -576,10 +590,10 @@ object AppUpgrade {
                 }
             }
         }
-        if (oldVersion <= 3001 && prefs.getInt(Settings.PREF_CLIPBOARD_HISTORY_RETENTION_TIME, Defaults.PREF_CLIPBOARD_HISTORY_RETENTION_TIME) <= 0) {
+        if (legacyVersion <= 3001 && prefs.getInt(Settings.PREF_CLIPBOARD_HISTORY_RETENTION_TIME, Defaults.PREF_CLIPBOARD_HISTORY_RETENTION_TIME) <= 0) {
             prefs.edit { putInt(Settings.PREF_CLIPBOARD_HISTORY_RETENTION_TIME, 121) }
         }
-        if (oldVersion <= 3002) {
+        if (legacyVersion <= 3002) {
             prefs.all.filterKeys { it.startsWith(Settings.PREF_USER_ALL_COLORS_PREFIX) }.forEach {
                 val oldValue = prefs.getString(it.key, "")!!
                 if ("KEY_PREVIEW" !in oldValue) return@forEach
@@ -587,7 +601,7 @@ object AppUpgrade {
                 prefs.edit { putString(it.key, newValue) }
             }
         }
-        if (oldVersion <= 3101) {
+        if (legacyVersion <= 3101) {
             @SuppressLint("UseKtx") val e = prefs.edit()
             prefs.all.toMap().forEach { (key, value) ->
                 if (key == "side_padding_scale") {
@@ -638,7 +652,7 @@ object AppUpgrade {
             }
             e.apply()
         }
-        if (oldVersion <= 3201) {
+        if (legacyVersion <= 3201) {
             prefs.edit {
                 putBoolean(Settings.PREF_SUGGEST_PUNCTUATION,
                     !prefs.getBoolean(Settings.PREF_BIGRAM_PREDICTIONS, Defaults.PREF_BIGRAM_PREDICTIONS))

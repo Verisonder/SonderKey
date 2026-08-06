@@ -85,7 +85,8 @@ fun AppearanceScreen(
         Settings.PREF_FONT_SCALE,
         SettingsWithoutKey.CUSTOM_EMOJI_FONT,
         Settings.PREF_EMOJI_FONT_SCALE,
-        Settings.PREF_USE_BUNDLED_EMOJI_FONT,
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+            Settings.PREF_USE_BUNDLED_EMOJI_FONT else null,
         Settings.PREF_USE_SYSTEM_EMOJI,
         if (prefs.getFloat(Settings.PREF_EMOJI_FONT_SCALE, Defaults.PREF_EMOJI_FONT_SCALE) != 1f)
             Settings.PREF_EMOJI_KEY_FIT else null,

@@ -25,7 +25,28 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build with Gradle
-        run: ./gradlew assembleStandardDebug assembleOfflineDebug
+        run: |
+          set -o pipefail
+          ./gradlew assembleStandardDebug assembleOfflineDebug 2>&1 | tee gradle-build.log
+
+      - name: Report build failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          grep -in "e: \|error:\|FAILURE\|Caused by\|OutOfMemory\|Killed\|daemon disappeared\|Execution failed" gradle-build.log | tail -n 60 > err-index.txt || true
+          grep -i -B2 -A25 "FAILURE: Build failed\|Execution failed\|daemon disappeared" gradle-build.log | head -n 120 > ctx.txt || true
+          tail -n 80 gradle-build.log > tail.txt
+          cat ctx.txt tail.txt > combined.txt && mv combined.txt tail.txt
+          BODY="$(printf 'Error index:\n```\n%s\n```\nLog tail:\n```\n%s\n```' "$(cat err-index.txt)" "$(cat tail.txt)")"
+          gh api "repos/${{ github.repository }}/issues" -f title="Debug build failure (run ${{ github.run_id }})" -f body="$BODY" || true
+
+      - name: Upload gradle log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-build-log
+          path: gradle-build.log
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
