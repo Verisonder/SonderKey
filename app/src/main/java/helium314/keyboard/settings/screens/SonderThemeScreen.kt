@@ -84,12 +84,23 @@ fun SonderThemeScreen(onClickBack: () -> Unit) {
     var seed by remember {
         mutableIntStateOf(prefs.getInt(Settings.PREF_SONDER_SEED_COLOR, Defaults.PREF_SONDER_SEED_COLOR))
     }
-    var hexField by remember { mutableStateOf(seed.toHex()) }
+    var surface by remember {
+        mutableIntStateOf(prefs.getInt(Settings.PREF_SONDER_SURFACE_COLOR, Defaults.PREF_SONDER_SURFACE_COLOR))
+    }
+    // which of the two colours the presets, sliders and hex field are editing
+    var editingAccent by remember { mutableStateOf(true) }
+    val current = if (editingAccent) seed else surface
+    var hexField by remember(editingAccent) { mutableStateOf(current.toHex()) }
 
-    fun apply(newSeed: Int) {
-        seed = newSeed
-        hexField = newSeed.toHex()
-        prefs.edit { putInt(Settings.PREF_SONDER_SEED_COLOR, newSeed) }
+    fun apply(newValue: Int) {
+        if (editingAccent) {
+            seed = newValue
+            prefs.edit { putInt(Settings.PREF_SONDER_SEED_COLOR, newValue) }
+        } else {
+            surface = newValue
+            prefs.edit { putInt(Settings.PREF_SONDER_SURFACE_COLOR, newValue) }
+        }
+        hexField = newValue.toHex()
         KeyboardSwitcher.getInstance().setThemeNeedsReload()
     }
 
@@ -104,13 +115,23 @@ fun SonderThemeScreen(onClickBack: () -> Unit) {
                 .padding(horizontal = 20.dp)
                 .padding(bottom = 32.dp)
         ) {
-            PreviewCard(seed)
+            PreviewCard(seed, surface)
+
+            SectionTitle(stringResource(R.string.sonder_theme_which))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(bottom = 4.dp)) {
+                ChannelChip(stringResource(R.string.sonder_theme_accent), Color(seed), editingAccent) {
+                    editingAccent = true
+                }
+                ChannelChip(stringResource(R.string.sonder_theme_surface), Color(surface), !editingAccent) {
+                    editingAccent = false
+                }
+            }
 
             SectionTitle(stringResource(R.string.sonder_theme_presets))
-            SwatchGrid(seed) { apply(it) }
+            SwatchGrid(current, editingAccent) { apply(it) }
 
             SectionTitle(stringResource(R.string.sonder_theme_custom))
-            val hsv = remember(seed) { hsvOf(seed) }
+            val hsv = remember(current) { hsvOf(current) }
             ChannelSlider("Hue", hsv[0], 0f..360f) { apply(fromHsv(it, hsv[1], hsv[2])) }
             ChannelSlider("Saturation", hsv[1], 0f..1f) { apply(fromHsv(hsv[0], it, hsv[2])) }
             ChannelSlider("Brightness", hsv[2], 0f..1f) { apply(fromHsv(hsv[0], hsv[1], it)) }
@@ -130,7 +151,9 @@ fun SonderThemeScreen(onClickBack: () -> Unit) {
                     modifier = Modifier.width(190.dp)
                 )
                 Spacer(Modifier.width(16.dp))
-                TextButton(onClick = { apply(SonderPalette.DEFAULT_SEED) }) {
+                TextButton(onClick = {
+                    apply(if (editingAccent) SonderPalette.DEFAULT_SEED else SonderPalette.DEFAULT_SURFACE)
+                }) {
                     Text(stringResource(R.string.sonder_theme_reset))
                 }
             }
@@ -158,9 +181,9 @@ private fun SectionTitle(text: String) {
 
 /** Live sample of the derived palette — the point of a seed picker is seeing what it produces. */
 @Composable
-private fun PreviewCard(seed: Int) {
+private fun PreviewCard(seed: Int, surfaceSeed: Int) {
     val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
-    val kb = remember(seed, dark) { SonderPalette.Keyboard(seed, dark) }
+    val kb = remember(seed, surfaceSeed, dark) { SonderPalette.Keyboard(seed, surfaceSeed, dark) }
     val spring = spring<Color>(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMediumLow)
 
     val bg by animateColorAsState(Color(kb.background), spring, label = "bg")
@@ -227,8 +250,8 @@ private fun PreviewCard(seed: Int) {
 private fun Color.luminance(): Float = 0.2126f * red + 0.7152f * green + 0.0722f * blue
 
 @Composable
-private fun SwatchGrid(seed: Int, onPick: (Int) -> Unit) {
-    val presets = SonderPalette.PRESETS
+private fun SwatchGrid(seed: Int, accent: Boolean, onPick: (Int) -> Unit) {
+    val presets = if (accent) SonderPalette.PRESETS else SonderPalette.SURFACE_PRESETS
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         presets.toList().chunked(5).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -262,6 +285,37 @@ private fun Swatch(color: Int, selected: Boolean, onClick: () -> Unit) {
             .border(ring, MaterialTheme.colorScheme.onSurface, CircleShape)
             .clickable(interactionSource = interaction, indication = null, onClick = onClick)
     )
+}
+
+/** Small pill showing one of the two colours; tapping it switches what the controls edit. */
+@Composable
+private fun ChannelChip(label: String, color: Color, selected: Boolean, onClick: () -> Unit) {
+    Surface(
+        color = if (selected) MaterialTheme.colorScheme.secondaryContainer
+                else MaterialTheme.colorScheme.surfaceContainerHighest,
+        shape = MaterialTheme.shapes.small,
+        modifier = Modifier.clickable(onClick = onClick)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+        ) {
+            Box(
+                Modifier
+                    .size(22.dp)
+                    .clip(CircleShape)
+                    .background(color)
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
+            )
+            Text(
+                label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (selected) MaterialTheme.colorScheme.onSecondaryContainer
+                        else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
 }
 
 @Composable

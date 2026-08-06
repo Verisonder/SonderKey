@@ -40,7 +40,7 @@ private val SonderShapes = Shapes(
 
 private fun c(v: Int) = Color(v)
 
-private fun darkSchemeFor(seed: Int) = with(SonderPalette) {
+private fun darkSchemeFor(seed: Int, surface: Int) = with(SonderPalette) {
     val accent = accentFor(seed, true)
     darkColorScheme(
         primary = c(tone(accent, 74)),
@@ -50,29 +50,29 @@ private fun darkSchemeFor(seed: Int) = with(SonderPalette) {
         inversePrimary = c(tone(accent, 42)),
         secondary = c(tone(accent, 68)),
         onSecondary = c(tone(accent, 16)),
-        secondaryContainer = c(neutral(accent, 24)),
-        onSecondaryContainer = c(neutral(accent, 92)),
+        secondaryContainer = c(neutral(surface, 24)),
+        onSecondaryContainer = c(neutral(surface, 92)),
         tertiary = c(tone(accent, 84)),
         onTertiary = c(tone(accent, 20)),
-        background = c(neutral(accent, 7)),
-        onBackground = c(neutral(accent, 93)),
-        surface = c(neutral(accent, 7)),
-        onSurface = c(neutral(accent, 93)),
-        surfaceVariant = c(neutral(accent, 15)),
-        onSurfaceVariant = c(neutral(accent, 78)),
-        surfaceContainerLowest = c(neutral(accent, 5)),
-        surfaceContainerLow = c(neutral(accent, 10)),
-        surfaceContainer = c(neutral(accent, 12)),
-        surfaceContainerHigh = c(neutral(accent, 16)),
-        surfaceContainerHighest = c(neutral(accent, 21)),
-        outline = c(neutral(accent, 62)),
-        outlineVariant = c(neutral(accent, 26)),
+        background = c(neutral(surface, 7)),
+        onBackground = c(neutral(surface, 93)),
+        surface = c(neutral(surface, 7)),
+        onSurface = c(neutral(surface, 93)),
+        surfaceVariant = c(neutral(surface, 15)),
+        onSurfaceVariant = c(neutral(surface, 78)),
+        surfaceContainerLowest = c(neutral(surface, 5)),
+        surfaceContainerLow = c(neutral(surface, 10)),
+        surfaceContainer = c(neutral(surface, 12)),
+        surfaceContainerHigh = c(neutral(surface, 16)),
+        surfaceContainerHighest = c(neutral(surface, 21)),
+        outline = c(neutral(surface, 62)),
+        outlineVariant = c(neutral(surface, 26)),
         error = c(0xFFFFB4AB.toInt()),
         onError = c(0xFF690005.toInt())
     )
 }
 
-private fun lightSchemeFor(seed: Int) = with(SonderPalette) {
+private fun lightSchemeFor(seed: Int, surface: Int) = with(SonderPalette) {
     val accent = accentFor(seed, false)
     lightColorScheme(
         primary = c(tone(accent, 40)),
@@ -82,23 +82,23 @@ private fun lightSchemeFor(seed: Int) = with(SonderPalette) {
         inversePrimary = c(tone(accent, 76)),
         secondary = c(tone(accent, 44)),
         onSecondary = Color.White,
-        secondaryContainer = c(neutral(accent, 88)),
-        onSecondaryContainer = c(neutral(accent, 14)),
+        secondaryContainer = c(neutral(surface, 88)),
+        onSecondaryContainer = c(neutral(surface, 14)),
         tertiary = c(tone(accent, 32)),
         onTertiary = Color.White,
-        background = c(neutral(accent, 96)),
-        onBackground = c(neutral(accent, 12)),
-        surface = c(neutral(accent, 96)),
-        onSurface = c(neutral(accent, 12)),
-        surfaceVariant = c(neutral(accent, 89)),
-        onSurfaceVariant = c(neutral(accent, 32)),
+        background = c(neutral(surface, 96)),
+        onBackground = c(neutral(surface, 12)),
+        surface = c(neutral(surface, 96)),
+        onSurface = c(neutral(surface, 12)),
+        surfaceVariant = c(neutral(surface, 89)),
+        onSurfaceVariant = c(neutral(surface, 32)),
         surfaceContainerLowest = Color.White,
-        surfaceContainerLow = c(neutral(accent, 97)),
-        surfaceContainer = c(neutral(accent, 94)),
-        surfaceContainerHigh = c(neutral(accent, 91)),
-        surfaceContainerHighest = c(neutral(accent, 88)),
-        outline = c(neutral(accent, 48)),
-        outlineVariant = c(neutral(accent, 80)),
+        surfaceContainerLow = c(neutral(surface, 97)),
+        surfaceContainer = c(neutral(surface, 94)),
+        surfaceContainerHigh = c(neutral(surface, 91)),
+        surfaceContainerHighest = c(neutral(surface, 88)),
+        outline = c(neutral(surface, 48)),
+        outlineVariant = c(neutral(surface, 80)),
         error = c(0xFFBA1A1A.toInt()),
         onError = Color.White
     )
@@ -118,16 +118,28 @@ fun Theme(dark: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit
                 ?: Defaults.PREF_SONDER_SEED_COLOR
         )
     }
+    var surface by remember {
+        mutableIntStateOf(
+            prefs?.getInt(Settings.PREF_SONDER_SURFACE_COLOR, Defaults.PREF_SONDER_SURFACE_COLOR)
+                ?: Defaults.PREF_SONDER_SURFACE_COLOR
+        )
+    }
     DisposableEffect(prefs) {
         val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { p, key ->
-            if (key == Settings.PREF_SONDER_SEED_COLOR)
-                seed = p.getInt(Settings.PREF_SONDER_SEED_COLOR, Defaults.PREF_SONDER_SEED_COLOR)
+            when (key) {
+                Settings.PREF_SONDER_SEED_COLOR ->
+                    seed = p.getInt(key, Defaults.PREF_SONDER_SEED_COLOR)
+                Settings.PREF_SONDER_SURFACE_COLOR ->
+                    surface = p.getInt(key, Defaults.PREF_SONDER_SURFACE_COLOR)
+            }
         }
         prefs?.registerOnSharedPreferenceChangeListener(listener)
         onDispose { prefs?.unregisterOnSharedPreferenceChangeListener(listener) }
     }
 
-    val colorScheme = remember(seed, dark) { if (dark) darkSchemeFor(seed) else lightSchemeFor(seed) }
+    val colorScheme = remember(seed, surface, dark) {
+        if (dark) darkSchemeFor(seed, surface) else lightSchemeFor(seed, surface)
+    }
     val base = Typography()
 
     MaterialTheme(

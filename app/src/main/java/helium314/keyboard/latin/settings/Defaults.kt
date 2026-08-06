@@ -54,6 +54,7 @@ object Defaults {
     const val PREF_USE_SYSTEM_EMOJI = false
     const val PREF_USE_BUNDLED_EMOJI_FONT = true
     const val PREF_SONDER_SEED_COLOR = SonderPalette.DEFAULT_SEED
+    const val PREF_SONDER_SURFACE_COLOR = SonderPalette.DEFAULT_SURFACE
 
     const val PREF_ENABLE_SPELL_CHECKER_SERVICE = true
     const val PREF_ENABLE_CONTACTS_OBSERVER = false
@@ -68,7 +69,7 @@ object Defaults {
     @JvmField
     val PREF_THEME_COLORS = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) KeyboardTheme.THEME_DYNAMIC else KeyboardTheme.THEME_LIGHT
     @JvmField
-    val PREF_THEME_COLORS_NIGHT = KeyboardTheme.THEME_DARKER
+    val PREF_THEME_COLORS_NIGHT = KeyboardTheme.THEME_SONDER_DARK
     const val PREF_THEME_KEY_BORDERS = true
     @JvmField
     val PREF_THEME_DAY_NIGHT = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q

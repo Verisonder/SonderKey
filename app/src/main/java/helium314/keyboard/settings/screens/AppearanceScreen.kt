@@ -25,6 +25,8 @@ import helium314.keyboard.latin.utils.prefs
 import helium314.keyboard.settings.preferences.ListPreference
 import helium314.keyboard.settings.SettingsWithoutKey
 import helium314.keyboard.settings.Setting
+import helium314.keyboard.settings.NextScreenIcon
+import helium314.keyboard.settings.SettingsDestination
 import helium314.keyboard.settings.preferences.Preference
 import helium314.keyboard.settings.SearchSettingsScreen
 import helium314.keyboard.settings.SettingsActivity
@@ -53,6 +55,7 @@ fun AppearanceScreen(
         Log.v("irrelevant", "stupid way to trigger recomposition on preference change")
     val dayNightMode = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && prefs.getBoolean(Settings.PREF_THEME_DAY_NIGHT, Defaults.PREF_THEME_DAY_NIGHT)
     val items = listOf(
+        "sonder_theme_entry",
         R.string.settings_screen_theme,
         Settings.PREF_THEME_STYLE,
         Settings.PREF_ICON_STYLE,
@@ -100,6 +103,14 @@ fun AppearanceScreen(
 }
 
 fun createAppearanceSettings(context: Context) = listOf(
+    Setting(context, "sonder_theme_entry", R.string.settings_screen_sonder_theme,
+        R.string.settings_screen_sonder_theme_summary) {
+        Preference(
+            name = it.title,
+            description = it.description,
+            onClick = { SettingsDestination.navigateTo(SettingsDestination.SonderTheme) }
+        ) { NextScreenIcon() }
+    },
     Setting(context, Settings.PREF_THEME_STYLE, R.string.theme_style) { setting ->
         val ctx = LocalContext.current
         val prefs = ctx.prefs()

@@ -242,6 +242,7 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static final String PREF_EMOJI_MAX_SDK = "emoji_max_sdk";
     public static final String PREF_USE_BUNDLED_EMOJI_FONT = "use_bundled_emoji_font";
     public static final String PREF_SONDER_SEED_COLOR = "sonder_seed_color";
+    public static final String PREF_SONDER_SURFACE_COLOR = "sonder_surface_color";
     public static final String PREF_EMOJI_MAX_SDK_FONT = "emoji_max_sdk_font";
     public static final String PREF_EMOJI_UNRENDERABLE = "emoji_unrenderable";
     public static final String PREF_EMOJI_RECENT_KEYS = "emoji_recent_keys";

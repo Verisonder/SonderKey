@@ -169,8 +169,9 @@ private constructor(val themeId: Int, @JvmField val mStyleId: Int) {
                 }
                 THEME_SONDER_LIGHT, THEME_SONDER_DARK -> {
                     val dark = themeName == THEME_SONDER_DARK
-                    val seed = prefs.getInt(Settings.PREF_SONDER_SEED_COLOR, Defaults.PREF_SONDER_SEED_COLOR)
-                    val p = SonderPalette.Keyboard(seed, dark)
+                    val accentSeed = prefs.getInt(Settings.PREF_SONDER_SEED_COLOR, Defaults.PREF_SONDER_SEED_COLOR)
+                    val surfaceSeed = prefs.getInt(Settings.PREF_SONDER_SURFACE_COLOR, Defaults.PREF_SONDER_SURFACE_COLOR)
+                    val p = SonderPalette.Keyboard(accentSeed, surfaceSeed, dark)
                     DefaultColors(
                         themeStyle,
                         hasBorders,
