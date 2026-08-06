@@ -229,6 +229,13 @@ object SubtypeSettings {
     @Suppress("SameReturnValue")
     private fun getDefaultEnabledSubtypes(): List<InputMethodSubtype> {
         if (systemSubtypes.isNotEmpty()) return systemSubtypes
+        // SonderKey ships with English (US) enabled regardless of the device locale. Upstream
+        // derived this from the system locales, which meant a phone set to another language got a
+        // layout the user did not ask for. Other languages remain one tap away in Languages.
+        resourceSubtypesByLocale[Locale.US]?.firstOrNull()?.let {
+            systemSubtypes.add(it)
+            return systemSubtypes
+        }
         val subtypes = systemLocales.mapNotNull { locale ->
             val subtypesOfLocale = resourceSubtypesByLocale[locale]
             // get best match

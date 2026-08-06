@@ -63,12 +63,12 @@ object Defaults {
 
 
     private const val DEFAULT_SIZE_SCALE = 1.0f // 100%
-    const val PREF_THEME_STYLE = KeyboardTheme.STYLE_SONDER
+    const val PREF_THEME_STYLE = KeyboardTheme.STYLE_ROUNDED
     const val PREF_ICON_STYLE = KeyboardTheme.STYLE_SONDER
     @JvmField
-    val PREF_THEME_COLORS = KeyboardTheme.THEME_SONDER_LIGHT
+    val PREF_THEME_COLORS = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) KeyboardTheme.THEME_DYNAMIC else KeyboardTheme.THEME_LIGHT
     @JvmField
-    val PREF_THEME_COLORS_NIGHT = KeyboardTheme.THEME_SONDER_DARK
+    val PREF_THEME_COLORS_NIGHT = KeyboardTheme.THEME_DARKER
     const val PREF_THEME_KEY_BORDERS = true
     @JvmField
     val PREF_THEME_DAY_NIGHT = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
@@ -121,7 +121,7 @@ object Defaults {
     val PREF_BOTTOM_PADDING_SCALE = arrayOf(1.04f, 0f) // [portrait, landscape]
     @JvmField
     val PREF_SIDE_PADDING_SCALE = arrayOf(0.15f, 0.14f, 0.15f, 0.15f) // [default, landscape, split, landscape+split]
-    const val PREF_FONT_SCALE = 0.85f
+    const val PREF_FONT_SCALE = 1.0f
     const val PREF_EMOJI_FONT_SCALE = DEFAULT_SIZE_SCALE
     const val PREF_EMOJI_KEY_FIT = true
     const val PREF_EMOJI_SKIN_TONE = ""
@@ -177,7 +177,7 @@ object Defaults {
     const val PREF_LOCALIZED_NUMBER_ROW = true
     const val PREF_SHOW_NUMBER_ROW_HINTS = false
     const val PREF_CUSTOM_CURRENCY_KEY = ""
-    const val PREF_SHOW_HINTS = true
+    const val PREF_SHOW_HINTS = false
     const val PREF_POPUP_KEYS_ORDER = POPUP_KEYS_ORDER_DEFAULT
     const val PREF_POPUP_KEYS_LABELS_ORDER = POPUP_KEYS_LABEL_DEFAULT
     const val PREF_SHOW_POPUP_HINTS = false
