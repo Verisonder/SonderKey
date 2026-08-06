@@ -49,6 +49,12 @@ public final class InputAttributes {
     final private EditorInfo mEditorInfo;
     final private String mPackageNameForPrivateImeOptions;
 
+    /** True when SonderKey can transcribe on its own, so the mic key is worth showing. */
+    private static boolean hasOwnVoiceTyping() {
+        final android.app.Application app = App.Companion.getApp();
+        return app != null && helium314.keyboard.latin.voice.VoiceTyping.INSTANCE.isReady(app);
+    }
+
     public InputAttributes(final EditorInfo editorInfo, final boolean isFullscreenMode,
             final String packageNameForPrivateImeOptions) {
         mEditorInfo = editorInfo;
@@ -102,7 +108,8 @@ public final class InputAttributes {
                 || InputTypeUtils.isEmailVariation(variation)
                 || hasNoMicrophoneKeyOption()
                 || !RichInputMethodManager.isInitialized() // avoid crash when only using spell checker
-                || !RichInputMethodManager.getInstance().isShortcutImeReady();
+                || (!RichInputMethodManager.getInstance().isShortcutImeReady()
+                    && !hasOwnVoiceTyping());
         mShouldShowVoiceInputKey = !noMicrophone;
 
         mDisableGestureFloatingPreviewText = InputAttributes.inPrivateImeOptions(

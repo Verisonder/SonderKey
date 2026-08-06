@@ -794,7 +794,10 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
     }
 
     fun updateVoiceKey() {
+        // The upstream check only asks whether the system has a voice input method. SonderKey can
+        // now transcribe on its own, so the key stays useful even when the system has nothing.
         val show = Settings.getValues().mShowsVoiceInputKey
+            || helium314.keyboard.latin.voice.VoiceTyping.isReady(context)
         toolbar.findViewWithTag<View>(ToolbarKey.VOICE)?.isVisible = show
         pinnedKeys.findViewWithTag<View>(ToolbarKey.VOICE)?.isVisible = show
     }
