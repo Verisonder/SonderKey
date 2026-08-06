@@ -721,11 +721,9 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
             }
             // otherwise fall back to the emoji font shipped with SonderKey, so the emoji set
             // does not depend on how old the device's system font is
-            // The bundled font is COLRv1; Android only learned to render that in 13 (API 33).
-            // On anything older it would draw blank glyphs, so leave those devices on the
-            // system font.
-            if (sCachedEmojiTypeface == null && useBundledEmojiFont()
-                    && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // The bundled font uses embedded bitmaps, which every supported Android version can
+            // draw, so there is no version gate here.
+            if (sCachedEmojiTypeface == null && useBundledEmojiFont()) {
                 try {
                     sCachedEmojiTypeface = Typeface.createFromAsset(mContext.getAssets(), BUNDLED_EMOJI_FONT);
                 } catch (Exception ignored) {
@@ -738,7 +736,7 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
 
     public static final String BUNDLED_EMOJI_FONT = "fonts/sonderkey_emoji.ttf";
     /** bump when the bundled font is replaced, so emoji support is probed again */
-    public static final String BUNDLED_EMOJI_FONT_VERSION = "noto-colrv1-2.051";
+    public static final String BUNDLED_EMOJI_FONT_VERSION = "noto-cbdt-2.051";
 
     public static void clearCachedTypeface() {
         sCachedTypeface = null;
