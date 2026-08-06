@@ -9,7 +9,11 @@ import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -103,9 +107,25 @@ private fun lightSchemeFor(seed: Int) = with(SonderPalette) {
 @Composable
 fun Theme(dark: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
     val ctx = LocalContext.current
-    val seed = runCatching {
-        ctx.prefs().getInt(Settings.PREF_SONDER_SEED_COLOR, Defaults.PREF_SONDER_SEED_COLOR)
-    }.getOrDefault(Defaults.PREF_SONDER_SEED_COLOR)
+    val prefs = remember(ctx) { runCatching { ctx.prefs() }.getOrNull() }
+
+    // Reading the seed once meant the settings UI kept the colour it started with until the app
+    // was restarted, so picking a swatch appeared to only affect the keyboard. Watch the pref
+    // instead and recolour immediately.
+    var seed by remember {
+        mutableIntStateOf(
+            prefs?.getInt(Settings.PREF_SONDER_SEED_COLOR, Defaults.PREF_SONDER_SEED_COLOR)
+                ?: Defaults.PREF_SONDER_SEED_COLOR
+        )
+    }
+    DisposableEffect(prefs) {
+        val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { p, key ->
+            if (key == Settings.PREF_SONDER_SEED_COLOR)
+                seed = p.getInt(Settings.PREF_SONDER_SEED_COLOR, Defaults.PREF_SONDER_SEED_COLOR)
+        }
+        prefs?.registerOnSharedPreferenceChangeListener(listener)
+        onDispose { prefs?.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
 
     val colorScheme = remember(seed, dark) { if (dark) darkSchemeFor(seed) else lightSchemeFor(seed) }
     val base = Typography()

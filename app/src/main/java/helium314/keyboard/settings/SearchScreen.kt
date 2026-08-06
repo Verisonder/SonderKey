@@ -110,20 +110,30 @@ fun SearchSettingsScreen(
                     ) {
                         items(groups, key = { (titleRes, _) -> titleRes ?: 0 }) { (titleRes, keys) ->
                             androidx.compose.material3.Card(
+                                shape = MaterialTheme.shapes.large,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                                    .padding(horizontal = 12.dp, vertical = 6.dp),
                                 colors = androidx.compose.material3.CardDefaults.cardColors(
                                     containerColor = MaterialTheme.colorScheme.surfaceContainer
                                  )
                             ) {
-                                Column {
+                                Column(Modifier.padding(vertical = 4.dp)) {
                                     if (titleRes != null) {
                                         PreferenceCategory(stringResource(titleRes), icon = categoryIcon(titleRes))
                                     }
-                                    
-                                    keys.forEach { key ->
+
+                                    keys.forEachIndexed { index, key ->
                                         androidx.compose.runtime.key(key) {
+                                            // hairline between rows inside a card, as in the
+                                            // grouped lists this UI is modelled on
+                                            if (index > 0) {
+                                                androidx.compose.material3.HorizontalDivider(
+                                                    modifier = Modifier.padding(start = 20.dp, end = 20.dp),
+                                                    thickness = 0.5.dp,
+                                                    color = MaterialTheme.colorScheme.outlineVariant
+                                                )
+                                            }
                                             SettingsActivity.settingsContainer[key]?.Preference()
                                         }
                                     }
