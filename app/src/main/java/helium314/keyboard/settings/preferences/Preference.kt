@@ -47,20 +47,20 @@ fun PreferenceCategory(
     Column {
         // Divider removed as cards provide separation
         Row(
-            modifier = modifier.padding(top = 16.dp, start = 16.dp, end = 16.dp, bottom = 4.dp),
+            modifier = modifier.padding(top = 20.dp, start = 24.dp, end = 24.dp, bottom = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (icon != null) {
                 CompositionLocalProvider(
-                    LocalContentColor provides MaterialTheme.colorScheme.primary
+                    LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant
                 ) {
                     IconOrImage(icon, title, 18)
                 }
             }
             Text(
                 text = title,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.titleSmall
             )
         }
@@ -81,24 +81,17 @@ fun Preference(
         modifier = modifier
             .fillMaxWidth()
             .clickable(enabled = enabled) { onClick() }
-            .heightIn(min = 44.dp)
-            .padding(vertical = 10.dp, horizontal = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+            .heightIn(min = 56.dp)
+            .padding(vertical = 14.dp, horizontal = 20.dp),
+        horizontalArrangement = Arrangement.spacedBy(20.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (icon != null) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(androidx.compose.foundation.shape.CircleShape)
-                    .background(MaterialTheme.colorScheme.secondaryContainer),
-                contentAlignment = Alignment.Center
+            // plain outline icon rather than a filled badge
+            CompositionLocalProvider(
+                LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant
             ) {
-                CompositionLocalProvider(
-                    LocalContentColor provides MaterialTheme.colorScheme.onSecondaryContainer
-                ) {
-                    IconOrImage(icon, name, 24)
-                }
+                IconOrImage(icon, name, 24)
             }
         }
         Column(modifier = Modifier.weight(1f)) {

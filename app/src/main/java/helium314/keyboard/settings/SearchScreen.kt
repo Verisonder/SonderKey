@@ -109,6 +109,10 @@ fun SearchSettingsScreen(
                         contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 8.dp)
                     ) {
                         items(groups, key = { (titleRes, _) -> titleRes ?: 0 }) { (titleRes, keys) ->
+                            // the group label sits above its card rather than inside it
+                            if (titleRes != null) {
+                                PreferenceCategory(stringResource(titleRes), icon = categoryIcon(titleRes))
+                            }
                             androidx.compose.material3.Card(
                                 shape = MaterialTheme.shapes.large,
                                 modifier = Modifier
@@ -118,11 +122,7 @@ fun SearchSettingsScreen(
                                     containerColor = MaterialTheme.colorScheme.surfaceContainer
                                  )
                             ) {
-                                Column(Modifier.padding(vertical = 4.dp)) {
-                                    if (titleRes != null) {
-                                        PreferenceCategory(stringResource(titleRes), icon = categoryIcon(titleRes))
-                                    }
-
+                                Column {
                                     keys.forEachIndexed { index, key ->
                                         androidx.compose.runtime.key(key) {
                                             // hairline between rows inside a card, as in the
