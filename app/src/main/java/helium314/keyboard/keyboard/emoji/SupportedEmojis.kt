@@ -51,9 +51,12 @@ object SupportedEmojis {
             ?.let { paint.setTypeface(it) }
         val maxApi = context.assets.open("emoji/minApi.txt").reader().readLines().maxOf {
             val s = it.split(" ")
-            // probe every entry in the tier, not just the first: a single missing glyph in an
-            // otherwise supported set used to disqualify the whole tier
-            val supported = s.drop(1).count { e -> paint.hasGlyph(e) } * 2 >= s.size - 1
+            // A tier counts as supported if the font can draw any of its emoji. A majority rule
+            // would be wrong here: most entries in the newer tiers are ZWJ or skin-tone
+            // sequences, and hasGlyph only returns true for those when the font carries a GSUB
+            // ligature, so a font with full coverage could still fail the vote. Tier 36, for
+            // instance, is 43 entries of which only 7 are plain codepoints.
+            val supported = s.drop(1).any { e -> paint.hasGlyph(e) }
             if (supported) s.first().toInt() else 0
         }
         val newMax = maxApi.coerceAtLeast(Build.VERSION.SDK_INT)
