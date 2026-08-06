@@ -1032,6 +1032,7 @@ New dictionary:
     <string name="voice_typing_download_all">Download everything</string>
     <string name="voice_typing_both_required">Both parts are required</string>
     <string name="voice_typing_where">Where the microphone key appears</string>
+    <string name="setup_gesture_needs_restart">Gesture typing will be active the next time the app starts</string>
     <string name="voice_typing_permission_title">Microphone access needed</string>
     <string name="voice_typing_permission_detail">SonderKey needs permission to use the microphone. Audio is transcribed on this device and is never recorded or sent anywhere.</string>
     <string name="voice_typing_permission_allow">Allow microphone</string>

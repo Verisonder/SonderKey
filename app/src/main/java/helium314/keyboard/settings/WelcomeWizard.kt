@@ -74,19 +74,6 @@ import helium314.keyboard.settings.preferences.TextInputPreference
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/** Reopens the settings after the process is killed, so a restart is not a disappearance. */
-private fun restartIntoSettings(ctx: android.content.Context) {
-    val intent = Intent(ctx, SettingsActivity::class.java)
-        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-    val pending = android.app.PendingIntent.getActivity(
-        ctx, 0x50DE, intent,
-        android.app.PendingIntent.FLAG_CANCEL_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
-    )
-    val alarm = ctx.getSystemService(android.content.Context.ALARM_SERVICE) as android.app.AlarmManager
-    alarm.set(android.app.AlarmManager.RTC, System.currentTimeMillis() + 200, pending)
-    Runtime.getRuntime().exit(0)
-}
-
 @Composable
 fun WelcomeWizard(
     close: () -> Unit,
@@ -649,14 +636,17 @@ fun WelcomeWizard(
                                     SubtypeSettings.addEnabledSubtype(ctx.prefs(), subtype)
                                 }
                             }
+                            // The gesture library loads in a static initialiser, so it only takes
+                            // effect after a restart. Killing the process here is not worth it:
+                            // Android forbids relaunching an activity from the background, so the
+                            // app simply disappears to the home screen instead of coming back.
+                            // Finish into the settings and say what is pending.
                             if (requiresRestart) {
-                                // The gesture library is loaded in a static initialiser, so the
-                                // process genuinely has to restart. Schedule the settings to open
-                                // again first, otherwise the app just vanishes to the home screen.
-                                restartIntoSettings(ctx)
-                            } else {
-                                finish()
+                                android.widget.Toast.makeText(
+                                    ctx, R.string.setup_gesture_needs_restart, android.widget.Toast.LENGTH_LONG
+                                ).show()
                             }
+                            finish()
                         },
                         { step-- }
                     )
