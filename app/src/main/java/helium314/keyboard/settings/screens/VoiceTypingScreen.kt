@@ -60,6 +60,26 @@ fun VoiceTypingScreen(onClickBack: () -> Unit) {
                 .padding(horizontal = 20.dp)
                 .padding(bottom = 32.dp)
         ) {
+            SetupStatus(engineReady = engineReady, modelReady = modelReady, busy = busy,
+                onDownloadAll = {
+                    busy = true; progress = 0; status = null
+                    scope.launch {
+                        var failure: String? = null
+                        if (!engineReady) {
+                            val r = VoiceEngineDownloader.download(ctx) { progress = it }
+                            engineReady = VoiceEngine.areLibrariesPresent(ctx)
+                            failure = r.exceptionOrNull()?.message
+                        }
+                        if (failure == null && !modelReady) {
+                            val r = VoiceModelDownloader.download(ctx, model) { progress = it }
+                            modelReady = model.isDownloaded(ctx)
+                            failure = r.exceptionOrNull()?.message
+                        }
+                        busy = false
+                        status = failure
+                    }
+                })
+
             Text(
                 stringResource(R.string.voice_typing_explainer),
                 style = MaterialTheme.typography.bodyMedium,
@@ -76,8 +96,15 @@ fun VoiceTypingScreen(onClickBack: () -> Unit) {
                 return@Column
             }
 
+            Text(
+                stringResource(R.string.voice_typing_both_required),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 10.dp)
+            )
+
             Piece(
-                title = stringResource(R.string.voice_typing_engine),
+                title = stringResource(R.string.voice_typing_engine_numbered),
                 detail = stringResource(R.string.voice_typing_engine_detail),
                 ready = engineReady,
                 busy = busy,
@@ -96,7 +123,7 @@ fun VoiceTypingScreen(onClickBack: () -> Unit) {
             Spacer(Modifier.height(12.dp))
 
             Piece(
-                title = "${model.displayName} · ${model.languages}",
+                title = stringResource(R.string.voice_typing_model_numbered, model.displayName, model.languages),
                 detail = stringResource(R.string.voice_typing_model_detail, model.approximateMegabytes),
                 ready = modelReady,
                 busy = busy,
@@ -131,13 +158,54 @@ fun VoiceTypingScreen(onClickBack: () -> Unit) {
                 Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
             }
 
-            if (engineReady && modelReady) {
-                Spacer(Modifier.height(24.dp))
-                Text(
-                    stringResource(R.string.voice_typing_ready),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
+        }
+    }
+}
+
+/** States in one place whether voice typing can actually be used, and offers to complete it. */
+@Composable
+private fun SetupStatus(
+    engineReady: Boolean,
+    modelReady: Boolean,
+    busy: Boolean,
+    onDownloadAll: () -> Unit
+) {
+    val ready = engineReady && modelReady
+    Card(
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(
+            containerColor = if (ready) MaterialTheme.colorScheme.primaryContainer
+                             else MaterialTheme.colorScheme.surfaceContainerHigh
+        ),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 12.dp, bottom = 16.dp)
+    ) {
+        Column(Modifier.padding(20.dp)) {
+            Text(
+                stringResource(
+                    if (ready) R.string.voice_typing_status_ready else R.string.voice_typing_status_incomplete
+                ),
+                style = MaterialTheme.typography.titleMedium,
+                color = if (ready) MaterialTheme.colorScheme.onPrimaryContainer
+                        else MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                stringResource(
+                    if (ready) R.string.voice_typing_status_ready_detail
+                    else R.string.voice_typing_status_incomplete_detail,
+                    (if (engineReady) 0 else 25) + (if (modelReady) 0 else 126)
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (ready) MaterialTheme.colorScheme.onPrimaryContainer
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+            if (!ready) {
+                Spacer(Modifier.height(14.dp))
+                Button(onClick = onDownloadAll, enabled = !busy) {
+                    Text(stringResource(R.string.voice_typing_download_all))
+                }
             }
         }
     }

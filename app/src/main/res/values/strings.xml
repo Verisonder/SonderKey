@@ -1025,6 +1025,14 @@ New dictionary:
     <string name="voice_typing_engine_detail">Roughly 25 MB. Required before any model can run.</string>
     <string name="voice_typing_model_detail">Roughly %1$d MB. The language model that turns speech into text.</string>
     <string name="voice_typing_installed">Installed</string>
+    <string name="voice_typing_status_ready">Ready to use</string>
+    <string name="voice_typing_status_ready_detail">Tap the microphone on the toolbar to dictate. Everything is transcribed on this device.</string>
+    <string name="voice_typing_status_incomplete">Not set up yet</string>
+    <string name="voice_typing_status_incomplete_detail">Voice typing needs both parts below before the microphone key will work. About %1$d MB left to download.</string>
+    <string name="voice_typing_download_all">Download everything</string>
+    <string name="voice_typing_both_required">Both parts are required</string>
+    <string name="voice_typing_engine_numbered">1. Speech engine</string>
+    <string name="voice_typing_model_numbered">2. %1$s \u00b7 %2$s</string>
     <string name="voice_typing_remove">Remove</string>
     <string name="voice_typing_download">Download</string>
     <string name="voice_typing_ready">Voice typing is ready. Tap the microphone on the toolbar to use it.</string>
