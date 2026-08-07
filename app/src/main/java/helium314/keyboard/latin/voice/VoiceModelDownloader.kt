@@ -22,25 +22,27 @@ object VoiceModelDownloader {
         model: VoiceModel,
         onProgress: ((Int) -> Unit)? = null
     ): Result<Unit> = withContext(Dispatchers.IO) {
+        // Download straight into the model's own directory rather than the cache. The model is
+        // large enough that writing it to cacheDir can push Android into trimming that directory
+        // mid-download, which took the second file's parent with it. Partial files carry a
+        // suffix and are only renamed once both have arrived and verified.
         val dir = model.dir(context)
-        val tmpDir = File(context.cacheDir, "voice-model-${model.id}")
+        val partModel = File(dir, "model.onnx.part")
+        val partTokens = File(dir, "tokens.txt.part")
         try {
-            tmpDir.deleteRecursively()
-            tmpDir.mkdirs()
+            dir.deleteRecursively()
+            if (!dir.mkdirs() && !dir.isDirectory)
+                return@withContext Result.failure(Exception("Could not create the model directory"))
 
-            // The model dwarfs the tokens file, so weight progress almost entirely towards it
-            // rather than letting a 10 KB file take half the bar.
-            val tmpModel = File(tmpDir, "model.onnx")
-            fetch(model.modelUrl, tmpModel) { onProgress?.invoke((it * 0.99f).toInt()) }
-            val tmpTokens = File(tmpDir, "tokens.txt")
-            fetch(model.tokensUrl, tmpTokens) { }
+            // weight progress towards the model; the tokens file is a rounding error beside it
+            fetch(model.modelUrl, partModel) { onProgress?.invoke((it * 0.99f).toInt()) }
+            fetch(model.tokensUrl, partTokens) { }
             onProgress?.invoke(100)
 
-            dir.deleteRecursively()
-            dir.mkdirs()
-            if (!tmpModel.renameTo(model.modelFile(context))) tmpModel.copyTo(model.modelFile(context), true)
-            if (!tmpTokens.renameTo(model.tokensFile(context))) tmpTokens.copyTo(model.tokensFile(context), true)
-            tmpDir.deleteRecursively()
+            if (!partModel.renameTo(model.modelFile(context)))
+                return@withContext Result.failure(Exception("Could not store the model"))
+            if (!partTokens.renameTo(model.tokensFile(context)))
+                return@withContext Result.failure(Exception("Could not store the tokens"))
 
             if (!model.verify(context)) {
                 model.delete(context)
@@ -49,7 +51,6 @@ object VoiceModelDownloader {
             Result.success(Unit)
         } catch (t: Throwable) {
             Log.e(TAG, "model download failed", t)
-            tmpDir.deleteRecursively()
             model.delete(context)
             Result.failure(t)
         }
@@ -65,6 +66,7 @@ object VoiceModelDownloader {
         }
         if (connection.responseCode != HttpURLConnection.HTTP_OK)
             throw Exception("Download failed: HTTP ${connection.responseCode} for $url")
+        target.parentFile?.mkdirs()
         val total = connection.contentLength.toLong()
         connection.inputStream.use { input ->
             FileOutputStream(target).use { output ->

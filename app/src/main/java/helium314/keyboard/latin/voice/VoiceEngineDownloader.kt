@@ -31,7 +31,8 @@ object VoiceEngineDownloader {
         val url = VoiceEngine.archiveUrl()
             ?: return@withContext Result.failure(Exception("Unsupported device architecture"))
 
-        val tmp = File(context.cacheDir, "voice-engine-download.tar.gz")
+        // kept out of cacheDir so Android cannot trim it out from under the download
+        val tmp = File(context.filesDir, "voice-engine-download.tar.gz")
         try {
             val connection = (URL(url).openConnection() as HttpURLConnection).apply {
                 connectTimeout = CONNECT_TIMEOUT_MS
@@ -44,6 +45,7 @@ object VoiceEngineDownloader {
                 return@withContext Result.failure(Exception("Download failed: HTTP ${connection.responseCode}"))
 
             val total = connection.contentLength.toLong()
+            tmp.parentFile?.mkdirs()
             connection.inputStream.use { input ->
                 FileOutputStream(tmp).use { output ->
                     val buffer = ByteArray(1 shl 16)
