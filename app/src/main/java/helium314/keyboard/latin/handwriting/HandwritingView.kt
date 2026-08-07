@@ -135,13 +135,28 @@ class HandwritingView @JvmOverloads constructor(
             if (iconView != null) colors.setColor(iconView, ColorType.KEY_ICON)
 
             if (button != null) {
+                val density = context.resources.displayMetrics.density
                 val btnBackground = GradientDrawable().apply {
                     shape = GradientDrawable.RECTANGLE
-                    cornerRadius = 8f * context.resources.displayMetrics.density
+                    cornerRadius = 22f * density
                     setColor(colors.get(ColorType.ACTION_KEY_BACKGROUND))
                 }
                 button.background = btnBackground
-                button.setTextColor(colors.get(ColorType.KEY_TEXT))
+                // The label used KEY_TEXT, which in most themes is near-white — the same as the
+                // action key background it sits on, leaving the button invisible. Pick the label
+                // colour from the actual background instead, so it can never disappear.
+                val bg = colors.get(ColorType.ACTION_KEY_BACKGROUND)
+                val luminance = (0.2126 * android.graphics.Color.red(bg)
+                        + 0.7152 * android.graphics.Color.green(bg)
+                        + 0.0722 * android.graphics.Color.blue(bg)) / 255.0
+                button.setTextColor(
+                    if (luminance > 0.5) android.graphics.Color.BLACK else android.graphics.Color.WHITE
+                )
+                button.textSize = 16f
+                button.setPadding((28 * density).toInt(), (14 * density).toInt(),
+                    (28 * density).toInt(), (14 * density).toInt())
+                button.minWidth = (200 * density).toInt()
+                button.elevation = 2f * density
 
                 // ponytail: download plugin directly on standard flavor, otherwise go to Settings
                 if ("standardfull" == helium314.keyboard.latin.BuildConfig.FLAVOR) {
