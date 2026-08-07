@@ -352,9 +352,9 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
         if (Settings.getValues().mDisableMultiWordSuggestions) {
             suggestionResults.removeAll { it.mWord.contains(' ') }
         }
-        if (!Settings.getValues().mSuggestEmojis) {
-            suggestionResults.removeAll { it.isEmoji || it.mSourceDict?.mDictType == Dictionary.TYPE_EMOJI }
-        }
+        // Emoji are never suggested for gestures. A swipe is a rough trace rather than a spelling,
+        // so emoji entries match far too readily and displace the word that was actually drawn.
+        suggestionResults.removeAll { it.isEmoji || it.mSourceDict?.mDictType == Dictionary.TYPE_EMOJI }
         replaceSingleLetterFirstSuggestion(suggestionResults)
         adjustToTooSuggestions(suggestionResults, pointers, keyboard)
 
