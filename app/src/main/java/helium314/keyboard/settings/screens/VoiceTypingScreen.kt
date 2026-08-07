@@ -37,6 +37,7 @@ import helium314.keyboard.latin.utils.isToolbarKeyEnabled
 import helium314.keyboard.latin.utils.defaultToolbarPref
 import helium314.keyboard.latin.utils.defaultPinnedToolbarPref
 import helium314.keyboard.latin.utils.ToolbarKey
+import helium314.keyboard.latin.settings.Defaults
 import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.keyboard.KeyboardSwitcher
 import androidx.compose.material3.Switch
