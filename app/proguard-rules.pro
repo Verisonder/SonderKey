@@ -56,3 +56,12 @@
 # ponytail: keep kotlin stdlib classes to prevent NoSuchMethodError in plugin loading
 -keep class kotlin.** { *; }
 
+
+# sherpa-onnx: the native library reads these classes' fields by name through JNI, so
+# nothing here may be renamed or stripped. Without this, a minified build fails with
+# "Failed to get field ID for ..." while a debug build works.
+-keep class com.k2fsa.sherpa.onnx.** { *; }
+-keepclassmembers class com.k2fsa.sherpa.onnx.** { *; }
+-keepclasseswithmembernames class com.k2fsa.sherpa.onnx.** {
+    native <methods>;
+}
