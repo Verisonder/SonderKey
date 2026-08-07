@@ -314,7 +314,7 @@ fun WelcomeWizard(
                     Step(
                         4,
                         "Libraries",
-                        "Download emoji and gesture libraries to improve typing and suggestions.",
+                        "Download the dictionary and libraries that word suggestions, gesture typing and voice typing need.",
                         "Next",
                         painterResource(R.drawable.sym_keyboard_language_switch),
                         { step++ },
@@ -325,6 +325,15 @@ fun WelcomeWizard(
                         val emojiLibInstalled = java.io.File(helium314.keyboard.latin.utils.DictionaryInfoUtils.getCacheDirectoryForLocale(locale, ctx), "emoji_${locale.language}.dict").exists()
                         val gestureLibInstalled = java.io.File(ctx.filesDir, "libjni_latinime.so").exists() || JniUtils.sHaveNativeGestureLib
 
+                        // The main dictionary is what suggestions and gesture typing match against;
+                        // without it the gesture engine runs and silently returns nothing.
+                        Box(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.shapes.medium)) {
+                            helium314.keyboard.settings.preferences.LoadMainDictPreference(
+                                title = "Dictionary",
+                                onSuccess = { refreshTrigger++ }
+                            )
+                        }
+                        Spacer(Modifier.height(8.dp))
                         Box(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.shapes.medium)) {
                             LoadEmojiLibPreference(
                                 title = "Emoji Dictionary",
