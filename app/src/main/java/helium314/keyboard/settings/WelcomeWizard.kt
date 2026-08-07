@@ -636,17 +636,15 @@ fun WelcomeWizard(
                                     SubtypeSettings.addEnabledSubtype(ctx.prefs(), subtype)
                                 }
                             }
-                            // The gesture library loads in a static initialiser, so it only takes
-                            // effect after a restart. Killing the process here is not worth it:
-                            // Android forbids relaunching an activity from the background, so the
-                            // app simply disappears to the home screen instead of coming back.
-                            // Finish into the settings and say what is pending.
                             if (requiresRestart) {
-                                android.widget.Toast.makeText(
-                                    ctx, R.string.setup_gesture_needs_restart, android.widget.Toast.LENGTH_LONG
-                                ).show()
+                                // The gesture library only loads at process start, so restart —
+                                // but through a helper in its own process, which can bring the
+                                // settings back up instead of leaving the user on the home screen.
+                                finish()
+                                RestartActivity.restart(ctx)
+                            } else {
+                                finish()
                             }
-                            finish()
                         },
                         { step-- }
                     )

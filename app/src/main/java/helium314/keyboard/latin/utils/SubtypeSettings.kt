@@ -232,8 +232,13 @@ object SubtypeSettings {
         // SonderKey ships with English (US) enabled regardless of the device locale. Upstream
         // derived this from the system locales, which meant a phone set to another language got a
         // layout the user did not ask for. Other languages remain one tap away in Languages.
-        resourceSubtypesByLocale[Locale.US]?.firstOrNull()?.let {
-            systemSubtypes.add(it)
+        // Match on the locale tag rather than map lookup: en_AU is declared before en_US in
+        // method.xml, so anything less exact lands on Australia.
+        val enUs = resourceSubtypesByLocale.entries
+            .firstOrNull { it.key.language == "en" && it.key.country == "US" }
+            ?.value?.firstOrNull()
+        if (enUs != null) {
+            systemSubtypes.add(enUs)
             return systemSubtypes
         }
         val subtypes = systemLocales.mapNotNull { locale ->

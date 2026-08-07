@@ -94,8 +94,8 @@ fun LoadGestureLibPreference(
         if (restartOnSuccess) {
             scope.launch {
                 FeedbackManager.message(ctx, "Gesture library loaded. Restarting...")
-                delay(3000)
-                Runtime.getRuntime().exit(0)
+                delay(1500)
+                helium314.keyboard.settings.RestartActivity.restart(ctx)
             }
         }
     }
@@ -212,8 +212,8 @@ fun LoadGestureLibPreference(
                                     if (restartOnSuccess) {
                                         scope.launch {
                                             FeedbackManager.message(ctx, "Gesture library removed. Restarting...")
-                                            delay(3000)
-                                            Runtime.getRuntime().exit(0)
+                                            delay(1500)
+                                            helium314.keyboard.settings.RestartActivity.restart(ctx)
                                         }
                                     }
                                 },
