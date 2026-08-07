@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.edit
 import helium314.keyboard.latin.R
 import helium314.keyboard.latin.utils.setToolbarKeyEnabled
 import helium314.keyboard.latin.utils.prefs
@@ -63,6 +64,9 @@ fun VoiceTypingScreen(onClickBack: () -> Unit) {
     val prefs = ctx.prefs()
     var inToolbar by remember {
         mutableStateOf(isToolbarKeyEnabled(prefs, Settings.PREF_TOOLBAR_KEYS, defaultToolbarPref, ToolbarKey.VOICE))
+    }
+    var voiceOnLeft by remember {
+        mutableStateOf(prefs.getBoolean(Settings.PREF_VOICE_KEY_ON_LEFT, Defaults.PREF_VOICE_KEY_ON_LEFT))
     }
     var pinned by remember {
         mutableStateOf(isToolbarKeyEnabled(prefs, Settings.PREF_PINNED_TOOLBAR_KEYS, defaultPinnedToolbarPref, ToolbarKey.VOICE))
@@ -212,6 +216,14 @@ fun VoiceTypingScreen(onClickBack: () -> Unit) {
                     ) {
                         pinned = it
                         setToolbarKeyEnabled(prefs, Settings.PREF_PINNED_TOOLBAR_KEYS, defaultPinnedToolbarPref, ToolbarKey.VOICE, it)
+                        KeyboardSwitcher.getInstance().setThemeNeedsReload()
+                    }
+                    ToggleRow(
+                        title = stringResource(R.string.voice_typing_on_left),
+                        checked = voiceOnLeft
+                    ) {
+                        voiceOnLeft = it
+                        prefs.edit { putBoolean(Settings.PREF_VOICE_KEY_ON_LEFT, it) }
                         KeyboardSwitcher.getInstance().setThemeNeedsReload()
                     }
                 }

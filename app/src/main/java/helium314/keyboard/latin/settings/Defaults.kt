@@ -57,6 +57,7 @@ object Defaults {
     const val PREF_SONDER_SURFACE_COLOR = SonderPalette.DEFAULT_SURFACE
     const val PREF_SONDER_KEY_COLOR = SonderPalette.DEFAULT_KEY
     const val PREF_SONDER_FUNCTIONAL_COLOR = SonderPalette.DEFAULT_FUNCTIONAL
+    const val PREF_VOICE_KEY_ON_LEFT = true
 
     const val PREF_ENABLE_SPELL_CHECKER_SERVICE = true
     const val PREF_ENABLE_CONTACTS_OBSERVER = false

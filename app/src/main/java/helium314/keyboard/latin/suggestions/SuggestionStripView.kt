@@ -125,6 +125,7 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
     private val toolbar: ViewGroup = findViewById(R.id.toolbar)
     private val toolbarContainer: View = findViewById(R.id.toolbar_container)
     private val pinnedKeys: ViewGroup = findViewById(R.id.pinned_keys)
+    private val pinnedKeysStart: ViewGroup = findViewById(R.id.pinned_keys_start)
     private val suggestionsStrip: ViewGroup = findViewById(R.id.suggestions_strip)
     private val toolbarExpandKey = findViewById<ImageButton>(R.id.suggestions_strip_toolbar_key)
     private var toolbarRow: LinearLayout? = null
@@ -369,6 +370,7 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
             toolbarContainer.isVisible = !locked && !isEmojiView
             toolbar.visibility = if (isEmojiView) GONE else VISIBLE
             pinnedKeys.isVisible = false // Hide pinned keys
+            pinnedKeysStart.isVisible = false
             toolbarExpandKey.isVisible = false // Hide expand key
             updateSplitToolbarState()
         } else {
@@ -377,6 +379,7 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
             val effectiveToolbarVisible = forceToolbar || toolbarVisible
             val showPinned = !locked && !effectiveToolbarVisible && mode != ToolbarMode.SUGGESTION_STRIP
             pinnedKeys.isVisible = showPinned
+            pinnedKeysStart.isVisible = showPinned
             suggestionsStrip.isVisible = locked || !effectiveToolbarVisible
             toolbarContainer.isVisible = !locked && effectiveToolbarVisible
         }
@@ -538,6 +541,7 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
 
     override fun onSharedPreferenceChanged(prefs: SharedPreferences, key: String?) {
         setToolbarButtonsActivatedStateOnPrefChange(pinnedKeys, key)
+        setToolbarButtonsActivatedStateOnPrefChange(pinnedKeysStart, key)
         setToolbarButtonsActivatedStateOnPrefChange(toolbar, key)
         if (key == Settings.PREF_PINNED_TOOLBAR_KEYS 
             || key == Settings.PREF_TOOLBAR_KEYS 
@@ -675,7 +679,7 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
             // If no shortcut exists, and quick pin is enabled, perform pinning/unpinning
             if (view.parent === toolbar) {
                 addPinnedKey(context.prefs(), tag)
-            } else if (view.parent === pinnedKeys) {
+            } else if (view.parent === pinnedKeys || view.parent === pinnedKeysStart) {
                 removePinnedKey(context.prefs(), tag)
             }
         }
@@ -799,6 +803,7 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         val show = Settings.getValues().mShowsVoiceInputKey
         toolbar.findViewWithTag<View>(ToolbarKey.VOICE)?.isVisible = show
         pinnedKeys.findViewWithTag<View>(ToolbarKey.VOICE)?.isVisible = show
+        pinnedKeysStart.findViewWithTag<View>(ToolbarKey.VOICE)?.isVisible = show
     }
 
     private fun getLanguageHistory(prefs: SharedPreferences) = helium314.keyboard.latin.utils.TranslationUtils.getLanguageHistory(prefs)
@@ -826,6 +831,7 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         if (!Settings.getValues().mSplitToolbar) {
             toolbarContainer.isVisible = false
             pinnedKeys.isVisible = false
+            pinnedKeysStart.isVisible = false
             toolbarExpandKey.isVisible = false
         }
 
@@ -952,6 +958,7 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         if (split) {
             toolbarExpandKey.isVisible = false
             pinnedKeys.isVisible = false // Hide pinned keys completely in split mode
+            pinnedKeysStart.isVisible = false
 
             val isEmojiView = isShowingEmojiSuggestions || helium314.keyboard.keyboard.KeyboardSwitcher.getInstance().isShowingEmojiPalettes
             toolbarRow?.isVisible = !isEmojiView
@@ -1070,11 +1077,16 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         
         // Only draw pinned keys if not in split mode
         if (!isSplitToolbar && !Settings.getValues().mSuggestionStripHiddenPerUserSettings) {
+            val voiceOnLeft = context.prefs().getBoolean(
+                Settings.PREF_VOICE_KEY_ON_LEFT, Defaults.PREF_VOICE_KEY_ON_LEFT
+            )
             for (pinnedKey in pinnedKeysList) {
                 val button = createToolbarKey(context, pinnedKey)
                 button.layoutParams = toolbarKeyLayoutParams
                 setupKey(button, colors)
-                pinnedKeys.addView(button)
+                // the microphone can sit at either end of the strip
+                if (pinnedKey == ToolbarKey.VOICE && voiceOnLeft) pinnedKeysStart.addView(button)
+                else pinnedKeys.addView(button)
             }
         }
         updateVoiceKey()

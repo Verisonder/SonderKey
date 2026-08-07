@@ -1038,6 +1038,7 @@ New dictionary:
     <string name="voice_typing_permission_allow">Allow microphone</string>
     <string name="voice_typing_in_toolbar">Show in the toolbar</string>
     <string name="voice_typing_pinned">Pin above the keyboard</string>
+    <string name="voice_typing_on_left">Place it on the left</string>
     <string name="voice_typing_engine_numbered">1. Speech engine</string>
     <string name="voice_typing_model_numbered">2. %1$s \u00b7 %2$s</string>
     <string name="voice_typing_remove">Remove</string>
