@@ -162,8 +162,9 @@ class HandwritingView @JvmOverloads constructor(
                 button.gravity = android.view.Gravity.CENTER
                 button.minWidth = (220 * density).toInt()
                 button.minHeight = (48 * density).toInt()
-                button.setPadding((32 * density).toInt(), (14 * density).toInt(),
-                    (32 * density).toInt(), (14 * density).toInt())
+                // horizontal padding only: the height is fixed in the layout so the button
+                // cannot be squeezed out when the overlay is short
+                button.setPadding((32 * density).toInt(), 0, (32 * density).toInt(), 0)
                 button.elevation = 4f * density
                 // never leave it blank, whatever the flavour branch below decides
                 if (button.text.isNullOrBlank()) button.text = context.getString(R.string.handwriting_plugin_load_button)
