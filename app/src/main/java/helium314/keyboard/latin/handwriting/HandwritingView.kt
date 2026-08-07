@@ -136,27 +136,37 @@ class HandwritingView @JvmOverloads constructor(
 
             if (button != null) {
                 val density = context.resources.displayMetrics.density
+
+                // Draw the button from the accent colour rather than the action key colour. The
+                // action key and the key text are both near-white in most themes, which is how
+                // this ended up as a blank bar; the accent is by definition the colour meant to
+                // stand out against the keyboard.
+                val accent = colors.get(ColorType.ACTION_KEY_BACKGROUND)
+                val onAccent = run {
+                    val l = (0.2126 * android.graphics.Color.red(accent)
+                            + 0.7152 * android.graphics.Color.green(accent)
+                            + 0.0722 * android.graphics.Color.blue(accent)) / 255.0
+                    if (l > 0.5) android.graphics.Color.BLACK else android.graphics.Color.WHITE
+                }
                 val btnBackground = GradientDrawable().apply {
                     shape = GradientDrawable.RECTANGLE
-                    cornerRadius = 22f * density
-                    setColor(colors.get(ColorType.ACTION_KEY_BACKGROUND))
+                    cornerRadius = 24f * density
+                    setColor(accent)
+                    setStroke((1 * density).toInt(), onAccent and 0x33FFFFFF)
                 }
                 button.background = btnBackground
-                // The label used KEY_TEXT, which in most themes is near-white — the same as the
-                // action key background it sits on, leaving the button invisible. Pick the label
-                // colour from the actual background instead, so it can never disappear.
-                val bg = colors.get(ColorType.ACTION_KEY_BACKGROUND)
-                val luminance = (0.2126 * android.graphics.Color.red(bg)
-                        + 0.7152 * android.graphics.Color.green(bg)
-                        + 0.0722 * android.graphics.Color.blue(bg)) / 255.0
-                button.setTextColor(
-                    if (luminance > 0.5) android.graphics.Color.BLACK else android.graphics.Color.WHITE
-                )
+                button.setTextColor(onAccent)
                 button.textSize = 16f
-                button.setPadding((28 * density).toInt(), (14 * density).toInt(),
-                    (28 * density).toInt(), (14 * density).toInt())
-                button.minWidth = (200 * density).toInt()
-                button.elevation = 2f * density
+                button.setTypeface(button.typeface, android.graphics.Typeface.BOLD)
+                button.setAllCaps(false)
+                button.gravity = android.view.Gravity.CENTER
+                button.minWidth = (220 * density).toInt()
+                button.minHeight = (48 * density).toInt()
+                button.setPadding((32 * density).toInt(), (14 * density).toInt(),
+                    (32 * density).toInt(), (14 * density).toInt())
+                button.elevation = 4f * density
+                // never leave it blank, whatever the flavour branch below decides
+                if (button.text.isNullOrBlank()) button.text = context.getString(R.string.handwriting_plugin_load_button)
 
                 // ponytail: download plugin directly on standard flavor, otherwise go to Settings
                 if ("standardfull" == helium314.keyboard.latin.BuildConfig.FLAVOR) {
