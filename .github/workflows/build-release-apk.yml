@@ -44,11 +44,9 @@ jobs:
           GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx5g -XX:MaxMetaspaceSize=1g
         run: |
           set -o pipefail
-          if [[ "${{ github.ref_name }}" == beta-* ]]; then
-            FLAVORS="assembleStandardfullRelease"
-          else
-            FLAVORS="assembleStandardRelease assembleOfflineRelease assembleStandardfullRelease assembleOfflineliteRelease"
-          fi
+          # standardfull is a superset of the other variants, so it is the only one released.
+          # The rest still build locally for anyone who wants them.
+          FLAVORS="assembleStandardfullRelease"
           for T in $FLAVORS; do
             echo "=== building $T ==="
             ./gradlew --max-workers=2 "$T" 2>&1 | tee -a gradle-build.log

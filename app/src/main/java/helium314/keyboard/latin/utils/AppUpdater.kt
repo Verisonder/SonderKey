@@ -39,20 +39,26 @@ object AppUpdater {
             val tag = json.getString("tag_name").removePrefix("v")
             if (compareVersions(tag, BuildConfig.VERSION_NAME) <= 0) return@withContext Result.success(null)
 
-            // pick the asset built for this flavour; names look like
-            // 1-SonderKey_2.4.0-standardfull-release.apk
+            // Releases now ship a single APK named SonderKey_<version>.apk. Older releases
+            // carried a flavour in the name, so prefer an exact flavour match and otherwise
+            // fall back to the plain build.
             val assets = json.getJSONArray("assets")
             var url: String? = null
             var size = 0L
+            var fallbackUrl: String? = null
+            var fallbackSize = 0L
             for (i in 0 until assets.length()) {
                 val a = assets.getJSONObject(i)
                 val name = a.getString("name")
-                if (name.endsWith(".apk") && name.contains("-${BuildConfig.FLAVOR}-")) {
-                    url = a.getString("browser_download_url")
-                    size = a.getLong("size")
-                    break
+                if (!name.endsWith(".apk")) continue
+                if (name.contains("-${BuildConfig.FLAVOR}-")) {
+                    url = a.getString("browser_download_url"); size = a.getLong("size"); break
+                }
+                if (!name.contains("-") || name.startsWith("SonderKey_")) {
+                    fallbackUrl = a.getString("browser_download_url"); fallbackSize = a.getLong("size")
                 }
             }
+            if (url == null) { url = fallbackUrl; size = fallbackSize }
             if (url == null) return@withContext Result.failure(
                 Exception("Release $tag has no build for this variant")
             )

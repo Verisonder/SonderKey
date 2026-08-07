@@ -23,8 +23,8 @@ android {
         minSdk = 21
         targetSdk = 35
         // SonderKey initial release
-        versionCode = 43
-        versionName = "2.4.3"
+        versionCode = 44
+        versionName = "2.4.4"
 
         proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         
@@ -117,7 +117,12 @@ android {
             if (number.isNotEmpty()) {
                 outputs.all {
                     val output = this as? com.android.build.gradle.api.ApkVariantOutput
-                    output?.outputFileName = "$number-SonderKey_${defaultConfig.versionName}-${flavor}-${buildType.name}.apk"
+                    // standardfull is the build that ships, so it gets the plain name; the other
+                    // variants keep a suffix so a local build of several stays distinguishable.
+                    output?.outputFileName = if (flavor == "standardfull" && buildType.name == "release")
+                        "SonderKey_${defaultConfig.versionName}.apk"
+                    else
+                        "SonderKey_${defaultConfig.versionName}-${flavor}-${buildType.name}.apk"
                 }
             }
 
