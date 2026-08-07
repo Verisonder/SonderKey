@@ -24,6 +24,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -68,6 +70,7 @@ fun AboutScreen(
     val items = listOf(
         SettingsWithoutKey.APP,
         SettingsWithoutKey.VERSION,
+        SettingsWithoutKey.UPDATE,
         SettingsWithoutKey.LICENSE,
         SettingsWithoutKey.HIDDEN_FEATURES,
         SettingsWithoutKey.GITHUB_FEATURES,
@@ -105,6 +108,60 @@ fun createAboutSettings(context: Context) = listOf(
                 if (count < 5) return@Preference
                 prefs.edit { putBoolean(DebugSettings.PREF_SHOW_DEBUG_SETTINGS, true) }
                 FeedbackManager.message(ctx, R.string.prefs_debug_settings_enabled)
+            },
+            icon = R.drawable.ic_settings_about
+        )
+    },
+    Setting(context, SettingsWithoutKey.UPDATE, R.string.check_for_updates) {
+        val ctx = LocalContext.current
+        val scope = androidx.compose.runtime.rememberCoroutineScope()
+        var state by remember { mutableStateOf("") }
+        var busy by remember { mutableStateOf(false) }
+        var pending by remember { mutableStateOf<helium314.keyboard.latin.utils.AppUpdater.Update?>(null) }
+
+        Preference(
+            name = it.title,
+            description = when {
+                busy -> state
+                pending != null -> stringResource(R.string.update_available, pending!!.version)
+                state.isNotEmpty() -> state
+                else -> stringResource(R.string.check_for_updates_summary)
+            },
+            onClick = {
+                if (busy) return@Preference
+                if (!helium314.keyboard.latin.utils.AppUpdater.isSupported()) {
+                    state = ctx.getString(R.string.update_not_available_offline)
+                    return@Preference
+                }
+                val ready = pending
+                if (ready != null) {
+                    // second tap: fetch it and hand it to the system installer
+                    busy = true
+                    state = ctx.getString(R.string.update_downloading, 0)
+                    scope.launch {
+                        val result = helium314.keyboard.latin.utils.AppUpdater.download(ctx, ready) { p ->
+                            state = ctx.getString(R.string.update_downloading, p)
+                        }
+                        busy = false
+                        result.onSuccess { file ->
+                            state = ""
+                            pending = null
+                            runCatching { helium314.keyboard.latin.utils.AppUpdater.install(ctx, file) }
+                                .onFailure { t -> state = t.message ?: "Could not open the installer" }
+                        }.onFailure { t -> state = t.message ?: "Download failed" }
+                    }
+                    return@Preference
+                }
+                busy = true
+                state = ctx.getString(R.string.update_checking)
+                scope.launch {
+                    val result = helium314.keyboard.latin.utils.AppUpdater.check()
+                    busy = false
+                    result.onSuccess { update ->
+                        if (update == null) state = ctx.getString(R.string.update_up_to_date)
+                        else { pending = update; state = "" }
+                    }.onFailure { t -> state = t.message ?: "Check failed" }
+                }
             },
             icon = R.drawable.ic_settings_about
         )

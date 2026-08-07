@@ -13,6 +13,8 @@ SPDX-License-Identifier: Apache-2.0 AND GPL-3.0-only
     <uses-permission android:name="android.permission.READ_USER_DICTIONARY" />
     <!-- voice typing; audio is transcribed on the device and never leaves it -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- so the app can offer its own updates; the system installer still asks the user -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WRITE_USER_DICTIONARY" />
