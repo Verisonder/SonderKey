@@ -23,8 +23,8 @@ android {
         minSdk = 21
         targetSdk = 35
         // SonderKey initial release
-        versionCode = 41
-        versionName = "2.4.1"
+        versionCode = 42
+        versionName = "2.4.2"
 
         proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         

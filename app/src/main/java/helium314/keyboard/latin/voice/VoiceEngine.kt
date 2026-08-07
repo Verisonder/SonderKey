@@ -54,6 +54,8 @@ object VoiceEngine {
 
     @Volatile private var loaded = false
     @Volatile private var failedOnce = false
+    @Volatile var loadError: String? = null
+        private set
 
     val isLoaded get() = loaded
 
@@ -68,16 +70,18 @@ object VoiceEngine {
         if (!areLibrariesPresent(context)) return false
         return try {
             val dir = libDir(context)
+            // onnxruntime first: the JNI wrapper records it as a dependency, and the linker
+            // resolves it from what is already loaded rather than searching a path.
             System.load(File(dir, LIB_ONNXRUNTIME).absolutePath)
             System.load(File(dir, LIB_SHERPA_JNI).absolutePath)
             loaded = true
             Log.i(TAG, "voice engine loaded")
             true
         } catch (t: Throwable) {
-            // A partial or mismatched download is the likely cause; drop it so the next attempt
-            // fetches a clean copy rather than failing the same way forever.
-            Log.w(TAG, "could not load voice engine, removing it", t)
-            deleteLibraries(context)
+            Log.w(TAG, "could not load voice engine", t)
+            loadError = t.message ?: t.javaClass.simpleName
+            // Keep the files. Deleting them here meant a transient failure cost a 25 MB
+            // re-download, and hid the cause behind "not installed".
             failedOnce = true
             false
         }

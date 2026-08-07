@@ -63,9 +63,14 @@ object VoiceTyping {
         val samples = r.stop()
         if (samples == null) { onResult(null); return }
         thread(name = "SonderKeyTranscribe") {
+            VoiceRecognizer.lastError = null
             val model = VoiceModel.ALL.firstOrNull { it.isDownloaded(context) }
+            if (model == null) VoiceRecognizer.lastError = "No model is installed"
             val text = if (model == null) null
                 else VoiceRecognizer.get(context, model)?.transcribe(samples)
+            // Report the reason rather than letting every failure read as silence.
+            val error = VoiceRecognizer.lastError
+            if (text == null && error != null) toast(context, error)
             main.post { onResult(text) }
         }
     }

@@ -20,6 +20,7 @@ class VoiceRecognizer private constructor(private val recognizer: OfflineRecogni
 
     /** [samples] must be mono 16 kHz floats in -1..1, which is what [VoiceRecorder] produces. */
     fun transcribe(samples: FloatArray, sampleRate: Int = 16000): String? = try {
+        lastError = null
         val stream = recognizer.createStream()
         stream.acceptWaveform(samples, sampleRate)
         recognizer.decode(stream)
@@ -28,6 +29,7 @@ class VoiceRecognizer private constructor(private val recognizer: OfflineRecogni
         text.trim().ifEmpty { null }
     } catch (t: Throwable) {
         Log.e(TAG, "transcription failed", t)
+        lastError = "Transcription failed: ${t.message ?: t.javaClass.simpleName}"
         null
     }
 
@@ -36,14 +38,27 @@ class VoiceRecognizer private constructor(private val recognizer: OfflineRecogni
     companion object {
         private const val TAG = "VoiceRecognizer"
 
+        /**
+         * Why the last attempt produced nothing. Without this, a missing library, a bad model and
+         * genuine silence are indistinguishable to the user — all three just say nothing was heard.
+         */
+        @Volatile var lastError: String? = null
+            internal set
+
         @Volatile private var cached: Pair<String, VoiceRecognizer>? = null
 
         /** Returns a recogniser for [model], or null if the engine or files are unavailable. */
         @Synchronized
         fun get(context: Context, model: VoiceModel): VoiceRecognizer? {
             cached?.let { (id, recognizer) -> if (id == model.id) return recognizer }
-            if (!VoiceEngine.ensureLoaded(context)) return null
-            if (!model.isDownloaded(context)) return null
+            if (!VoiceEngine.ensureLoaded(context)) {
+                lastError = "Speech engine did not load: ${VoiceEngine.loadError ?: "unknown"}"
+                return null
+            }
+            if (!model.isDownloaded(context)) {
+                lastError = "The model files are missing"
+                return null
+            }
             return try {
                 val config = OfflineRecognizerConfig(
                     featConfig = FeatureConfig(sampleRate = 16000, featureDim = 80),
@@ -62,6 +77,7 @@ class VoiceRecognizer private constructor(private val recognizer: OfflineRecogni
                 recognizer
             } catch (t: Throwable) {
                 Log.e(TAG, "could not create recognizer", t)
+                lastError = "Could not start the recogniser: ${t.message ?: t.javaClass.simpleName}"
                 null
             }
         }
