@@ -148,6 +148,20 @@ class VoiceRecorder(private val context: Context) {
     }
 
     /**
+     * Everything captured since recording began, without consuming it.
+     *
+     * Rolling mode re-transcribes the whole dictation each tick so later words can correct earlier
+     * ones, which means the cost grows with the length of the turn — unlike the pause cutting
+     * above, where each phrase is decoded exactly once.
+     */
+    fun snapshot(): FloatArray? = synchronized(samples) {
+        if (samples.size < SAMPLE_RATE / 3) return@synchronized null
+        val copy = FloatArray(samples.size)
+        for (i in copy.indices) copy[i] = samples[i]
+        copy
+    }
+
+    /**
      * Everything captured since the last cut. Used when recording ends, so a final phrase that
      * never got a trailing pause is not silently dropped.
      */

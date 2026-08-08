@@ -1690,6 +1690,10 @@ public class LatinIME extends InputMethodService implements
         }
         final InputTransaction completeInputTransaction = mInputLogic.onCodeInput(mSettings.getCurrent(), event,
                 mKeyboardSwitcher.getKeyboardShiftMode(), mHandler);
+        // Typing during a dictation moves the cursor away from what voice typing last wrote, so the
+        // count it would delete no longer matches. Forget it: the next pass appends instead, which
+        // may repeat a few words but will never eat something the user typed themselves.
+        if (helium314.keyboard.latin.voice.VoiceTyping.INSTANCE.isRecording()) mVoiceInsertedLength = 0;
         updateStateAfterInputTransaction(completeInputTransaction);
         mKeyboardSwitcher.onEvent(event, getCurrentAutoCapsState(), getCurrentRecapitalizeState());
     }
@@ -1701,19 +1705,19 @@ public class LatinIME extends InputMethodService implements
         final helium314.keyboard.latin.voice.VoiceTyping voice = helium314.keyboard.latin.voice.VoiceTyping.INSTANCE;
         if (voice.isRecording()) {
             if (mVoiceStatusView != null) mVoiceStatusView.showTranscribing();
-            final boolean anythingInserted = mVoiceNeedsLeadingSpace;
-            voice.stopAndTranscribe(this, text -> {
+            final boolean anythingInserted = mVoiceInsertedLength > 0;
+            voice.stopAndTranscribe(this, (text, replaces) -> {
                 hideVoiceStatus();
                 if (text == null || text.isEmpty()) {
                     // Only complain when the whole turn produced nothing. In a live turn the
-                    // earlier phrases already landed, so an empty tail is normal, not a failure.
+                    // earlier text already landed, so an empty tail is normal, not a failure.
                     if (!anythingInserted) {
                         android.widget.Toast.makeText(this, R.string.voice_typing_nothing_heard, android.widget.Toast.LENGTH_SHORT).show();
                     }
                 } else {
-                    insertVoiceText(text, mVoiceNeedsLeadingSpace);
+                    insertVoiceText(text, replaces);
                 }
-                mVoiceNeedsLeadingSpace = false;
+                mVoiceInsertedLength = 0;
                 return kotlin.Unit.INSTANCE;
             });
             return;
@@ -1724,37 +1728,59 @@ public class LatinIME extends InputMethodService implements
             final helium314.keyboard.latin.voice.VoiceStatusView view = mVoiceStatusView;
             if (view != null) view.post(() -> view.setLevel(level));
             return kotlin.Unit.INSTANCE;
-        }, text -> {
-            // A phrase finished while the microphone is still open. Insert it now rather than
-            // holding everything back until the turn ends.
-            mVoiceNeedsLeadingSpace = insertVoiceText(text, mVoiceNeedsLeadingSpace);
+        }, (text, replaces) -> {
+            // Text arrived while the microphone is still open. Insert it now rather than holding
+            // everything back until the turn ends.
+            insertVoiceText(text, replaces);
             return kotlin.Unit.INSTANCE;
         });
         if (!started) hideVoiceStatus();
     }
 
     /**
-     * True once a phrase has been inserted in this turn, so the next one is spaced off it. The
-     * recogniser emits bare words with no leading space, and phrases arrive separately, so without
-     * this they run together into one word.
+     * How many characters this voice turn has put into the editor, so rolling mode can take them
+     * back before writing its next pass. Rolling re-transcribes the whole dictation each time, so
+     * appending would repeat everything already said.
      */
-    private boolean mVoiceNeedsLeadingSpace = false;
+    private int mVoiceInsertedLength = 0;
 
-    private boolean insertVoiceText(final String text, final boolean needsSpace) {
-        if (text == null || text.isEmpty()) return needsSpace;
-        onTextInput(needsSpace ? " " + text : text);
-        return true;
+    /**
+     * Inserts transcribed text. When {@code replaces} is set, whatever this turn wrote before is
+     * removed first; otherwise the text is appended, spaced off the previous phrase because the
+     * recogniser emits bare words that would otherwise run together.
+     */
+    private void insertVoiceText(final String text, final boolean replaces) {
+        if (text == null || text.isEmpty()) return;
+        if (replaces) {
+            final helium314.keyboard.latin.RichInputConnection connection = mInputLogic.getConnection();
+            connection.beginBatchEdit();
+            connection.finishComposingText();
+            if (mVoiceInsertedLength > 0) connection.deleteTextBeforeCursor(mVoiceInsertedLength);
+            connection.commitText(text, 1);
+            connection.endBatchEdit();
+            mVoiceInsertedLength = text.length();
+            return;
+        }
+        final String toInsert = mVoiceInsertedLength > 0 ? " " + text : text;
+        onTextInput(toInsert);
+        mVoiceInsertedLength += toInsert.length();
     }
 
     private void showVoiceStatus() {
         if (!hasSuggestionStripView()) return;
         mVoiceStatusView = new helium314.keyboard.latin.voice.VoiceStatusView(this);
+        // Claim the strip before attaching, otherwise the words produced by the dictation replace
+        // the listening indicator and there is no sign the microphone is still open.
+        mSuggestionStripView.setVoiceInputActive(true);
         mSuggestionStripView.setExternalSuggestionView(mVoiceStatusView, false);
     }
 
     private void hideVoiceStatus() {
         mVoiceStatusView = null;
-        if (hasSuggestionStripView()) mSuggestionStripView.setExternalSuggestionView(null, false);
+        if (hasSuggestionStripView()) {
+            mSuggestionStripView.setVoiceInputActive(false);
+            mSuggestionStripView.setExternalSuggestionView(null, false);
+        }
     }
 
     public void onTextInput(final String rawText) {
