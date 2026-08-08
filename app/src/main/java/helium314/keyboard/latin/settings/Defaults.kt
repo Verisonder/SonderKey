@@ -145,7 +145,7 @@ object Defaults {
     const val PREF_AUTOSPACE_AFTER_GESTURE_TYPING = true
     const val PREF_AUTOSPACE_BEFORE_GESTURE_TYPING = true
     const val PREF_SHIFT_REMOVES_AUTOSPACE = false
-    const val PREF_PRESERVE_SPACE_BEFORE_PUNCTUATION = false
+    const val PREF_PRESERVE_SPACE_BEFORE_PUNCTUATION = true
     const val PREF_ALWAYS_INCOGNITO_MODE = false
     const val PREF_BIGRAM_PREDICTIONS = true
     const val PREF_PRIORITIZE_PERSONAL_SUGGESTIONS = false
