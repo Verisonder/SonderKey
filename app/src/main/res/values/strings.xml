@@ -86,10 +86,6 @@
     <string name="language_switch_key_behavior">Language switch key behavior</string>
     <!-- Option to show shortcut key to emoji palettes -->
     <string name="show_emoji_key">Emoji key</string>
-    <!-- Title of the setting for choosing which keys appear when long pressing the comma key -->
-    <string name="comma_popup_keys">Comma key popup</string>
-    <!-- Summary of the setting for choosing which keys appear when long pressing the comma key -->
-    <string name="comma_popup_keys_summary">Keys shown when long pressing the comma key</string>
     <!-- Units abbreviation for the duration (milliseconds) -->
     <string name="abbreviation_unit_milliseconds">%s ms</string>
     <!-- Units abbreviation for the duration (minutes) -->
@@ -677,6 +673,10 @@
     </string-array>
     <!-- Title of the setting to set clipboard toolbar keys -->
     <string name="clipboard_toolbar_keys">Select clipboard toolbar keys</string>
+    <!-- Title of the setting for choosing which keys appear when long pressing the comma key -->
+    <string name="comma_popup_keys">Select comma popup keys</string>
+    <!-- Summary of the setting for choosing which keys appear when long pressing the comma key -->
+    <string name="comma_popup_keys_summary">Keys shown when long pressing the comma key</string>
     <!-- Title of the setting to set pinned toolbar keys -->
     <string name="pinned_toolbar_keys">Select pinned toolbar keys</string>
     <!-- Title of the setting to quick-pin toolbar keys -->

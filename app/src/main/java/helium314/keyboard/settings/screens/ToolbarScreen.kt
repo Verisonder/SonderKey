@@ -38,6 +38,7 @@ import helium314.keyboard.latin.utils.ToolbarMode
 import helium314.keyboard.latin.utils.dpToPx
 import helium314.keyboard.latin.utils.getActivity
 import helium314.keyboard.latin.utils.getStringResourceOrName
+import helium314.keyboard.latin.utils.isCommaPopupKeyAvailable
 import helium314.keyboard.latin.utils.prefs
 import helium314.keyboard.latin.utils.upgradeToolbarPrefs
 import helium314.keyboard.settings.SearchSettingsScreen
@@ -76,6 +77,7 @@ fun ToolbarScreen(
         Settings.PREF_TOOLBAR_KEYS,
         if (!isSplitToolbar) Settings.PREF_PINNED_TOOLBAR_KEYS else null,
         Settings.PREF_CLIPBOARD_TOOLBAR_KEYS,
+        Settings.PREF_COMMA_POPUP_KEYS,
         Settings.PREF_TOOLBAR_CUSTOM_KEY_CODES,
         Settings.PREF_TOOLBAR_LONG_PRESS_HINT,
         if (toolbarMode == ToolbarMode.EXPANDABLE && !isSplitToolbar) Settings.PREF_QUICK_PIN_TOOLBAR_KEYS else null,
@@ -136,6 +138,11 @@ fun createToolbarSettings(context: Context): List<Setting> {
         },
         Setting(context, Settings.PREF_CLIPBOARD_TOOLBAR_KEYS, R.string.clipboard_toolbar_keys) {
             ReorderSwitchPreference(it, Defaults.PREF_CLIPBOARD_TOOLBAR_KEYS, filter)
+        },
+        Setting(context, Settings.PREF_COMMA_POPUP_KEYS,
+            R.string.comma_popup_keys, R.string.comma_popup_keys_summary)
+        {
+            ReorderSwitchPreference(it, Defaults.PREF_COMMA_POPUP_KEYS, ::isCommaPopupKeyAvailable)
         },
         Setting(context, Settings.PREF_TOOLBAR_CUSTOM_KEY_CODES, R.string.customize_toolbar_key_codes) {
             var showDialog by rememberSaveable { mutableStateOf(false) }

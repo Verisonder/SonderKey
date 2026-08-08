@@ -18,7 +18,6 @@ import helium314.keyboard.latin.settings.Defaults
 import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.latin.utils.Log
 import helium314.keyboard.latin.utils.SubtypeSettings
-import helium314.keyboard.latin.utils.isCommaPopupKeyAvailable
 import helium314.keyboard.latin.utils.getActivity
 import helium314.keyboard.latin.utils.locale
 import helium314.keyboard.latin.utils.prefs
@@ -83,7 +82,6 @@ fun PreferencesScreen(
         Settings.PREF_LANGUAGE_SWITCH_KEY,
         Settings.PREF_DIRECT_IME_SWITCH_TARGET,
         Settings.PREF_SHOW_EMOJI_KEY,
-        Settings.PREF_COMMA_POPUP_KEYS,
         Settings.PREF_REMOVE_REDUNDANT_POPUPS,
         R.string.settings_category_clipboard_history,
         Settings.PREF_ENABLE_CLIPBOARD_HISTORY,
@@ -177,11 +175,6 @@ fun createPreferencesSettings(context: Context) = listOf(
     },
     Setting(context, Settings.PREF_SHOW_EMOJI_KEY, R.string.show_emoji_key) {
         SwitchPreference(it, Defaults.PREF_SHOW_EMOJI_KEY) { KeyboardSwitcher.getInstance().reloadKeyboard() }
-    },
-    Setting(context, Settings.PREF_COMMA_POPUP_KEYS,
-        R.string.comma_popup_keys, R.string.comma_popup_keys_summary)
-    {
-        ReorderSwitchPreference(it, Defaults.PREF_COMMA_POPUP_KEYS, ::isCommaPopupKeyAvailable)
     },
     Setting(context, Settings.PREF_REMOVE_REDUNDANT_POPUPS,
         R.string.remove_redundant_popups, R.string.remove_redundant_popups_summary)
