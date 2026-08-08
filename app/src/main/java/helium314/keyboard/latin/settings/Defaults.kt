@@ -61,8 +61,8 @@ object Defaults {
     const val PREF_VOICE_KEY_ON_LEFT = true
     const val PREF_VOICE_TRANSCRIPTION_MODE = "rolling"
     const val PREF_VOICE_PULSE_INDICATOR = true
-    const val PREF_VOICE_SILENCE_STOP = false
-    const val PREF_VOICE_SILENCE_SECONDS = 3
+    const val PREF_VOICE_SILENCE_STOP = true
+    const val PREF_VOICE_SILENCE_SECONDS = 10
 
     const val PREF_ENABLE_SPELL_CHECKER_SERVICE = true
     const val PREF_ENABLE_CONTACTS_OBSERVER = false
