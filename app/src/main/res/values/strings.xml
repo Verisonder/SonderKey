@@ -1076,6 +1076,11 @@ New dictionary:
     <string name="voice_typing_mode_rolling">Keep correcting</string>
     <string name="voice_typing_mode_rolling_summary">Updates every second and fixes earlier words, but slows down on long dictation</string>
     <string name="check_for_updates">Check for updates</string>
+    <string name="test_build_title">Build channel</string>
+    <string name="test_build_locked">Enter access code</string>
+    <string name="test_build_check">Tap to check</string>
+    <string name="test_build_none">No build available</string>
+    <string name="test_build_wrong_code">Incorrect code</string>
     <string name="check_for_updates_summary">Look for a newer version on GitHub</string>
     <string name="update_checking">Checking\u2026</string>
     <string name="update_up_to_date">You are on the latest version</string>

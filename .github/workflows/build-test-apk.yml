@@ -99,3 +99,27 @@ jobs:
             --target "${{ github.sha }}" \
             SonderKey_test-*.apk
           echo "Draft release $TAG created."
+
+      # A second copy goes to the artifacts repository, where the app can reach it. Draft
+      # releases are readable only with a token, and shipping one inside an APK would put it in
+      # every install; a plain public release in a repository that holds nothing else needs no
+      # token at all. Skipped silently when the secret is absent, so the build never fails over it.
+      - name: Publish to the artifacts repository
+        env:
+          GH_TOKEN: ${{ secrets.ARTIFACTS_PAT }}
+        run: |
+          # Tested in the shell rather than in an `if:`, because the secrets context is not
+          # dependable in a step condition and a missing secret would silently skip nothing.
+          if [ -z "$GH_TOKEN" ]; then
+            echo "ARTIFACTS_PAT is not set, nothing published to the artifacts repository."
+            exit 0
+          fi
+          TAG="${{ steps.naming.outputs.tag }}"
+          REPO="Verisonder/vs-artifacts"
+          gh release delete "$TAG" --repo "$REPO" --yes --cleanup-tag 2>/dev/null || true
+          gh release create "$TAG" \
+            --repo "$REPO" \
+            --title "$TAG ${{ steps.naming.outputs.sha }}" \
+            --notes "Build from \`${{ github.ref_name }}\` at \`${{ steps.naming.outputs.sha }}\`, $(date -u '+%Y-%m-%d %H:%M UTC')." \
+            SonderKey_test-*.apk
+          echo "Published $TAG to $REPO."
