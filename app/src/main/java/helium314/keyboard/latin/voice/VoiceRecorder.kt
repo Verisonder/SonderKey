@@ -37,6 +37,12 @@ class VoiceRecorder(private val context: Context) {
          */
         private const val QUIET_FRAMES_TO_CUT = 6
 
+        /**
+         * Audio kept ahead of a phrase when the window slides forward through silence. A fifth of
+         * a second is comfortably longer than one read, so no word can begin in the gap.
+         */
+        private const val PRE_ROLL_SAMPLES = SAMPLE_RATE / 5
+
         fun hasPermission(context: Context) = ContextCompat.checkSelfPermission(
             context, Manifest.permission.RECORD_AUDIO
         ) == PackageManager.PERMISSION_GRANTED
@@ -145,7 +151,18 @@ class VoiceRecorder(private val context: Context) {
         if (!heardSpeechInSegment) {
             // Nothing said yet: keep the window sliding forward so leading silence is not
             // prepended to the first phrase.
-            synchronized(samples) { if (samples.size - segmentStart > SAMPLE_RATE) segmentStart = samples.size }
+            //
+            // The window used to jump the whole way to the current end of the buffer, which threw
+            // away everything captured since the last check - including the start of a word if the
+            // speaker began talking part way through that read. That is where "test" arrived as
+            // "est". Leaving a short pre-roll behind costs a fraction of a second of silence at
+            // the front of a phrase, which the recogniser ignores, and guarantees the onset of
+            // whatever comes next is inside the segment.
+            synchronized(samples) {
+                if (samples.size - segmentStart > SAMPLE_RATE) {
+                    segmentStart = (samples.size - PRE_ROLL_SAMPLES).coerceAtLeast(segmentStart)
+                }
+            }
             return
         }
         quietFrames++

@@ -1848,7 +1848,7 @@ public class LatinIME extends InputMethodService implements
         // Dictating code, shell commands or markup wants exactly what was said and nothing else -
         // an inserted space or a lowered capital is a defect there, not a courtesy. Off means the
         // recogniser's output is committed untouched and the keyboard governs the rest.
-        if (!mSettings.getCurrent().mVoiceAutoFormat) return text;
+        if (!mSettings.getCurrent().mVoiceAutoFormat) return separateFromPreviousPhrase(text);
         final CharSequence before = mInputLogic.getConnection()
                 .getTextBeforeCursor(VOICE_CONTEXT_LOOKBACK, 0);
         // Nothing behind the cursor: a fresh field, so the recogniser's own sentence casing stands.
@@ -1862,6 +1862,29 @@ public class LatinIME extends InputMethodService implements
                 .isSentenceTerminator(lastMeaningful);
         final String cased = startsASentence ? text : uncapitalizeFirst(text);
         return spaceAlreadyThere ? cased : " " + cased;
+    }
+
+    /**
+     * Keeps consecutive phrases of one dictation apart when context formatting is off.
+     *
+     * Leaving the text completely untouched sounded right and read wrong: pauses mode delivers a
+     * phrase at a time and appends each one, so with nothing between them a turn came out as
+     * "Test thisTest are you listening". Wanting exact text is not wanting the words run together,
+     * and someone dictating a shell command wants the space between "git" and "commit" just as
+     * much as anyone else.
+     *
+     * So the space between phrases stays, and what the switch turns off is the part that inspects
+     * the surrounding text: no space is added where this turn has written nothing yet, because
+     * there the cursor is wherever the user chose to put it, and nothing is ever recapitalised.
+     */
+    private String separateFromPreviousPhrase(final String text) {
+        if (text.isEmpty() || mVoiceInsertedLength <= 0) return text;
+        if (Character.isWhitespace(text.codePointAt(0))) return text;
+        final CharSequence before = mInputLogic.getConnection().getTextBeforeCursor(1, 0);
+        if (before != null && before.length() > 0 && Character.isWhitespace(before.charAt(0))) {
+            return text;
+        }
+        return " " + text;
     }
 
     /**
