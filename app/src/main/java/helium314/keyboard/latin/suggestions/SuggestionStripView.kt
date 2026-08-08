@@ -406,12 +406,20 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         setToolbarVisibility(false, saveState = saveState)
     }
 
+    /**
+     * Set while voice typing holds the strip. Suggestions arrive as soon as text is inserted, and
+     * they replaced the listening indicator mid-dictation, leaving no sign the mic was still open.
+     */
+    var isVoiceInputActive = false
+
     fun setSuggestions(suggestions: SuggestedWords, isRtlLanguage: Boolean) {
 
         if (isShowingEmojiSuggestions && !helium314.keyboard.keyboard.KeyboardSwitcher.getInstance().isShowingEmojiPalettes) {
             isShowingEmojiSuggestions = false
         }
         if (isShowingEmojiSuggestions) return
+        // The indicator has to outlast the words produced by the dictation that is still running.
+        if (isVoiceInputActive) return
         if (isExternalSuggestionVisible && (suggestions.isEmpty || suggestions.isPunctuationSuggestions)) {
             // Keep external suggestion (clipboard/screenshot) if new suggestions are empty or just punctuation
             return

@@ -2,6 +2,7 @@
 package helium314.keyboard.settings.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -40,6 +41,7 @@ import helium314.keyboard.latin.utils.ToolbarKey
 import helium314.keyboard.latin.settings.Defaults
 import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.keyboard.KeyboardSwitcher
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
 import helium314.keyboard.latin.voice.VoiceEngine
 import helium314.keyboard.latin.voice.VoiceEngineDownloader
@@ -71,6 +73,10 @@ fun VoiceTypingScreen(onClickBack: () -> Unit) {
     }
     var pinned by remember {
         mutableStateOf(isToolbarKeyEnabled(prefs, Settings.PREF_PINNED_TOOLBAR_KEYS, defaultPinnedToolbarPref, ToolbarKey.VOICE))
+    }
+    var transcriptionMode by remember {
+        mutableStateOf(prefs.getString(Settings.PREF_VOICE_TRANSCRIPTION_MODE, Defaults.PREF_VOICE_TRANSCRIPTION_MODE)
+            ?: Defaults.PREF_VOICE_TRANSCRIPTION_MODE)
     }
     var progress by remember { mutableIntStateOf(0) }
     var status by remember { mutableStateOf<String?>(null) }
@@ -227,6 +233,25 @@ fun VoiceTypingScreen(onClickBack: () -> Unit) {
                         prefs.edit { putBoolean(Settings.PREF_VOICE_KEY_ON_LEFT, it) }
                         KeyboardSwitcher.getInstance().setThemeNeedsReload()
                     }
+                    Text(
+                        text = stringResource(R.string.voice_typing_mode),
+                        style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier.padding(start = 20.dp, top = 16.dp, bottom = 4.dp)
+                    )
+                    listOf(
+                        "on_stop" to (R.string.voice_typing_mode_on_stop to R.string.voice_typing_mode_on_stop_summary),
+                        "pauses" to (R.string.voice_typing_mode_pauses to R.string.voice_typing_mode_pauses_summary),
+                        "rolling" to (R.string.voice_typing_mode_rolling to R.string.voice_typing_mode_rolling_summary)
+                    ).forEach { (value, labels) ->
+                        ChoiceRow(
+                            title = stringResource(labels.first),
+                            summary = stringResource(labels.second),
+                            selected = transcriptionMode == value
+                        ) {
+                            transcriptionMode = value
+                            prefs.edit { putString(Settings.PREF_VOICE_TRANSCRIPTION_MODE, value) }
+                        }
+                    }
                 }
             }
 
@@ -249,6 +274,25 @@ fun VoiceTypingScreen(onClickBack: () -> Unit) {
                 Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
             }
 
+        }
+    }
+}
+
+@Composable
+private fun ChoiceRow(title: String, summary: String, selected: Boolean, onSelect: () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onSelect() }
+            .padding(horizontal = 20.dp, vertical = 10.dp)
+    ) {
+        RadioButton(selected = selected, onClick = onSelect)
+        Column(modifier = Modifier
+            .weight(1f)
+            .padding(start = 8.dp)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+            Text(summary, style = MaterialTheme.typography.bodySmall)
         }
     }
 }

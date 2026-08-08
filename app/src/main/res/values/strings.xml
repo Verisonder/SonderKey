@@ -1039,6 +1039,17 @@ New dictionary:
     <string name="voice_typing_in_toolbar">Show in the toolbar</string>
     <string name="voice_typing_pinned">Pin above the keyboard</string>
     <string name="voice_typing_on_left">Place it on the left</string>
+    <!-- Heading for the group of settings choosing when speech becomes text -->
+    <string name="voice_typing_mode">When to type what you say</string>
+    <!-- Option: transcribe only after recording is stopped -->
+    <string name="voice_typing_mode_on_stop">When you finish</string>
+    <string name="voice_typing_mode_on_stop_summary">Nothing appears until you tap the microphone again</string>
+    <!-- Option: transcribe each phrase at a pause in speech -->
+    <string name="voice_typing_mode_pauses">At every pause</string>
+    <string name="voice_typing_mode_pauses_summary">Each phrase appears when you pause for breath</string>
+    <!-- Option: repeatedly re-transcribe everything said so far -->
+    <string name="voice_typing_mode_rolling">Keep correcting</string>
+    <string name="voice_typing_mode_rolling_summary">Updates every second and fixes earlier words, but slows down on long dictation</string>
     <string name="check_for_updates">Check for updates</string>
     <string name="check_for_updates_summary">Look for a newer version on GitHub</string>
     <string name="update_checking">Checking\u2026</string>

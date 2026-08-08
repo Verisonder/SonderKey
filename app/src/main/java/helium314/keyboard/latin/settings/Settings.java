@@ -246,6 +246,7 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static final String PREF_SONDER_KEY_COLOR = "sonder_key_color";
     public static final String PREF_SONDER_FUNCTIONAL_COLOR = "sonder_functional_color";
     public static final String PREF_VOICE_KEY_ON_LEFT = "voice_key_on_left";
+    public static final String PREF_VOICE_TRANSCRIPTION_MODE = "voice_transcription_mode";
     public static final String PREF_EMOJI_MAX_SDK_FONT = "emoji_max_sdk_font";
     public static final String PREF_EMOJI_UNRENDERABLE = "emoji_unrenderable";
     public static final String PREF_EMOJI_RECENT_KEYS = "emoji_recent_keys";
