@@ -181,11 +181,15 @@ public final class InputView extends FrameLayout {
             setPadding(0, Math.round(r), 0, 0);
         }
 
-        // Rounded pinches the leftmost toolbar key against the curve and leaves no gap above the
-        // row, so the strip is inset by half the radius. Inverted keeps a flat edge and needs none.
+        // The toolbar row has the keyboard's own spacing below it and nothing at all above, so it
+        // reads as pushed upwards against either shape. Half a radius on top evens it out.
+        // Rounded also needs it at the sides, where the curve otherwise pinches the leftmost key;
+        // inverted keeps a flat edge and would only look indented.
         if (strip != null) {
-            final int inset = TOP_SHAPE_ROUNDED.equals(shape) ? Math.round(r * 0.5f) : 0;
-            strip.setPadding(inset, inset, inset, 0);
+            final boolean shaped = TOP_SHAPE_ROUNDED.equals(shape) || TOP_SHAPE_INVERTED.equals(shape);
+            final int top = shaped ? Math.round(r * 0.5f) : 0;
+            final int sides = TOP_SHAPE_ROUNDED.equals(shape) ? Math.round(r * 0.5f) : 0;
+            strip.setPadding(sides, top, sides, 0);
         }
         invalidate();
     }
