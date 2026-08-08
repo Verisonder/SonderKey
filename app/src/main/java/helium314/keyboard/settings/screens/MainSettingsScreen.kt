@@ -44,6 +44,7 @@ import helium314.keyboard.settings.SearchSettingsScreen
 import helium314.keyboard.settings.Theme
 import helium314.keyboard.settings.dialogs.SponsorDialog
 import helium314.keyboard.settings.initPreview
+import helium314.keyboard.settings.preferences.CheckForUpdatesPreference
 import helium314.keyboard.settings.preferences.Preference
 import helium314.keyboard.settings.previewDark
 
@@ -216,7 +217,7 @@ fun MainSettingsScreen(
                     }
                 }
 
-                // Group 3: Other (Advanced, About)
+                // Group 3: Other (Advanced, updates, About)
                 SectionLabel(stringResource(R.string.settings_group_system))
                 Card(
                     modifier = Modifier
@@ -232,6 +233,7 @@ fun MainSettingsScreen(
                             onClick = onClickAdvanced,
                             icon = R.drawable.ic_settings_advanced
                         ) { NextScreenIcon() }
+                        CheckForUpdatesPreference(stringResource(R.string.check_for_updates))
                         Preference(
                             name = stringResource(R.string.settings_screen_about),
                             onClick = onClickAbout,

@@ -31,6 +31,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
+import kotlin.math.roundToInt
 import helium314.keyboard.latin.R
 import helium314.keyboard.latin.utils.setToolbarKeyEnabled
 import helium314.keyboard.latin.utils.prefs
@@ -42,6 +43,7 @@ import helium314.keyboard.latin.settings.Defaults
 import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.keyboard.KeyboardSwitcher
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import helium314.keyboard.latin.voice.VoiceEngine
 import helium314.keyboard.latin.voice.VoiceEngineDownloader
@@ -73,6 +75,15 @@ fun VoiceTypingScreen(onClickBack: () -> Unit) {
     }
     var pinned by remember {
         mutableStateOf(isToolbarKeyEnabled(prefs, Settings.PREF_PINNED_TOOLBAR_KEYS, defaultPinnedToolbarPref, ToolbarKey.VOICE))
+    }
+    var pulseIndicator by remember {
+        mutableStateOf(prefs.getBoolean(Settings.PREF_VOICE_PULSE_INDICATOR, Defaults.PREF_VOICE_PULSE_INDICATOR))
+    }
+    var silenceStop by remember {
+        mutableStateOf(prefs.getBoolean(Settings.PREF_VOICE_SILENCE_STOP, Defaults.PREF_VOICE_SILENCE_STOP))
+    }
+    var silenceSeconds by remember {
+        mutableIntStateOf(prefs.getInt(Settings.PREF_VOICE_SILENCE_SECONDS, Defaults.PREF_VOICE_SILENCE_SECONDS))
     }
     var transcriptionMode by remember {
         mutableStateOf(prefs.getString(Settings.PREF_VOICE_TRANSCRIPTION_MODE, Defaults.PREF_VOICE_TRANSCRIPTION_MODE)
@@ -232,6 +243,37 @@ fun VoiceTypingScreen(onClickBack: () -> Unit) {
                         voiceOnLeft = it
                         prefs.edit { putBoolean(Settings.PREF_VOICE_KEY_ON_LEFT, it) }
                         KeyboardSwitcher.getInstance().setThemeNeedsReload()
+                    }
+                    ToggleRow(
+                        title = stringResource(R.string.voice_typing_pulse_indicator),
+                        checked = pulseIndicator
+                    ) {
+                        pulseIndicator = it
+                        prefs.edit { putBoolean(Settings.PREF_VOICE_PULSE_INDICATOR, it) }
+                    }
+                    ToggleRow(
+                        title = stringResource(R.string.voice_typing_silence_stop),
+                        checked = silenceStop
+                    ) {
+                        silenceStop = it
+                        prefs.edit { putBoolean(Settings.PREF_VOICE_SILENCE_STOP, it) }
+                    }
+                    if (silenceStop) {
+                        Text(
+                            text = stringResource(R.string.voice_typing_silence_seconds, silenceSeconds),
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 4.dp)
+                        )
+                        Slider(
+                            value = silenceSeconds.toFloat(),
+                            onValueChange = { silenceSeconds = it.roundToInt() },
+                            onValueChangeFinished = {
+                                prefs.edit { putInt(Settings.PREF_VOICE_SILENCE_SECONDS, silenceSeconds) }
+                            },
+                            valueRange = 1f..15f,
+                            steps = 13,
+                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp)
+                        )
                     }
                     Text(
                         text = stringResource(R.string.voice_typing_mode),

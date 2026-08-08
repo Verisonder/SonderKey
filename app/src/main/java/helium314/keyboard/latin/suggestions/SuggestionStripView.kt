@@ -51,6 +51,7 @@ import helium314.keyboard.keyboard.emoji.EmojiArtwork
 import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.latin.utils.Log
 import helium314.keyboard.latin.utils.ToolbarKey
+import helium314.keyboard.latin.voice.VoicePulse
 import helium314.keyboard.latin.utils.ToolbarMode
 import helium314.keyboard.latin.utils.addPinnedKey
 import helium314.keyboard.latin.utils.createToolbarKey
@@ -411,6 +412,32 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
      * they replaced the listening indicator mid-dictation, leaving no sign the mic was still open.
      */
     var isVoiceInputActive = false
+
+    /** The microphone key currently pulsing, or null when the compact indicator is not showing. */
+    private var voicePulseTarget: ImageButton? = null
+
+    /**
+     * Starts or stops the compact listening indicator, and reports whether it could be shown.
+     *
+     * It pulses whichever microphone key is actually on screen — pinned at either end, or in an
+     * open toolbar. If none is visible there is nothing to pulse, and false is returned so the
+     * caller can fall back to the full-strip indicator rather than leave the user with no sign
+     * that the microphone is open.
+     */
+    fun setVoicePulseActive(active: Boolean): Boolean {
+        if (!active) {
+            voicePulseTarget?.let { VoicePulse.stop(it) }
+            voicePulseTarget = null
+            return false
+        }
+        if (voicePulseTarget != null) return true
+        val target = sequenceOf(pinnedKeysStart, pinnedKeys, toolbar)
+            .mapNotNull { it.findViewWithTag<ImageButton>(ToolbarKey.VOICE) }
+            .firstOrNull { it.isShown } ?: return false
+        voicePulseTarget = target
+        VoicePulse.start(target)
+        return true
+    }
 
     fun setSuggestions(suggestions: SuggestedWords, isRtlLanguage: Boolean) {
 

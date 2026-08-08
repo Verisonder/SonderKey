@@ -77,6 +77,8 @@ public class SettingsValues {
         public final boolean mShowsEmojiKey;
         // Entry names for the comma key popup, enabled only, in user order. See CommaPopupUtils.
         public final java.util.List<String> mCommaPopupKeys;
+        // Pulse the microphone key instead of taking the whole suggestion strip while dictating.
+        public final boolean mVoicePulseIndicator;
         public final boolean mVarToolbarDirection;
         public final boolean mUsePersonalizedDicts;
         public final boolean mUseDoubleSpacePeriod;
@@ -258,6 +260,8 @@ public class SettingsValues {
                                 Defaults.PREF_SPACE_TO_CHANGE_LANG);
                 mShowsEmojiKey = prefs.getBoolean(Settings.PREF_SHOW_EMOJI_KEY, Defaults.PREF_SHOW_EMOJI_KEY);
                 mCommaPopupKeys = CommaPopupUtilsKt.getEnabledCommaPopupKeys(prefs);
+                mVoicePulseIndicator = prefs.getBoolean(Settings.PREF_VOICE_PULSE_INDICATOR,
+                                Defaults.PREF_VOICE_PULSE_INDICATOR);
                 mVarToolbarDirection = mToolbarMode != ToolbarMode.HIDDEN
                                 && prefs.getBoolean(Settings.PREF_VARIABLE_TOOLBAR_DIRECTION,
                                                 Defaults.PREF_VARIABLE_TOOLBAR_DIRECTION);

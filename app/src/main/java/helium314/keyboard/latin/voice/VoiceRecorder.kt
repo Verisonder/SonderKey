@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
+import android.os.SystemClock
 import androidx.core.content.ContextCompat
 import helium314.keyboard.latin.utils.Log
 import kotlin.concurrent.thread
@@ -44,6 +45,14 @@ class VoiceRecorder(private val context: Context) {
     private var record: AudioRecord? = null
     @Volatile private var recording = false
     private val samples = ArrayList<Float>(SAMPLE_RATE * 10)
+
+    /**
+     * Quiet time that ends the turn on its own, or 0 to keep listening until told otherwise.
+     * The clock starts when recording does, so a microphone opened by accident closes itself
+     * rather than staying open on a turn that never had any speech in it.
+     */
+    @Volatile var silenceTimeoutMs: Long = 0
+    private var lastLoudAt = 0L
 
     /** Emits finished phrases while recording continues, when live transcription is on. */
     @Volatile private var onSegment: ((FloatArray) -> Unit)? = null
@@ -86,6 +95,7 @@ class VoiceRecorder(private val context: Context) {
         record = audioRecord
         samples.clear()
         recording = true
+        lastLoudAt = SystemClock.elapsedRealtime()
         audioRecord.startRecording()
 
         thread(name = "SonderKeyVoiceRecorder") {
@@ -105,7 +115,14 @@ class VoiceRecorder(private val context: Context) {
                 }
                 onLevel?.invoke(peak)
                 if (onSegment != null) checkForPause(peak)
-                if (samples.size >= limit) {
+                val now = SystemClock.elapsedRealtime()
+                if (peak >= SPEECH_THRESHOLD) lastLoudAt = now
+                val timeout = silenceTimeoutMs
+                if (timeout > 0 && now - lastLoudAt >= timeout) {
+                    // Stop rather than cancel: whatever was said still deserves transcribing.
+                    recording = false
+                    onAutoStop?.invoke()
+                } else if (samples.size >= limit) {
                     recording = false
                     onAutoStop?.invoke()
                 }
