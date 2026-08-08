@@ -42,7 +42,7 @@ signing.properties
 
 # Scripts & Misc
 tools/*.txt
-tools/clean_qwencoder_history.sh
+tools/*.sh
 
 # Offline model files & Node
 tokenizer.json
@@ -51,38 +51,7 @@ node_modules/
 # Python Virtual Env
 .venv/
 
-# AI Assistants & Context
-.opencode/
-.aider*
-.superpowers/
-.qwen/
-QWEN.md
-**/QWEN.md
-AGENTS.md
-**/AGENTS.md
-GEMINI.md
-Pdoc/
-.antigravityignore
-.geminiignore
-.gemini/
-help/
-.cursor/
-.cursorrules
-.cline/
-cline_docs/
-.rocline/
-.continue/
-prompt_history.json
-chat.json
-docs/superpowers/
-.agents
-.kilo/
-.antigravitycli/
-
 .env
-
-# AI agent config (personal, not shared)
-.pi/
 
 # Temporary generated files
 docs/releasenote/release_notes_temp.md
