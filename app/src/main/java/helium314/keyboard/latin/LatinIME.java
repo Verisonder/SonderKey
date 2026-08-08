@@ -1716,22 +1716,7 @@ public class LatinIME extends InputMethodService implements
     private void onVoiceKeyPressed() {
         final helium314.keyboard.latin.voice.VoiceTyping voice = helium314.keyboard.latin.voice.VoiceTyping.INSTANCE;
         if (voice.isRecording()) {
-            if (mVoiceStatusView != null) mVoiceStatusView.showTranscribing();
-            final boolean anythingInserted = mVoiceInsertedLength > 0;
-            voice.stopAndTranscribe(this, (text, replaces) -> {
-                hideVoiceStatus();
-                if (text == null || text.isEmpty()) {
-                    // Only complain when the whole turn produced nothing. In a live turn the
-                    // earlier text already landed, so an empty tail is normal, not a failure.
-                    if (!anythingInserted) {
-                        android.widget.Toast.makeText(this, R.string.voice_typing_nothing_heard, android.widget.Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    insertVoiceText(text, replaces);
-                }
-                mVoiceInsertedLength = 0;
-                return kotlin.Unit.INSTANCE;
-            });
+            finishVoiceTurn();
             return;
         }
         // Show the indicator first, so the level meter is already on screen when audio starts.
@@ -1746,8 +1731,34 @@ public class LatinIME extends InputMethodService implements
             // when the turn is cancelled, so check the turn is still alive before writing.
             if (voice.isRecording()) insertVoiceText(text, replaces);
             return kotlin.Unit.INSTANCE;
+        }, () -> {
+            // The recorder closed itself, on the silence timeout or at the length cap. Finish the
+            // turn exactly as a second press of the mic key would, so what was said still lands.
+            finishVoiceTurn();
+            return kotlin.Unit.INSTANCE;
         });
         if (!started) hideVoiceStatus();
+    }
+
+    /** Transcribes and inserts whatever the turn captured, then tears the indicator down. */
+    private void finishVoiceTurn() {
+        final helium314.keyboard.latin.voice.VoiceTyping voice = helium314.keyboard.latin.voice.VoiceTyping.INSTANCE;
+        if (mVoiceStatusView != null) mVoiceStatusView.showTranscribing();
+        final boolean anythingInserted = mVoiceInsertedLength > 0;
+        voice.stopAndTranscribe(this, (text, replaces) -> {
+            hideVoiceStatus();
+            if (text == null || text.isEmpty()) {
+                // Only complain when the whole turn produced nothing. In a live turn the
+                // earlier text already landed, so an empty tail is normal, not a failure.
+                if (!anythingInserted) {
+                    android.widget.Toast.makeText(this, R.string.voice_typing_nothing_heard, android.widget.Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                insertVoiceText(text, replaces);
+            }
+            mVoiceInsertedLength = 0;
+            return kotlin.Unit.INSTANCE;
+        });
     }
 
     /**

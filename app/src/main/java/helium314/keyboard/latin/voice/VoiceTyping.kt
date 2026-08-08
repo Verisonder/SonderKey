@@ -94,6 +94,14 @@ object VoiceTyping {
         context.prefs().getString(Settings.PREF_VOICE_TRANSCRIPTION_MODE, Defaults.PREF_VOICE_TRANSCRIPTION_MODE)
     )
 
+    /** Quiet time that ends a turn on its own, in milliseconds, or 0 when the option is off. */
+    private fun silenceTimeoutMs(context: Context): Long {
+        val prefs = context.prefs()
+        if (!prefs.getBoolean(Settings.PREF_VOICE_SILENCE_STOP, Defaults.PREF_VOICE_SILENCE_STOP)) return 0
+        val seconds = prefs.getInt(Settings.PREF_VOICE_SILENCE_SECONDS, Defaults.PREF_VOICE_SILENCE_SECONDS)
+        return seconds.coerceAtLeast(1) * 1000L
+    }
+
     /**
      * Starts recording. Returns false if it could not start, having already told the user why.
      *
@@ -104,7 +112,8 @@ object VoiceTyping {
     fun start(
         context: Context,
         onLevel: ((Float) -> Unit)? = null,
-        onText: ((String, Boolean) -> Unit)? = null
+        onText: ((String, Boolean) -> Unit)? = null,
+        onAutoStop: (() -> Unit)? = null
     ): Boolean {
         if (isRecording) return true
         if (!isReady(context)) {
@@ -119,9 +128,13 @@ object VoiceTyping {
         }
         mode = if (onText == null) Mode.ON_STOP else modeOf(context)
         val r = VoiceRecorder(context)
+        r.silenceTimeoutMs = silenceTimeoutMs(context)
         cancelled = false
         if (mode == Mode.PAUSES) startWorker(context, onText)
-        if (!r.start(onLevel)) {
+        // Fires on the recorder thread when it stops itself, either on the silence timeout or at
+        // the hard length cap. Nothing used to listen for it, so a turn that hit the cap left the
+        // indicator up and never transcribed.
+        if (!r.start(onLevel) { main.post { onAutoStop?.invoke() } }) {
             toast(context, context.getString(R.string.voice_typing_mic_unavailable))
             stopWorker()
             return false
