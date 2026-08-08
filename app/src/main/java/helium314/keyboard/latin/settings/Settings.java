@@ -243,6 +243,7 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static final String PREF_USE_BUNDLED_EMOJI_FONT = "use_bundled_emoji_font";
     public static final String PREF_SONDER_SEED_COLOR = "sonder_seed_color";
     public static final String PREF_SONDER_SURFACE_COLOR = "sonder_surface_color";
+    public static final String PREF_SONDER_ROUNDED_TOP = "sonder_rounded_top";
     public static final String PREF_SONDER_KEY_COLOR = "sonder_key_color";
     public static final String PREF_SONDER_FUNCTIONAL_COLOR = "sonder_functional_color";
     public static final String PREF_VOICE_KEY_ON_LEFT = "voice_key_on_left";

@@ -6,6 +6,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -31,6 +32,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -98,6 +100,9 @@ fun SonderThemeScreen(onClickBack: () -> Unit) {
     var editing by remember { mutableIntStateOf(0) } // 0 accent, 1 keys, 2 functional, 3 background
     val current = when (editing) { 0 -> seed; 1 -> keyColor; 2 -> funcColor; else -> surface }
     var hexField by remember(editing) { mutableStateOf(current.toHex()) }
+    var roundedTop by remember {
+        mutableStateOf(prefs.getBoolean(Settings.PREF_SONDER_ROUNDED_TOP, Defaults.PREF_SONDER_ROUNDED_TOP))
+    }
 
     fun apply(newValue: Int) {
         when (editing) {
@@ -169,6 +174,39 @@ fun SonderThemeScreen(onClickBack: () -> Unit) {
                 }) {
                     Text(stringResource(R.string.sonder_theme_reset))
                 }
+            }
+
+            SectionTitle(stringResource(R.string.sonder_theme_shape))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        roundedTop = !roundedTop
+                        prefs.edit { putBoolean(Settings.PREF_SONDER_ROUNDED_TOP, roundedTop) }
+                        KeyboardSwitcher.getInstance().setThemeNeedsReload()
+                    }
+                    .padding(vertical = 4.dp)
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        stringResource(R.string.sonder_theme_rounded_top),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Text(
+                        stringResource(R.string.sonder_theme_rounded_top_summary),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(
+                    checked = roundedTop,
+                    onCheckedChange = {
+                        roundedTop = it
+                        prefs.edit { putBoolean(Settings.PREF_SONDER_ROUNDED_TOP, it) }
+                        KeyboardSwitcher.getInstance().setThemeNeedsReload()
+                    }
+                )
             }
 
             Spacer(Modifier.height(20.dp))
@@ -307,13 +345,20 @@ private fun Swatch(color: Int, selected: Boolean, onClick: () -> Unit) {
     )
 }
 
-/** Small pill showing one of the two colours; tapping it switches what the controls edit. */
+/**
+ * Small pill showing one channel; tapping it switches what the controls below edit.
+ *
+ * The selected one carries an outline, a filled container, a check and bolder text. A tint alone
+ * was too easy to miss, which left the swatches and sliders looking like they applied to nothing
+ * in particular.
+ */
 @Composable
 private fun ChannelChip(label: String, color: Color, selected: Boolean, onClick: () -> Unit) {
     Surface(
-        color = if (selected) MaterialTheme.colorScheme.secondaryContainer
+        color = if (selected) MaterialTheme.colorScheme.primaryContainer
                 else MaterialTheme.colorScheme.surfaceContainerHighest,
         shape = MaterialTheme.shapes.small,
+        border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
         modifier = Modifier.clickable(onClick = onClick)
     ) {
         Row(
@@ -326,12 +371,18 @@ private fun ChannelChip(label: String, color: Color, selected: Boolean, onClick:
                     .size(22.dp)
                     .clip(CircleShape)
                     .background(color)
-                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
+                    .border(
+                        if (selected) 2.dp else 1.dp,
+                        if (selected) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.outlineVariant,
+                        CircleShape
+                    )
             )
             Text(
                 label,
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (selected) MaterialTheme.colorScheme.onSecondaryContainer
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                color = if (selected) MaterialTheme.colorScheme.onPrimaryContainer
                         else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }

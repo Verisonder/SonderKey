@@ -9,6 +9,8 @@ package helium314.keyboard.latin;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.GradientDrawable;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -19,7 +21,9 @@ import androidx.core.view.ViewKt;
 import helium314.keyboard.accessibility.AccessibilityUtils;
 import helium314.keyboard.keyboard.MainKeyboardView;
 import helium314.keyboard.latin.common.ColorType;
+import helium314.keyboard.latin.settings.Defaults;
 import helium314.keyboard.latin.settings.Settings;
+import helium314.keyboard.latin.utils.DeviceProtectedUtils;
 import helium314.keyboard.latin.suggestions.MoreSuggestionsView;
 import helium314.keyboard.latin.suggestions.SuggestionStripView;
 import kotlin.Unit;
@@ -106,11 +110,40 @@ public final class InputView extends FrameLayout {
     }
 
     private Unit onNextLayout(View v) {
-        Settings.getValues().mColors.setBackground(findViewById(R.id.main_keyboard_frame), ColorType.MAIN_BACKGROUND);
+        final View frame = findViewById(R.id.main_keyboard_frame);
+        Settings.getValues().mColors.setBackground(frame, ColorType.MAIN_BACKGROUND);
+        applyRoundedTopCorners(frame);
 
         // Work around inset application being unreliable
         requestApplyInsets();
         return null;
+    }
+
+    /** Corner radius used when the rounded top is switched on. */
+    private static final float ROUNDED_TOP_RADIUS_DP = 18f;
+
+    /**
+     * Replaces the frame's flat background with one whose top corners are rounded, so the keyboard
+     * reads as a panel sitting over the app rather than a slab butted against it.
+     *
+     * Skipped when a background image is set: that is drawn as a bitmap sized to the view, and
+     * swapping it for a shape would throw the image away.
+     */
+    private void applyRoundedTopCorners(final View frame) {
+        if (frame == null) return;
+        final boolean rounded = DeviceProtectedUtils.getSharedPreferences(getContext())
+                .getBoolean(Settings.PREF_SONDER_ROUNDED_TOP, Defaults.PREF_SONDER_ROUNDED_TOP);
+        if (!rounded) return;
+        // A background image arrives as a bitmap sized to the view; replacing it with a shape
+        // would throw the image away, so leave those alone.
+        if (frame.getBackground() instanceof BitmapDrawable) return;
+        final float r = ROUNDED_TOP_RADIUS_DP * getResources().getDisplayMetrics().density;
+        final GradientDrawable shape = new GradientDrawable();
+        shape.setShape(GradientDrawable.RECTANGLE);
+        // top-left, top-right, bottom-right, bottom-left, each as an x/y pair
+        shape.setCornerRadii(new float[] { r, r, r, r, 0f, 0f, 0f, 0f });
+        shape.setColor(Settings.getValues().mColors.get(ColorType.MAIN_BACKGROUND));
+        frame.setBackground(shape);
     }
 
     /**

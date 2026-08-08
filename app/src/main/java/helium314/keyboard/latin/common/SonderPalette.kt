@@ -157,7 +157,12 @@ object SonderPalette {
         0xFFE8EDEB.toInt()  // pale (for light themes)
     )
 
-    /** Suggested surface tints. Deliberately close to neutral — these are large areas. */
+    /**
+     * Suggested surface tints. Deliberately close to neutral — these are large areas.
+     *
+     * The colour is now applied exactly as picked, so the light entries at the end matter: a light
+     * Sonder theme needs one of those rather than one of the graphites above it.
+     */
     val SURFACE_PRESETS = intArrayOf(
         0xFF111215.toInt(), // graphite (Sonder Dark)
         0xFF14171C.toInt(), // slate
@@ -168,7 +173,11 @@ object SonderPalette {
         0xFF0E0E0E.toInt(), // near black
         0xFF1C1C1E.toInt(), // charcoal
         0xFF101820.toInt(), // navy
-        0xFF171717.toInt()  // neutral
+        0xFF171717.toInt(), // neutral
+        0xFFF2F3F5.toInt(), // paper (Sonder Light)
+        0xFFECEFF3.toInt(), // cool grey
+        0xFFF1EDE7.toInt(), // warm sand
+        0xFFE7EDEA.toInt()  // pale green
     )
 
     /**
@@ -180,7 +189,19 @@ object SonderPalette {
      */
     class Keyboard(accentSeed: Int, surfaceSeed: Int, keySeed: Int, functionalSeed: Int, dark: Boolean) {
         val accent: Int = accentFor(accentSeed, dark)
-        val background: Int = if (dark) tone(surfaceSeed, 7) else tone(surfaceSeed, 95)
+
+        /**
+         * The plate behind the keys uses exactly the colour that was picked.
+         *
+         * This used to be `tone(surfaceSeed, 7)` for dark and `tone(surfaceSeed, 95)` for light,
+         * which pinned lightness to one end of the scale and cut chroma to roughly a quarter. Every
+         * choice therefore came out near-black or near-white with a tint too faint to notice, so
+         * the picker looked broken next to the key colours, which were already applied literally.
+         *
+         * The consequence is that the light and dark Sonder themes share this one colour and no
+         * longer force it either way, so a light theme needs a light colour chosen for it.
+         */
+        val background: Int = surfaceSeed
 
         /** The letter keys use exactly the colour that was picked, with no tone shifting. */
         val keyBackground: Int = keySeed
