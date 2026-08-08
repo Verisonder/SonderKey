@@ -190,6 +190,7 @@ object KeyCode {
     const val PROOFREAD =                 -10052  // Gemini AI proofreading
     const val TRANSLATE =                 -10053  // Gemini AI translation
     const val SHOW_TRANSLATE_LANGUAGES =  -10054  // Show translate language selector
+    const val VOICE_INPUT_MODE =          -10055  // Pick a dictation mode and start a turn in it
     const val CUSTOM_AI_1 =               -10061
     const val CUSTOM_AI_2 =               -10062
     const val CUSTOM_AI_3 =               -10063
@@ -228,6 +229,7 @@ object KeyCode {
         MEDIA_PREVIOUS, VOL_UP, VOL_DOWN, MUTE, F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, BACK,
         TIMESTAMP, CTRL_LEFT, CTRL_RIGHT, ALT_LEFT, ALT_RIGHT, META_LEFT, META_RIGHT, SEND_INTENT_ONE, SEND_INTENT_TWO,
         SEND_INTENT_THREE, INLINE_EMOJI_SEARCH_DONE, META_LOCK, PROOFREAD, TRANSLATE, SHOW_TRANSLATE_LANGUAGES,
+        VOICE_INPUT_MODE,
         CUSTOM_AI_1, CUSTOM_AI_2, CUSTOM_AI_3, CUSTOM_AI_4, CUSTOM_AI_5,
         CUSTOM_AI_6, CUSTOM_AI_7, CUSTOM_AI_8, CUSTOM_AI_9, CUSTOM_AI_10, CLIPBOARD_SEARCH, TOGGLE_FLOATING_KEYBOARD, TOGGLE_TOUCHPAD_MODE, TOGGLE_TEXT_EDIT_MODE, TOGGLE_SELECTION_MODE, HANDWRITING, CLEAR_HANDWRITING,
         CUSTOM1, CUSTOM2, CUSTOM3, CUSTOM4, CUSTOM5, SWITCH_TO_USER_IME

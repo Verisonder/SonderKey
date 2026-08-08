@@ -1680,6 +1680,10 @@ public class LatinIME extends InputMethodService implements
             switchToUserIme();
             return;
         }
+        if (KeyCode.VOICE_INPUT_MODE == event.getKeyCode()) {
+            showVoiceModeSelector();
+            return;
+        }
         if (KeyCode.VOICE_INPUT == event.getKeyCode()) {
             // SonderKey transcribes on the device when it is set up; otherwise fall back to
             // whichever voice input method the system provides, so the key is never dead.
@@ -2216,6 +2220,13 @@ public class LatinIME extends InputMethodService implements
     public void showTranslateLanguageSelector() {
         if (mSuggestionStripView != null) {
             mSuggestionStripView.showTranslateLanguageSelector();
+        }
+    }
+
+    /** Long-pressing the microphone offers the three dictation modes and starts a turn in one. */
+    public void showVoiceModeSelector() {
+        if (mSuggestionStripView != null) {
+            mSuggestionStripView.showVoiceModeSelector();
         }
     }
 

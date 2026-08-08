@@ -284,6 +284,7 @@ fun getCodeForToolbarKeyLongClick(key: ToolbarKey) = Settings.getInstance().getC
     PAGE_UP -> KeyCode.MOVE_START_OF_PAGE
     PAGE_DOWN -> KeyCode.MOVE_END_OF_PAGE
     TRANSLATE -> KeyCode.SHOW_TRANSLATE_LANGUAGES
+    VOICE -> KeyCode.VOICE_INPUT_MODE
     else -> KeyCode.UNSPECIFIED
 }
 

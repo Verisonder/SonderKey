@@ -1057,6 +1057,8 @@ New dictionary:
     <!-- Description for "voice_typing_auto_format" setting -->
     <string name="voice_typing_auto_format_summary">Add a space and match sentence case when dictating mid-text. Turn off for code, commands and other exact input.</string>
     <string name="voice_typing_mode">When to type what you say</string>
+    <!-- Title of the dialog shown when long-pressing the microphone key -->
+    <string name="voice_typing_mode_pick">Dictate using</string>
     <!-- Option: transcribe only after recording is stopped -->
     <string name="voice_typing_mode_on_stop">When you finish</string>
     <string name="voice_typing_mode_on_stop_summary">Nothing appears until you tap the microphone again</string>

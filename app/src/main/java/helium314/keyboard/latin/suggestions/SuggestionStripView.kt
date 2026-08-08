@@ -860,6 +860,43 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         dialog.show()
     }
 
+    /**
+     * Offers the three dictation modes and starts a turn in whichever is chosen.
+     *
+     * The mode lived only in settings, several taps away, but it is the kind of choice that
+     * changes per message rather than per install: block dictation for a paragraph, pauses for a
+     * shell command. Picking one writes it through as the standing preference and then presses the
+     * microphone, so the choice and the dictation are one gesture rather than two errands.
+     */
+    fun showVoiceModeSelector() {
+        val prefs = context.prefs()
+        val values = listOf("on_stop", "pauses", "rolling")
+        val labels = arrayOf<CharSequence>(
+            context.getString(R.string.voice_typing_mode_on_stop),
+            context.getString(R.string.voice_typing_mode_pauses),
+            context.getString(R.string.voice_typing_mode_rolling)
+        )
+        val current = values.indexOf(
+            prefs.getString(Settings.PREF_VOICE_TRANSCRIPTION_MODE, Defaults.PREF_VOICE_TRANSCRIPTION_MODE)
+        ).coerceAtLeast(0)
+        val builder = android.app.AlertDialog.Builder(
+            helium314.keyboard.latin.utils.getPlatformDialogThemeContext(context)
+        )
+            .setTitle(R.string.voice_typing_mode_pick)
+            .setNegativeButton(android.R.string.cancel, null)
+            .setSingleChoiceItems(labels, current) { dialog, which ->
+                prefs.edit().putString(Settings.PREF_VOICE_TRANSCRIPTION_MODE, values[which]).apply()
+                dialog.dismiss()
+                listener.onCodeInput(
+                    KeyCode.VOICE_INPUT,
+                    Constants.SUGGESTION_STRIP_COORDINATE,
+                    Constants.SUGGESTION_STRIP_COORDINATE,
+                    false
+                )
+            }
+        showDialogForIme(builder)
+    }
+
     fun showTranslateLanguageSelector() {
         // Hide other views
         suggestionsStrip.isVisible = false
