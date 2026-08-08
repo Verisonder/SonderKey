@@ -541,6 +541,13 @@
     <string name="backup_category_dictionary">Dictionaries &amp; Typing History</string>
     <string name="backup_category_clipboard">Clipboard History</string>
     <string name="backup_category_general">General Settings</string>
+    <string name="backup_category_downloaded_dictionaries">Downloaded Dictionaries</string>
+    <string name="backup_category_voice">Voice Typing Engine &amp; Models</string>
+    <string name="backup_category_plugins">Handwriting &amp; Gesture Plugins</string>
+    <!-- Button that ticks every backup category -->
+    <string name="backup_select_all">Select all</string>
+    <!-- Button that unticks every backup category -->
+    <string name="backup_select_none">Select none</string>
     <string name="backup_select_items">Select items to include:</string>
 
     <string name="config_gemini_models_endpoint" translatable="false">https://generativelanguage.googleapis.com/v1beta/models?key=%1$s</string>

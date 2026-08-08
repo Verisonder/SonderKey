@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.TextButton
 import helium314.keyboard.dictionarypack.DictionaryPackConstants
 import helium314.keyboard.keyboard.KeyboardSwitcher
 import helium314.keyboard.keyboard.emoji.SupportedEmojis
@@ -37,7 +38,9 @@ import helium314.keyboard.latin.database.Database
 import helium314.keyboard.latin.database.ClipboardDao
 import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.latin.utils.DeviceProtectedUtils
+import helium314.keyboard.latin.utils.DictionaryInfoUtils
 import helium314.keyboard.latin.utils.ExecutorUtils
+import helium314.keyboard.latin.utils.JniUtils
 import helium314.keyboard.latin.utils.LayoutUtilsCustom
 import helium314.keyboard.latin.utils.Log
 import helium314.keyboard.latin.utils.SubtypeSettings
@@ -71,13 +74,7 @@ fun BackupRestorePreference(setting: Setting) {
     var error: String? by rememberSaveable { mutableStateOf(null) }
     var selectedCategories by remember {
         mutableStateOf(
-            setOf(
-                BackupCategory.LAYOUTS,
-                BackupCategory.THEME_APPEARANCE,
-                BackupCategory.DICTIONARY_HISTORY,
-                BackupCategory.CLIPBOARD,
-                BackupCategory.GENERAL_SETTINGS
-            )
+            BackupCategory.entries.toSet()
         )
     }
     val backupLauncher = backupLauncher(selectedCategories) { error = it }
@@ -97,9 +94,25 @@ fun BackupRestorePreference(setting: Setting) {
                         BackupCategory.LAYOUTS to R.string.backup_category_layouts,
                         BackupCategory.THEME_APPEARANCE to R.string.backup_category_theme,
                         BackupCategory.DICTIONARY_HISTORY to R.string.backup_category_dictionary,
+                        BackupCategory.DOWNLOADED_DICTIONARIES to R.string.backup_category_downloaded_dictionaries,
                         BackupCategory.CLIPBOARD to R.string.backup_category_clipboard,
-                        BackupCategory.GENERAL_SETTINGS to R.string.backup_category_general
+                        BackupCategory.GENERAL_SETTINGS to R.string.backup_category_general,
+                        BackupCategory.VOICE_TYPING to R.string.backup_category_voice,
+                        BackupCategory.PLUGINS to R.string.backup_category_plugins
                     )
+                    val allSelected = selectedCategories.size == BackupCategory.entries.size
+                    TextButton(
+                        onClick = {
+                            selectedCategories =
+                                if (allSelected) emptySet() else BackupCategory.entries.toSet()
+                        }
+                    ) {
+                        Text(
+                            stringResource(
+                                if (allSelected) R.string.backup_select_none else R.string.backup_select_all
+                            )
+                        )
+                    }
                     categories.forEach { (category, stringResId) ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -264,7 +277,12 @@ private fun backupLauncher(
                 wait.countDown()
             }
         }
-        if (!wait.await(30, TimeUnit.SECONDS)) {
+        // A voice model alone is well over a hundred megabytes, and writing that through the
+        // document provider on a slow device takes far longer than the half minute a settings-only
+        // backup ever needed. Waiting too briefly does not cancel anything, it just stops us
+        // hearing how it went, so the error dialog never appears for the backups most likely to fail.
+        val timeoutSeconds = if (selectedCategories.any { it in largeCategories }) 600L else 30L
+        if (!wait.await(timeoutSeconds, TimeUnit.SECONDS)) {
             Log.w("AdvancedScreen", "Backup timed out")
         }
     }
@@ -292,12 +310,31 @@ private fun restoreLauncher(
                             File(filesDir, "layouts").deleteRecursively()
                         }
                         if (selectedCategories.contains(BackupCategory.DICTIONARY_HISTORY)) {
-                            File(filesDir, "dicts").deleteRecursively()
+                            // Only the learned words. Downloaded dictionaries sit in the same tree
+                            // and are their own category now, so clearing the whole directory
+                            // would take them out with someone who only asked for their history.
+                            File(filesDir, "dicts").walkBottomUp().forEach {
+                                if (it.isFile && it.name.endsWith(DictionaryInfoUtils.USER_DICTIONARY_SUFFIX)) it.delete()
+                            }
                             File(filesDir, "blacklists").deleteRecursively()
                             File(deviceProtectedFilesDir, "blacklists").deleteRecursively()
                             filesDir.listFiles()?.forEach {
                                 if (it.name.startsWith("UserHistoryDictionary")) it.delete()
                             }
+                        }
+                        if (selectedCategories.contains(BackupCategory.DOWNLOADED_DICTIONARIES)) {
+                            File(filesDir, "dicts").walkBottomUp().forEach {
+                                if (it.isFile && it.name.endsWith(".dict")
+                                    && !it.name.endsWith(DictionaryInfoUtils.USER_DICTIONARY_SUFFIX)
+                                ) it.delete()
+                            }
+                        }
+                        if (selectedCategories.contains(BackupCategory.VOICE_TYPING)) {
+                            File(filesDir, "voice-engine").deleteRecursively()
+                            File(filesDir, "voice-models").deleteRecursively()
+                        }
+                        if (selectedCategories.contains(BackupCategory.PLUGINS)) {
+                            File(filesDir, "handwriting_plugin.apk").delete()
                         }
                         if (selectedCategories.contains(BackupCategory.THEME_APPEARANCE)) {
                             File(filesDir, "custom_font").delete()
@@ -395,7 +432,8 @@ private fun restoreLauncher(
                 wait.countDown()
             }
         }
-        if (!wait.await(30, TimeUnit.SECONDS)) {
+        val timeoutSeconds = if (selectedCategories.any { it in largeCategories }) 600L else 30L
+        if (!wait.await(timeoutSeconds, TimeUnit.SECONDS)) {
             Log.w("AdvancedScreen", "Restore timed out")
         }
         AppUpgrade.checkVersionUpgrade(ctx, isRestore = true)
@@ -503,6 +541,14 @@ private val backupFilePatterns by lazy { listOf(
     "blacklists${File.separator}.*\\.txt".toRegex(),
     "layouts${File.separator}.*${LayoutUtilsCustom.CUSTOM_LAYOUT_PREFIX}+\\..{0,4}".toRegex(), // can't expect a period at the end, as this would break restoring older backups
     "dicts${File.separator}.*${File.separator}.*user\\.dict".toRegex(),
+    // Every other dictionary in the tree - the downloaded main, addon and emoji dictionaries.
+    // Only the user's own words were ever matched above, so a restore left someone re-downloading
+    // every language they had installed.
+    "dicts${File.separator}.*${File.separator}.*\\.dict".toRegex(),
+    "voice-engine${File.separator}.*".toRegex(),
+    "voice-models${File.separator}.*".toRegex(),
+    "handwriting_plugin\\.apk".toRegex(),
+    Regex.escape(JniUtils.JNI_LIB_IMPORT_FILE_NAME).toRegex(),
     "UserHistoryDictionary.*${File.separator}UserHistoryDictionary.*\\.(body|header)".toRegex(),
     "custom_background_image.*".toRegex(),
     "custom_font".toRegex(),
@@ -513,9 +559,18 @@ enum class BackupCategory {
     LAYOUTS,
     THEME_APPEARANCE,
     DICTIONARY_HISTORY,
+    DOWNLOADED_DICTIONARIES,
     CLIPBOARD,
-    GENERAL_SETTINGS
+    GENERAL_SETTINGS,
+    VOICE_TYPING,
+    PLUGINS
 }
+
+/**
+ * Categories that can carry tens or hundreds of megabytes, so the backup needs longer than the
+ * ordinary wait before it gives up reporting on itself.
+ */
+private val largeCategories = setOf(BackupCategory.VOICE_TYPING, BackupCategory.PLUGINS)
 
 private fun getCategoryForPrefKey(key: String): BackupCategory {
     if (key.startsWith("layout_")) return BackupCategory.LAYOUTS
@@ -564,11 +619,24 @@ private fun getCategoryForFilePath(path: String): BackupCategory? {
     if (path.startsWith("custom_background_image") || path == "custom_font" || path == "custom_emoji_font" || path == FLOATING_KEYBOARD_PREFS_FILE_NAME) {
         return BackupCategory.THEME_APPEARANCE
     }
+    // The learned words and the downloaded dictionaries share a directory but not a purpose:
+    // one is irreplaceable, the other is a re-download. Split them so either can be left out.
+    if ((path.startsWith("dicts${File.separator}") || path.startsWith("dicts/"))
+        && !path.endsWith(DictionaryInfoUtils.USER_DICTIONARY_SUFFIX)
+    ) {
+        return BackupCategory.DOWNLOADED_DICTIONARIES
+    }
     if (path.startsWith("dicts${File.separator}") || path.startsWith("dicts/")
         || path.startsWith("blacklists${File.separator}") || path.startsWith("blacklists/")
         || path.startsWith("UserHistoryDictionary")
     ) {
         return BackupCategory.DICTIONARY_HISTORY
+    }
+    if (path.startsWith("voice-engine") || path.startsWith("voice-models")) {
+        return BackupCategory.VOICE_TYPING
+    }
+    if (path == "handwriting_plugin.apk" || path == JniUtils.JNI_LIB_IMPORT_FILE_NAME) {
+        return BackupCategory.PLUGINS
     }
     if (path == Database.NAME) {
         return BackupCategory.CLIPBOARD
