@@ -1051,6 +1051,10 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         KeyboardIconsSet.instance.loadIcons(context)
         toolbar.removeAllViews()
         pinnedKeys.removeAllViews()
+        // pinnedKeysStart holds the voice key when it sits on the left. Missing it here meant every
+        // rebuild appended another microphone instead of replacing it, and a dictionary install
+        // rebuilds several times in a row.
+        pinnedKeysStart.removeAllViews()
 
         val colors = Settings.getValues().mColors
         val pinnedKeysList = getPinnedToolbarKeys(context.prefs())
