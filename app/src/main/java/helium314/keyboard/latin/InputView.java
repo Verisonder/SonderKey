@@ -137,10 +137,12 @@ public final class InputView extends FrameLayout {
         if (frame == null) return;
         final boolean rounded = DeviceProtectedUtils.getSharedPreferences(getContext())
                 .getBoolean(Settings.PREF_SONDER_ROUNDED_TOP, Defaults.PREF_SONDER_ROUNDED_TOP);
+        final View strip = findViewById(R.id.strip_container);
         if (!rounded) {
             // The view is reused across theme reloads, so switching this off has to undo it.
             frame.setClipToOutline(false);
             frame.setOutlineProvider(ViewOutlineProvider.BACKGROUND);
+            if (strip != null) strip.setPadding(0, 0, 0, 0);
             return;
         }
         final float r = ROUNDED_TOP_RADIUS_DP * getResources().getDisplayMetrics().density;
@@ -151,6 +153,16 @@ public final class InputView extends FrameLayout {
             }
         });
         frame.setClipToOutline(true);
+
+        // Without this the toolbar sits hard against the curve: the leftmost key is pinched by the
+        // corner, and the row reads as crowded upwards because the gap below it is the keyboard's
+        // own spacing while the gap above it is nothing at all. Insetting the strip by half the
+        // radius pulls the keys clear of the arc and balances the row. Set absolutely rather than
+        // added, since this runs again on every layout.
+        if (strip != null) {
+            final int inset = Math.round(r * 0.5f);
+            strip.setPadding(inset, inset, inset, 0);
+        }
     }
 
     /**
