@@ -36,6 +36,8 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -51,6 +53,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 import androidx.compose.ui.unit.sp
 import androidx.core.content.edit
 import helium314.keyboard.keyboard.KeyboardSwitcher
@@ -104,6 +107,18 @@ fun SonderThemeScreen(onClickBack: () -> Unit) {
         mutableStateOf(prefs.getBoolean(Settings.PREF_SONDER_ROUNDED_TOP, Defaults.PREF_SONDER_ROUNDED_TOP))
     }
 
+    // Rebuilding the keyboard is expensive and disruptive: it is the live keyboard being torn down
+    // and recreated underneath the settings screen. Doing it on every change made dragging a slider
+    // flicker the keyboard away and back on each step, and firing it while the keyboard was busy
+    // handling a paste brought the app down. Changes are written through immediately; the rebuild
+    // waits until they stop coming.
+    var reloadTick by remember { mutableIntStateOf(0) }
+    LaunchedEffect(reloadTick) {
+        if (reloadTick == 0) return@LaunchedEffect
+        delay(250)
+        KeyboardSwitcher.getInstance().setThemeNeedsReload()
+    }
+
     fun apply(newValue: Int) {
         when (editing) {
             0 -> { seed = newValue; prefs.edit { putInt(Settings.PREF_SONDER_SEED_COLOR, newValue) } }
@@ -112,7 +127,7 @@ fun SonderThemeScreen(onClickBack: () -> Unit) {
             else -> { surface = newValue; prefs.edit { putInt(Settings.PREF_SONDER_SURFACE_COLOR, newValue) } }
         }
         hexField = newValue.toHex()
-        KeyboardSwitcher.getInstance().setThemeNeedsReload()
+        reloadTick++
     }
 
     SearchSettingsScreen(
@@ -184,7 +199,7 @@ fun SonderThemeScreen(onClickBack: () -> Unit) {
                     .clickable {
                         roundedTop = !roundedTop
                         prefs.edit { putBoolean(Settings.PREF_SONDER_ROUNDED_TOP, roundedTop) }
-                        KeyboardSwitcher.getInstance().setThemeNeedsReload()
+                        reloadTick++
                     }
                     .padding(vertical = 4.dp)
             ) {
@@ -204,7 +219,7 @@ fun SonderThemeScreen(onClickBack: () -> Unit) {
                     onCheckedChange = {
                         roundedTop = it
                         prefs.edit { putBoolean(Settings.PREF_SONDER_ROUNDED_TOP, it) }
-                        KeyboardSwitcher.getInstance().setThemeNeedsReload()
+                        reloadTick++
                     }
                 )
             }

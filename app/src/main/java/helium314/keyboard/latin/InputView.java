@@ -8,12 +8,12 @@ package helium314.keyboard.latin;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Outline;
 import android.graphics.Rect;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.GradientDrawable;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewOutlineProvider;
 import android.widget.FrameLayout;
 
 import androidx.core.view.ViewKt;
@@ -123,27 +123,34 @@ public final class InputView extends FrameLayout {
     private static final float ROUNDED_TOP_RADIUS_DP = 18f;
 
     /**
-     * Replaces the frame's flat background with one whose top corners are rounded, so the keyboard
-     * reads as a panel sitting over the app rather than a slab butted against it.
+     * Rounds the top corners of the keyboard by clipping the frame to a rounded outline.
      *
-     * Skipped when a background image is set: that is drawn as a bitmap sized to the view, and
-     * swapping it for a shape would throw the image away.
+     * Clipping rather than giving the frame a rounded background, because the strip and the
+     * keyboard view both paint their own opaque backgrounds across the full width. A rounded
+     * drawable on the parent is simply painted over by its children and never shows. Clipping
+     * applies to everything drawn inside, so the corners survive.
+     *
+     * The outline is taller than the view by one radius, which pushes the bottom corners past the
+     * edge and leaves only the top two rounded.
      */
     private void applyRoundedTopCorners(final View frame) {
         if (frame == null) return;
         final boolean rounded = DeviceProtectedUtils.getSharedPreferences(getContext())
                 .getBoolean(Settings.PREF_SONDER_ROUNDED_TOP, Defaults.PREF_SONDER_ROUNDED_TOP);
-        if (!rounded) return;
-        // A background image arrives as a bitmap sized to the view; replacing it with a shape
-        // would throw the image away, so leave those alone.
-        if (frame.getBackground() instanceof BitmapDrawable) return;
+        if (!rounded) {
+            // The view is reused across theme reloads, so switching this off has to undo it.
+            frame.setClipToOutline(false);
+            frame.setOutlineProvider(ViewOutlineProvider.BACKGROUND);
+            return;
+        }
         final float r = ROUNDED_TOP_RADIUS_DP * getResources().getDisplayMetrics().density;
-        final GradientDrawable shape = new GradientDrawable();
-        shape.setShape(GradientDrawable.RECTANGLE);
-        // top-left, top-right, bottom-right, bottom-left, each as an x/y pair
-        shape.setCornerRadii(new float[] { r, r, r, r, 0f, 0f, 0f, 0f });
-        shape.setColor(Settings.getValues().mColors.get(ColorType.MAIN_BACKGROUND));
-        frame.setBackground(shape);
+        frame.setOutlineProvider(new ViewOutlineProvider() {
+            @Override
+            public void getOutline(final View view, final Outline outline) {
+                outline.setRoundRect(0, 0, view.getWidth(), view.getHeight() + (int) r, r);
+            }
+        });
+        frame.setClipToOutline(true);
     }
 
     /**
