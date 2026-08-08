@@ -65,6 +65,7 @@ object Defaults {
     const val PREF_VOICE_SILENCE_STOP = true
     const val PREF_VOICE_SILENCE_SECONDS = 3
     const val PREF_VOICE_AUTO_FORMAT = true
+    const val PREF_VOICE_MODEL = ""
 
     const val PREF_ENABLE_SPELL_CHECKER_SERVICE = true
     const val PREF_ENABLE_CONTACTS_OBSERVER = false

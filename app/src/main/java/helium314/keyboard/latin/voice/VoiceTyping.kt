@@ -203,7 +203,10 @@ object VoiceTyping {
     private fun transcribeLocked(context: Context, samples: FloatArray): String? {
         synchronized(decodeLock) {
             VoiceRecognizer.lastError = null
-            val model = VoiceModel.ALL.firstOrNull { it.isDownloaded(context) } ?: return null
+            val model = VoiceModel.active(
+                context,
+                context.prefs().getString(Settings.PREF_VOICE_MODEL, Defaults.PREF_VOICE_MODEL)
+            ) ?: return null
             val text = VoiceRecognizer.get(context, model)?.transcribe(samples)
             if (text == null) VoiceRecognizer.lastError?.let { Log.w(TAG, "pass failed: $it") }
             return text
