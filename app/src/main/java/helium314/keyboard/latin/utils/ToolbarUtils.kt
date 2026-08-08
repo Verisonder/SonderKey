@@ -359,14 +359,27 @@ val defaultClipboardToolbarPref by lazy {
             others.joinToString(Separators.ENTRY) { it.name + Separators.KV + false }
 }
 
-/** add missing keys, typically because a new key has been added */
-fun upgradeToolbarPrefs(prefs: SharedPreferences) {
-    upgradeToolbarPref(prefs, Settings.PREF_TOOLBAR_KEYS, defaultToolbarPref)
-    upgradeToolbarPref(prefs, Settings.PREF_PINNED_TOOLBAR_KEYS, defaultPinnedToolbarPref)
-    upgradeToolbarPref(prefs, Settings.PREF_CLIPBOARD_TOOLBAR_KEYS, defaultClipboardToolbarPref)
+/**
+ * add missing keys, typically because a new key has been added
+ *
+ * [keepNewKeysDisabled] appends missing keys switched off instead of carrying SonderKey's default
+ * state. Used when restoring an upstream backup: a key the backup never mentioned is one the user
+ * never opted into, and some are absent only because their old flavour excluded them (HANDWRITING
+ * is excluded on every flavour but standardfull). Enabling those would put keys on the toolbar the
+ * user never had - and, in the handwriting case, one whose plugin they have never installed.
+ */
+fun upgradeToolbarPrefs(prefs: SharedPreferences, keepNewKeysDisabled: Boolean = false) {
+    upgradeToolbarPref(prefs, Settings.PREF_TOOLBAR_KEYS, defaultToolbarPref, keepNewKeysDisabled)
+    upgradeToolbarPref(prefs, Settings.PREF_PINNED_TOOLBAR_KEYS, defaultPinnedToolbarPref, keepNewKeysDisabled)
+    upgradeToolbarPref(prefs, Settings.PREF_CLIPBOARD_TOOLBAR_KEYS, defaultClipboardToolbarPref, keepNewKeysDisabled)
 }
 
-private fun upgradeToolbarPref(prefs: SharedPreferences, pref: String, default: String) {
+private fun upgradeToolbarPref(
+    prefs: SharedPreferences,
+    pref: String,
+    default: String,
+    keepNewKeysDisabled: Boolean = false
+) {
     if (!prefs.contains(pref)) return
     val originalString = prefs.getString(pref, default)!!
     val list = originalString.split(Separators.ENTRY).toMutableList()
@@ -374,7 +387,7 @@ private fun upgradeToolbarPref(prefs: SharedPreferences, pref: String, default: 
     splitDefault.forEach { entry ->
         val keyWithSeparator = entry.substringBefore(Separators.KV) + Separators.KV
         if (list.none { it.startsWith(keyWithSeparator) })
-            list.add(entry)
+            list.add(if (keepNewKeysDisabled) keyWithSeparator + false else entry)
     }
     // likely not needed, but better prepare for possibility of key removal
     list.removeAll {

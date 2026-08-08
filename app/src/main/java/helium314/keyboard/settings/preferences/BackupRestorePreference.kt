@@ -398,7 +398,7 @@ private fun restoreLauncher(
         if (!wait.await(30, TimeUnit.SECONDS)) {
             Log.w("AdvancedScreen", "Restore timed out")
         }
-        AppUpgrade.checkVersionUpgrade(ctx)
+        AppUpgrade.checkVersionUpgrade(ctx, isRestore = true)
         AppUpgrade.transferOldPinnedClips(ctx)
         Settings.getInstance().startListener()
         SubtypeSettings.reloadEnabledSubtypes(ctx)

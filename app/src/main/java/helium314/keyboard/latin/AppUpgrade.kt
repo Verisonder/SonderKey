@@ -18,6 +18,7 @@ import helium314.keyboard.latin.database.ClipboardDao
 import helium314.keyboard.latin.settings.Defaults
 import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.latin.settings.SettingsSubtype
+import helium314.keyboard.latin.settings.UpstreamDefaults
 import helium314.keyboard.latin.settings.SettingsSubtype.Companion.toSettingsSubtype
 import helium314.keyboard.latin.settings.createPrefKeyForBooleanSettings
 import helium314.keyboard.latin.utils.DeviceProtectedUtils
@@ -57,7 +58,13 @@ object AppUpgrade {
 
     private const val EMOJI_FONT_MIGRATION_MARKER = "sonderkey_bundled_emoji_font_applied"
 
-    fun checkVersionUpgrade(context: Context) {
+    /**
+     * [isRestore] marks the call made straight after restoring a backup. Combined with a stored
+     * version code in the upstream range it identifies a LeanType / HeliBoard backup, which needs
+     * upstream's defaults rather than SonderKey's for anything the backup did not carry.
+     */
+    @JvmOverloads
+    fun checkVersionUpgrade(context: Context, isRestore: Boolean = false) {
         val prefs = context.prefs()
         val oldVersion = prefs.getInt(Settings.PREF_VERSION_CODE, 0)
         if (oldVersion == BuildConfig.VERSION_CODE)
@@ -71,6 +78,14 @@ object AppUpgrade {
         // value inherited through a restored backup and still needs the migrations.
         val legacyVersion = if (oldVersion in 1 until SONDERKEY_VERSION_CODE_CEILING)
             FORK_UPSTREAM_VERSION_CODE else oldVersion
+        // A restore that leaves an upstream version code behind came from an upstream backup.
+        // Those backups only contain settings the user actually changed, so everything they left
+        // alone arrives unset and would otherwise pick up SonderKey's defaults - which differ from
+        // upstream's in fifteen places. Fill those in before the migration blocks, so a migration
+        // that rewrites one of these keys still gets the last word.
+        val isUpstreamBackup = isRestore && oldVersion >= SONDERKEY_VERSION_CODE_CEILING
+        if (isUpstreamBackup)
+            UpstreamDefaults.applyMissing(prefs)
         // clear extracted dictionaries, in case updated version contains newer ones
         val assetsList = DictionaryInfoUtils.getAssetsDictionaryList(context)
         DictionaryInfoUtils.getCacheDirectories(context).forEach { dir ->
@@ -666,7 +681,7 @@ object AppUpgrade {
             remove(Settings.PREF_EMOJI_UNRENDERABLE)
             putBoolean(EMOJI_FONT_MIGRATION_MARKER, true)
         }
-        upgradeToolbarPrefs(prefs)
+        upgradeToolbarPrefs(prefs, keepNewKeysDisabled = isUpstreamBackup)
         LayoutUtilsCustom.onLayoutFileChanged() // just to be sure
         prefs.edit { putInt(Settings.PREF_VERSION_CODE, BuildConfig.VERSION_CODE) }
     }
