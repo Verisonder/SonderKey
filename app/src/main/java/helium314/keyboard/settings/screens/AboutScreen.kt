@@ -50,6 +50,7 @@ import helium314.keyboard.latin.utils.prefs
 import helium314.keyboard.settings.SettingsContainer
 import helium314.keyboard.settings.SettingsWithoutKey
 import helium314.keyboard.settings.Setting
+import helium314.keyboard.settings.preferences.CheckForUpdatesPreference
 import helium314.keyboard.settings.preferences.Preference
 import helium314.keyboard.settings.SearchSettingsScreen
 import helium314.keyboard.settings.SettingsActivity
@@ -113,58 +114,7 @@ fun createAboutSettings(context: Context) = listOf(
         )
     },
     Setting(context, SettingsWithoutKey.UPDATE, R.string.check_for_updates) {
-        val ctx = LocalContext.current
-        val scope = androidx.compose.runtime.rememberCoroutineScope()
-        var state by remember { mutableStateOf("") }
-        var busy by remember { mutableStateOf(false) }
-        var pending by remember { mutableStateOf<helium314.keyboard.latin.utils.AppUpdater.Update?>(null) }
-
-        Preference(
-            name = it.title,
-            description = when {
-                busy -> state
-                pending != null -> stringResource(R.string.update_available, pending!!.version)
-                state.isNotEmpty() -> state
-                else -> stringResource(R.string.check_for_updates_summary)
-            },
-            onClick = {
-                if (busy) return@Preference
-                if (!helium314.keyboard.latin.utils.AppUpdater.isSupported()) {
-                    state = ctx.getString(R.string.update_not_available_offline)
-                    return@Preference
-                }
-                val ready = pending
-                if (ready != null) {
-                    // second tap: fetch it and hand it to the system installer
-                    busy = true
-                    state = ctx.getString(R.string.update_downloading, 0)
-                    scope.launch {
-                        val result = helium314.keyboard.latin.utils.AppUpdater.download(ctx, ready) { p ->
-                            state = ctx.getString(R.string.update_downloading, p)
-                        }
-                        busy = false
-                        result.onSuccess { file ->
-                            state = ""
-                            pending = null
-                            runCatching { helium314.keyboard.latin.utils.AppUpdater.install(ctx, file) }
-                                .onFailure { t -> state = t.message ?: "Could not open the installer" }
-                        }.onFailure { t -> state = t.message ?: "Download failed" }
-                    }
-                    return@Preference
-                }
-                busy = true
-                state = ctx.getString(R.string.update_checking)
-                scope.launch {
-                    val result = helium314.keyboard.latin.utils.AppUpdater.check()
-                    busy = false
-                    result.onSuccess { update ->
-                        if (update == null) state = ctx.getString(R.string.update_up_to_date)
-                        else { pending = update; state = "" }
-                    }.onFailure { t -> state = t.message ?: "Check failed" }
-                }
-            },
-            icon = R.drawable.ic_settings_about
-        )
+        CheckForUpdatesPreference(it.title)
     },
     Setting(context, SettingsWithoutKey.LICENSE, R.string.license, R.string.gnu_gpl) {
         val ctx = LocalContext.current
