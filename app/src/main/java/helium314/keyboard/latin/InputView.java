@@ -131,11 +131,11 @@ public final class InputView extends FrameLayout {
     private static final String TOP_SHAPE_ROUNDED = "rounded";
     private static final String TOP_SHAPE_INVERTED = "inverted";
 
-    /**
-     * The two corner wedges cut away for the inverted shape, in this view's coordinates, or null
-     * when the shape is anything else.
-     */
+    /** Corner radius for the inverted shape, or 0 when the top is flat or rounded. */
+    private float mInvertedRadius = 0f;
+    /** Cached wedge path, rebuilt whenever the frame moves or resizes. */
     private Path mInvertedCornerPath;
+    private int mInvertedLeft, mInvertedTop, mInvertedRight;
     private final Paint mCornerClearPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
     {
@@ -164,6 +164,7 @@ public final class InputView extends FrameLayout {
         // The view is reused across theme reloads, so every branch has to undo the others.
         frame.setClipToOutline(false);
         frame.setOutlineProvider(ViewOutlineProvider.BACKGROUND);
+        mInvertedRadius = 0f;
         mInvertedCornerPath = null;
 
         if (TOP_SHAPE_ROUNDED.equals(shape)) {
@@ -177,7 +178,7 @@ public final class InputView extends FrameLayout {
             });
             frame.setClipToOutline(true);
         } else if (TOP_SHAPE_INVERTED.equals(shape)) {
-            buildInvertedCornerPath(frame, r);
+            mInvertedRadius = r;
         }
 
         // Without an inset the toolbar sits hard against the curve: the leftmost key is pinched by
@@ -192,12 +193,23 @@ public final class InputView extends FrameLayout {
         invalidate();
     }
 
-    /** A quarter disc centred on each top corner of [frame]; clearing these leaves the curve. */
-    private void buildInvertedCornerPath(final View frame, final float r) {
-        final float left = frame.getLeft();
-        final float right = frame.getRight();
-        final float top = frame.getTop();
-        if (right <= left) return;
+    /**
+     * A quarter disc centred on each top corner of the frame; clearing these leaves the curve.
+     *
+     * Rebuilt from the frame's current bounds rather than cached from whenever the setting was
+     * applied. The frame moves as the toolbar expands and as the keyboard is resized, and a path
+     * captured at one layout left the notches stranded partway down the keys.
+     */
+    private Path invertedCornerPath(final View frame) {
+        final int left = frame.getLeft();
+        final int top = frame.getTop();
+        final int right = frame.getRight();
+        if (right <= left) return null;
+        if (mInvertedCornerPath != null
+                && left == mInvertedLeft && top == mInvertedTop && right == mInvertedRight) {
+            return mInvertedCornerPath;
+        }
+        final float r = mInvertedRadius;
         final Path path = new Path();
 
         path.moveTo(left, top);
@@ -211,11 +223,16 @@ public final class InputView extends FrameLayout {
         path.close();
 
         mInvertedCornerPath = path;
+        mInvertedLeft = left;
+        mInvertedTop = top;
+        mInvertedRight = right;
+        return path;
     }
 
     @Override
     protected void dispatchDraw(final Canvas canvas) {
-        final Path corners = mInvertedCornerPath;
+        final View frame = mInvertedRadius > 0f ? findViewById(R.id.main_keyboard_frame) : null;
+        final Path corners = frame == null ? null : invertedCornerPath(frame);
         if (corners == null) {
             super.dispatchDraw(canvas);
             return;
