@@ -26,6 +26,7 @@ import helium314.keyboard.latin.R;
 import helium314.keyboard.latin.RichInputMethodManager;
 import helium314.keyboard.latin.common.Colors;
 import helium314.keyboard.latin.permissions.PermissionsUtil;
+import helium314.keyboard.latin.utils.CommaPopupUtilsKt;
 import helium314.keyboard.latin.utils.InputTypeUtils;
 import helium314.keyboard.latin.utils.JniUtils;
 import helium314.keyboard.latin.utils.ScriptUtils;
@@ -74,6 +75,8 @@ public class SettingsValues {
         public final boolean mShowTldPopupKeys;
         public final boolean mSpaceForLangChange;
         public final boolean mShowsEmojiKey;
+        // Entry names for the comma key popup, enabled only, in user order. See CommaPopupUtils.
+        public final java.util.List<String> mCommaPopupKeys;
         public final boolean mVarToolbarDirection;
         public final boolean mUsePersonalizedDicts;
         public final boolean mUseDoubleSpacePeriod;
@@ -254,6 +257,7 @@ public class SettingsValues {
                 mSpaceForLangChange = prefs.getBoolean(Settings.PREF_SPACE_TO_CHANGE_LANG,
                                 Defaults.PREF_SPACE_TO_CHANGE_LANG);
                 mShowsEmojiKey = prefs.getBoolean(Settings.PREF_SHOW_EMOJI_KEY, Defaults.PREF_SHOW_EMOJI_KEY);
+                mCommaPopupKeys = CommaPopupUtilsKt.getEnabledCommaPopupKeys(prefs);
                 mVarToolbarDirection = mToolbarMode != ToolbarMode.HIDDEN
                                 && prefs.getBoolean(Settings.PREF_VARIABLE_TOOLBAR_DIRECTION,
                                                 Defaults.PREF_VARIABLE_TOOLBAR_DIRECTION);

@@ -24,8 +24,10 @@ import helium314.keyboard.latin.common.LocaleUtils.constructLocale
 import helium314.keyboard.latin.common.StringUtils
 import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.latin.spellcheck.AndroidSpellCheckerService
+import helium314.keyboard.latin.utils.LANGUAGE_SWITCH_POPUP_KEY
 import helium314.keyboard.latin.utils.LayoutType
 import helium314.keyboard.latin.utils.Log
+import helium314.keyboard.latin.utils.commaPopupKeySpec
 import helium314.keyboard.latin.utils.ToolbarKey
 import helium314.keyboard.latin.utils.toolbarKeyStrings
 
@@ -91,24 +93,26 @@ sealed interface KeyData : AbstractKeyData {
          */
         const val GROUP_KANA: Int = 97
 
-        // todo: emoji and language switch popups should actually disappear depending on current layout (including functional keys)
-        //  keys could be replaced with toolbar keys, but parsing needs to be adjusted (should happen anyway...)
+        // The set is user configurable via Settings.PREF_COMMA_POPUP_KEYS; see CommaPopupUtils.
+        // Only genuine availability is enforced here — whether the same key is also reachable
+        // elsewhere on the keyboard is the user's business, not ours.
         private fun getCommaPopupKeys(params: KeyboardParams): List<String> {
-            val keys = mutableListOf<String>()
-            if (!params.mId.mDeviceLocked)
-                keys.add("!icon/clipboard_normal_key|!code/key_clipboard")
-            if (!params.mId.mEmojiKeyEnabled && !params.mId.isNumberLayout)
-                keys.add("!icon/emoji_normal_key|!code/key_emoji")
-            if (!params.mId.mLanguageSwitchKeyEnabled && !params.mId.isNumberLayout && RichInputMethodManager.canSwitchLanguage())
-                keys.add("!icon/language_switch_key|!code/key_language_switch")
-            if (!params.mId.mOneHandedModeEnabled)
-                keys.add("!icon/start_onehanded_mode_key|!code/key_toggle_onehanded")
-            if (!params.mId.mDeviceLocked)
-                keys.add("!icon/settings_key|!code/key_settings")
+            val keys = Settings.getInstance().current.mCommaPopupKeys
+                .filter { isCommaPopupKeyUsable(it, params) }
+                .mapNotNullTo(mutableListOf()) { commaPopupKeySpec(it) }
             if (shouldShowTldPopups(params)) {
                 keys.add(",")
             }
             return keys
+        }
+
+        private fun isCommaPopupKeyUsable(name: String, params: KeyboardParams): Boolean = when (name) {
+            LANGUAGE_SWITCH_POPUP_KEY ->
+                !params.mId.isNumberLayout && RichInputMethodManager.canSwitchLanguage()
+            ToolbarKey.EMOJI.name -> !params.mId.isNumberLayout
+            ToolbarKey.CLIPBOARD.name, ToolbarKey.CLEAR_CLIPBOARD.name, ToolbarKey.SETTINGS.name ->
+                !params.mId.mDeviceLocked
+            else -> true
         }
 
         private fun getPunctuationPopupKeys(params: KeyboardParams): List<String> {

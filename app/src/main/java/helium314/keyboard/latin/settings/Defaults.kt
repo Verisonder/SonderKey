@@ -14,6 +14,7 @@ import helium314.keyboard.latin.utils.LayoutType
 import helium314.keyboard.latin.utils.POPUP_KEYS_LABEL_DEFAULT
 import helium314.keyboard.latin.utils.POPUP_KEYS_ORDER_DEFAULT
 import helium314.keyboard.latin.utils.defaultClipboardToolbarPref
+import helium314.keyboard.latin.utils.defaultCommaPopupPref
 import helium314.keyboard.latin.utils.defaultPinnedToolbarPref
 import helium314.keyboard.latin.utils.defaultToolbarPref
 
@@ -107,6 +108,7 @@ object Defaults {
     const val PREF_DIRECT_IME_SWITCH_TARGET = ""
     const val PREF_APP_LANGUAGE = ""
     const val PREF_SHOW_EMOJI_KEY = true
+    val PREF_COMMA_POPUP_KEYS = defaultCommaPopupPref
     const val PREF_VARIABLE_TOOLBAR_DIRECTION = true
     const val PREF_SHOW_ONLY_TOOLBAR_WITH_HARDWARE_KEYBOARD = false
     const val PREF_ADDITIONAL_SUBTYPES = "de${Separators.SET}${ExtraValue.KEYBOARD_LAYOUT_SET}=MAIN:qwerty${Separators.SETS}" +
