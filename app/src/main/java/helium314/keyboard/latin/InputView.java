@@ -12,8 +12,6 @@ import android.graphics.Outline;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.AttributeSet;
@@ -131,28 +129,26 @@ public final class InputView extends FrameLayout {
     private static final String TOP_SHAPE_ROUNDED = "rounded";
     private static final String TOP_SHAPE_INVERTED = "inverted";
 
-    /** Corner radius for the inverted shape, or 0 when the top is flat or rounded. */
+    /** Radius for the inverted shape, or 0 when the top is flat or rounded. */
     private float mInvertedRadius = 0f;
-    /** Cached wedge path, rebuilt whenever the frame moves or resizes. */
-    private Path mInvertedCornerPath;
-    private int mInvertedLeft, mInvertedTop, mInvertedRight;
-    private final Paint mCornerClearPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-
-    {
-        mCornerClearPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
-    }
+    private Path mInvertedFillPath;
+    private int mInvertedWidth = -1, mInvertedTop = -1;
+    private final Paint mCornerFillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
     /**
      * Shapes the top of the keyboard: left flat, rounded off, or cut inwards.
      *
-     * Rounded uses outline clipping, which is cheap and antialiased. Inverted cannot: an Outline
-     * has to be convex, and a corner curving into the shape is not. That one is drawn instead, by
-     * rendering the keyboard into a layer and clearing a quarter disc from each top corner with an
-     * antialiased paint, which keeps the curve smooth where a plain path clip would stair-step.
+     * Rounded clips the frame to a rounded outline, which is cheap and antialiased.
      *
-     * Clipping rather than giving the frame a rounded background, because the strip and the
-     * keyboard view both paint their own opaque backgrounds across the full width, so a shaped
-     * drawable on the parent is simply painted over by its children and never shows.
+     * Inverted works the other way round and does not touch the keyboard's own edge, which stays
+     * flat. A strip the height of one radius is added above the keyboard, and the two corners of
+     * that strip are filled with the keyboard's background colour while the middle stays clear. The
+     * app showing through the gap therefore appears to have rounded bottom corners, with the
+     * keyboard curving up and around them.
+     *
+     * Clipping rather than giving the frame a shaped background, because the strip and the keyboard
+     * view both paint their own opaque backgrounds across the full width, so a shaped drawable on
+     * the parent is simply painted over by its children and never shows.
      */
     private void applyRoundedTopCorners(final View frame) {
         if (frame == null) return;
@@ -165,7 +161,8 @@ public final class InputView extends FrameLayout {
         frame.setClipToOutline(false);
         frame.setOutlineProvider(ViewOutlineProvider.BACKGROUND);
         mInvertedRadius = 0f;
-        mInvertedCornerPath = null;
+        mInvertedFillPath = null;
+        setPadding(0, 0, 0, 0);
 
         if (TOP_SHAPE_ROUNDED.equals(shape)) {
             // Taller than the view by one radius, which pushes the bottom corners past the edge
@@ -179,70 +176,66 @@ public final class InputView extends FrameLayout {
             frame.setClipToOutline(true);
         } else if (TOP_SHAPE_INVERTED.equals(shape)) {
             mInvertedRadius = r;
+            // Makes room for the fill above the keyboard. The window grows by this much, so the
+            // app is pushed up rather than being covered.
+            setPadding(0, Math.round(r), 0, 0);
         }
 
-        // Without an inset the toolbar sits hard against the curve: the leftmost key is pinched by
-        // the corner, and the row reads as crowded upwards because the gap below it is the
-        // keyboard's own spacing while the gap above it is nothing at all. Set absolutely rather
-        // than added, since this runs again on every layout.
+        // Rounded pinches the leftmost toolbar key against the curve and leaves no gap above the
+        // row, so the strip is inset by half the radius. Inverted keeps a flat edge and needs none.
         if (strip != null) {
-            final int inset = TOP_SHAPE_ROUNDED.equals(shape) || TOP_SHAPE_INVERTED.equals(shape)
-                    ? Math.round(r * 0.5f) : 0;
+            final int inset = TOP_SHAPE_ROUNDED.equals(shape) ? Math.round(r * 0.5f) : 0;
             strip.setPadding(inset, inset, inset, 0);
         }
         invalidate();
     }
 
     /**
-     * A quarter disc centred on each top corner of the frame; clearing these leaves the curve.
+     * The two shapes filled above the keyboard: a square corner with a quarter disc taken out of
+     * it, so what remains hugs a rounded corner on the app above.
      *
-     * Rebuilt from the frame's current bounds rather than cached from whenever the setting was
-     * applied. The frame moves as the toolbar expands and as the keyboard is resized, and a path
-     * captured at one layout left the notches stranded partway down the keys.
+     * Rebuilt from the frame's live position, because the frame moves as the toolbar expands and
+     * as the keyboard is resized, and a path captured once ends up stranded.
      */
-    private Path invertedCornerPath(final View frame) {
-        final int left = frame.getLeft();
-        final int top = frame.getTop();
-        final int right = frame.getRight();
-        if (right <= left) return null;
-        if (mInvertedCornerPath != null
-                && left == mInvertedLeft && top == mInvertedTop && right == mInvertedRight) {
-            return mInvertedCornerPath;
+    private Path invertedFillPath(final View frame) {
+        final int top = frame.getTop() - Math.round(mInvertedRadius);
+        final int width = getWidth();
+        if (width <= 0 || top < 0) return null;
+        if (mInvertedFillPath != null && width == mInvertedWidth && top == mInvertedTop) {
+            return mInvertedFillPath;
         }
         final float r = mInvertedRadius;
         final Path path = new Path();
 
-        path.moveTo(left, top);
-        path.lineTo(left, top + r);
-        path.arcTo(new RectF(left - r, top - r, left + r, top + r), 90f, -90f);
+        path.moveTo(0f, top);
+        path.lineTo(0f, top + r);
+        path.lineTo(r, top + r);
+        path.arcTo(new RectF(0f, top - r, 2f * r, top + r), 90f, 90f);
         path.close();
 
-        path.moveTo(right, top);
-        path.lineTo(right - r, top);
-        path.arcTo(new RectF(right - r, top - r, right + r, top + r), 180f, -90f);
+        path.moveTo(width, top);
+        path.lineTo(width, top + r);
+        path.lineTo(width - r, top + r);
+        path.arcTo(new RectF(width - 2f * r, top - r, width, top + r), 90f, -90f);
         path.close();
 
-        mInvertedCornerPath = path;
-        mInvertedLeft = left;
+        mInvertedFillPath = path;
+        mInvertedWidth = width;
         mInvertedTop = top;
-        mInvertedRight = right;
         return path;
     }
 
     @Override
     protected void dispatchDraw(final Canvas canvas) {
-        final View frame = mInvertedRadius > 0f ? findViewById(R.id.main_keyboard_frame) : null;
-        final Path corners = frame == null ? null : invertedCornerPath(frame);
-        if (corners == null) {
-            super.dispatchDraw(canvas);
-            return;
+        if (mInvertedRadius > 0f) {
+            final View frame = findViewById(R.id.main_keyboard_frame);
+            final Path fill = frame == null ? null : invertedFillPath(frame);
+            if (fill != null) {
+                mCornerFillPaint.setColor(Settings.getValues().mColors.get(ColorType.MAIN_BACKGROUND));
+                canvas.drawPath(fill, mCornerFillPaint);
+            }
         }
-        // A separate layer, so clearing takes the keyboard's own pixels away rather than punching
-        // a hole through whatever is behind this view.
-        final int save = canvas.saveLayer(0f, 0f, getWidth(), getHeight(), null);
         super.dispatchDraw(canvas);
-        canvas.drawPath(corners, mCornerClearPaint);
-        canvas.restoreToCount(save);
     }
 
     /**
