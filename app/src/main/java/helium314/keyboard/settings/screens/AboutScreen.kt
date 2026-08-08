@@ -50,7 +50,6 @@ import helium314.keyboard.latin.utils.prefs
 import helium314.keyboard.settings.SettingsContainer
 import helium314.keyboard.settings.SettingsWithoutKey
 import helium314.keyboard.settings.Setting
-import helium314.keyboard.settings.preferences.CheckForUpdatesPreference
 import helium314.keyboard.settings.preferences.Preference
 import helium314.keyboard.settings.SearchSettingsScreen
 import helium314.keyboard.settings.SettingsActivity
@@ -71,7 +70,6 @@ fun AboutScreen(
     val items = listOf(
         SettingsWithoutKey.APP,
         SettingsWithoutKey.VERSION,
-        SettingsWithoutKey.UPDATE,
         SettingsWithoutKey.LICENSE,
         SettingsWithoutKey.HIDDEN_FEATURES,
         SettingsWithoutKey.GITHUB_FEATURES,
@@ -112,9 +110,6 @@ fun createAboutSettings(context: Context) = listOf(
             },
             icon = R.drawable.ic_settings_about
         )
-    },
-    Setting(context, SettingsWithoutKey.UPDATE, R.string.check_for_updates) {
-        CheckForUpdatesPreference(it.title)
     },
     Setting(context, SettingsWithoutKey.LICENSE, R.string.license, R.string.gnu_gpl) {
         val ctx = LocalContext.current
