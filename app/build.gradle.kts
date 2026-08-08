@@ -22,9 +22,8 @@ android {
         applicationId = "com.verisonder.sonderkey"
         minSdk = 21
         targetSdk = 35
-        // SonderKey initial release
-        versionCode = 100
-        versionName = "3.0"
+        versionCode = 130
+        versionName = "3.3"
 
         proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         
