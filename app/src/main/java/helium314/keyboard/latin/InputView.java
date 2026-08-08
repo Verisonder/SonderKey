@@ -9,7 +9,13 @@ package helium314.keyboard.latin;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Outline;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -119,50 +125,107 @@ public final class InputView extends FrameLayout {
         return null;
     }
 
-    /** Corner radius used when the rounded top is switched on. */
-    private static final float ROUNDED_TOP_RADIUS_DP = 18f;
+    /** Corner radius used by both the rounded and the inverted top shapes. */
+    private static final float TOP_CORNER_RADIUS_DP = 18f;
+
+    private static final String TOP_SHAPE_ROUNDED = "rounded";
+    private static final String TOP_SHAPE_INVERTED = "inverted";
 
     /**
-     * Rounds the top corners of the keyboard by clipping the frame to a rounded outline.
+     * The two corner wedges cut away for the inverted shape, in this view's coordinates, or null
+     * when the shape is anything else.
+     */
+    private Path mInvertedCornerPath;
+    private final Paint mCornerClearPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+    {
+        mCornerClearPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
+    }
+
+    /**
+     * Shapes the top of the keyboard: left flat, rounded off, or cut inwards.
+     *
+     * Rounded uses outline clipping, which is cheap and antialiased. Inverted cannot: an Outline
+     * has to be convex, and a corner curving into the shape is not. That one is drawn instead, by
+     * rendering the keyboard into a layer and clearing a quarter disc from each top corner with an
+     * antialiased paint, which keeps the curve smooth where a plain path clip would stair-step.
      *
      * Clipping rather than giving the frame a rounded background, because the strip and the
-     * keyboard view both paint their own opaque backgrounds across the full width. A rounded
-     * drawable on the parent is simply painted over by its children and never shows. Clipping
-     * applies to everything drawn inside, so the corners survive.
-     *
-     * The outline is taller than the view by one radius, which pushes the bottom corners past the
-     * edge and leaves only the top two rounded.
+     * keyboard view both paint their own opaque backgrounds across the full width, so a shaped
+     * drawable on the parent is simply painted over by its children and never shows.
      */
     private void applyRoundedTopCorners(final View frame) {
         if (frame == null) return;
-        final boolean rounded = DeviceProtectedUtils.getSharedPreferences(getContext())
-                .getBoolean(Settings.PREF_SONDER_ROUNDED_TOP, Defaults.PREF_SONDER_ROUNDED_TOP);
+        final String shape = DeviceProtectedUtils.getSharedPreferences(getContext())
+                .getString(Settings.PREF_SONDER_TOP_SHAPE, Defaults.PREF_SONDER_TOP_SHAPE);
         final View strip = findViewById(R.id.strip_container);
-        if (!rounded) {
-            // The view is reused across theme reloads, so switching this off has to undo it.
-            frame.setClipToOutline(false);
-            frame.setOutlineProvider(ViewOutlineProvider.BACKGROUND);
-            if (strip != null) strip.setPadding(0, 0, 0, 0);
-            return;
-        }
-        final float r = ROUNDED_TOP_RADIUS_DP * getResources().getDisplayMetrics().density;
-        frame.setOutlineProvider(new ViewOutlineProvider() {
-            @Override
-            public void getOutline(final View view, final Outline outline) {
-                outline.setRoundRect(0, 0, view.getWidth(), view.getHeight() + (int) r, r);
-            }
-        });
-        frame.setClipToOutline(true);
+        final float r = TOP_CORNER_RADIUS_DP * getResources().getDisplayMetrics().density;
 
-        // Without this the toolbar sits hard against the curve: the leftmost key is pinched by the
-        // corner, and the row reads as crowded upwards because the gap below it is the keyboard's
-        // own spacing while the gap above it is nothing at all. Insetting the strip by half the
-        // radius pulls the keys clear of the arc and balances the row. Set absolutely rather than
-        // added, since this runs again on every layout.
+        // The view is reused across theme reloads, so every branch has to undo the others.
+        frame.setClipToOutline(false);
+        frame.setOutlineProvider(ViewOutlineProvider.BACKGROUND);
+        mInvertedCornerPath = null;
+
+        if (TOP_SHAPE_ROUNDED.equals(shape)) {
+            // Taller than the view by one radius, which pushes the bottom corners past the edge
+            // and leaves only the top two rounded.
+            frame.setOutlineProvider(new ViewOutlineProvider() {
+                @Override
+                public void getOutline(final View view, final Outline outline) {
+                    outline.setRoundRect(0, 0, view.getWidth(), view.getHeight() + (int) r, r);
+                }
+            });
+            frame.setClipToOutline(true);
+        } else if (TOP_SHAPE_INVERTED.equals(shape)) {
+            buildInvertedCornerPath(frame, r);
+        }
+
+        // Without an inset the toolbar sits hard against the curve: the leftmost key is pinched by
+        // the corner, and the row reads as crowded upwards because the gap below it is the
+        // keyboard's own spacing while the gap above it is nothing at all. Set absolutely rather
+        // than added, since this runs again on every layout.
         if (strip != null) {
-            final int inset = Math.round(r * 0.5f);
+            final int inset = TOP_SHAPE_ROUNDED.equals(shape) || TOP_SHAPE_INVERTED.equals(shape)
+                    ? Math.round(r * 0.5f) : 0;
             strip.setPadding(inset, inset, inset, 0);
         }
+        invalidate();
+    }
+
+    /** A quarter disc centred on each top corner of [frame]; clearing these leaves the curve. */
+    private void buildInvertedCornerPath(final View frame, final float r) {
+        final float left = frame.getLeft();
+        final float right = frame.getRight();
+        final float top = frame.getTop();
+        if (right <= left) return;
+        final Path path = new Path();
+
+        path.moveTo(left, top);
+        path.lineTo(left, top + r);
+        path.arcTo(new RectF(left - r, top - r, left + r, top + r), 90f, -90f);
+        path.close();
+
+        path.moveTo(right, top);
+        path.lineTo(right - r, top);
+        path.arcTo(new RectF(right - r, top - r, right + r, top + r), 180f, -90f);
+        path.close();
+
+        mInvertedCornerPath = path;
+    }
+
+    @Override
+    protected void dispatchDraw(final Canvas canvas) {
+        final Path corners = mInvertedCornerPath;
+        if (corners == null) {
+            super.dispatchDraw(canvas);
+            return;
+        }
+        // A separate layer, so clearing takes the keyboard's own pixels away rather than punching
+        // a hole through whatever is behind this view.
+        final int save = canvas.saveLayer(0f, 0f, getWidth(), getHeight(), null);
+        super.dispatchDraw(canvas);
+        canvas.drawPath(corners, mCornerClearPaint);
+        canvas.restoreToCount(save);
     }
 
     /**

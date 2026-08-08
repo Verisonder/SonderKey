@@ -30,9 +30,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -103,8 +103,9 @@ fun SonderThemeScreen(onClickBack: () -> Unit) {
     var editing by remember { mutableIntStateOf(0) } // 0 accent, 1 keys, 2 functional, 3 background
     val current = when (editing) { 0 -> seed; 1 -> keyColor; 2 -> funcColor; else -> surface }
     var hexField by remember(editing) { mutableStateOf(current.toHex()) }
-    var roundedTop by remember {
-        mutableStateOf(prefs.getBoolean(Settings.PREF_SONDER_ROUNDED_TOP, Defaults.PREF_SONDER_ROUNDED_TOP))
+    var topShape by remember {
+        mutableStateOf(prefs.getString(Settings.PREF_SONDER_TOP_SHAPE, Defaults.PREF_SONDER_TOP_SHAPE)
+            ?: Defaults.PREF_SONDER_TOP_SHAPE)
     }
 
     // Rebuilding the keyboard is expensive and disruptive: it is the live keyboard being torn down
@@ -192,37 +193,43 @@ fun SonderThemeScreen(onClickBack: () -> Unit) {
             }
 
             SectionTitle(stringResource(R.string.sonder_theme_shape))
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        roundedTop = !roundedTop
-                        prefs.edit { putBoolean(Settings.PREF_SONDER_ROUNDED_TOP, roundedTop) }
-                        reloadTick++
-                    }
-                    .padding(vertical = 4.dp)
-            ) {
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        stringResource(R.string.sonder_theme_rounded_top),
-                        style = MaterialTheme.typography.bodyLarge
+            listOf(
+                "flat" to R.string.sonder_theme_top_flat,
+                "rounded" to R.string.sonder_theme_top_rounded,
+                "inverted" to R.string.sonder_theme_top_inverted
+            ).forEach { (value, label) ->
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            topShape = value
+                            prefs.edit { putString(Settings.PREF_SONDER_TOP_SHAPE, value) }
+                            reloadTick++
+                        }
+                        .padding(vertical = 2.dp)
+                ) {
+                    RadioButton(
+                        selected = topShape == value,
+                        onClick = {
+                            topShape = value
+                            prefs.edit { putString(Settings.PREF_SONDER_TOP_SHAPE, value) }
+                            reloadTick++
+                        }
                     )
                     Text(
-                        stringResource(R.string.sonder_theme_rounded_top_summary),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        stringResource(label),
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(start = 8.dp)
                     )
                 }
-                Switch(
-                    checked = roundedTop,
-                    onCheckedChange = {
-                        roundedTop = it
-                        prefs.edit { putBoolean(Settings.PREF_SONDER_ROUNDED_TOP, it) }
-                        reloadTick++
-                    }
-                )
             }
+            Text(
+                stringResource(R.string.sonder_theme_top_shape_summary),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp)
+            )
 
             Spacer(Modifier.height(20.dp))
             Text(
