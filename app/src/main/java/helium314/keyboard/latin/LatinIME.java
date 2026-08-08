@@ -1701,13 +1701,19 @@ public class LatinIME extends InputMethodService implements
         final helium314.keyboard.latin.voice.VoiceTyping voice = helium314.keyboard.latin.voice.VoiceTyping.INSTANCE;
         if (voice.isRecording()) {
             if (mVoiceStatusView != null) mVoiceStatusView.showTranscribing();
+            final boolean anythingInserted = mVoiceNeedsLeadingSpace;
             voice.stopAndTranscribe(this, text -> {
                 hideVoiceStatus();
                 if (text == null || text.isEmpty()) {
-                    android.widget.Toast.makeText(this, R.string.voice_typing_nothing_heard, android.widget.Toast.LENGTH_SHORT).show();
+                    // Only complain when the whole turn produced nothing. In a live turn the
+                    // earlier phrases already landed, so an empty tail is normal, not a failure.
+                    if (!anythingInserted) {
+                        android.widget.Toast.makeText(this, R.string.voice_typing_nothing_heard, android.widget.Toast.LENGTH_SHORT).show();
+                    }
                 } else {
-                    onTextInput(text);
+                    insertVoiceText(text, mVoiceNeedsLeadingSpace);
                 }
+                mVoiceNeedsLeadingSpace = false;
                 return kotlin.Unit.INSTANCE;
             });
             return;
@@ -1718,8 +1724,26 @@ public class LatinIME extends InputMethodService implements
             final helium314.keyboard.latin.voice.VoiceStatusView view = mVoiceStatusView;
             if (view != null) view.post(() -> view.setLevel(level));
             return kotlin.Unit.INSTANCE;
+        }, text -> {
+            // A phrase finished while the microphone is still open. Insert it now rather than
+            // holding everything back until the turn ends.
+            mVoiceNeedsLeadingSpace = insertVoiceText(text, mVoiceNeedsLeadingSpace);
+            return kotlin.Unit.INSTANCE;
         });
         if (!started) hideVoiceStatus();
+    }
+
+    /**
+     * True once a phrase has been inserted in this turn, so the next one is spaced off it. The
+     * recogniser emits bare words with no leading space, and phrases arrive separately, so without
+     * this they run together into one word.
+     */
+    private boolean mVoiceNeedsLeadingSpace = false;
+
+    private boolean insertVoiceText(final String text, final boolean needsSpace) {
+        if (text == null || text.isEmpty()) return needsSpace;
+        onTextInput(needsSpace ? " " + text : text);
+        return true;
     }
 
     private void showVoiceStatus() {

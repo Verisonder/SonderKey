@@ -72,6 +72,9 @@ fun VoiceTypingScreen(onClickBack: () -> Unit) {
     var pinned by remember {
         mutableStateOf(isToolbarKeyEnabled(prefs, Settings.PREF_PINNED_TOOLBAR_KEYS, defaultPinnedToolbarPref, ToolbarKey.VOICE))
     }
+    var liveTranscription by remember {
+        mutableStateOf(prefs.getBoolean(Settings.PREF_VOICE_LIVE_TRANSCRIPTION, Defaults.PREF_VOICE_LIVE_TRANSCRIPTION))
+    }
     var progress by remember { mutableIntStateOf(0) }
     var status by remember { mutableStateOf<String?>(null) }
 
@@ -226,6 +229,13 @@ fun VoiceTypingScreen(onClickBack: () -> Unit) {
                         voiceOnLeft = it
                         prefs.edit { putBoolean(Settings.PREF_VOICE_KEY_ON_LEFT, it) }
                         KeyboardSwitcher.getInstance().setThemeNeedsReload()
+                    }
+                    ToggleRow(
+                        title = stringResource(R.string.voice_typing_live),
+                        checked = liveTranscription
+                    ) {
+                        liveTranscription = it
+                        prefs.edit { putBoolean(Settings.PREF_VOICE_LIVE_TRANSCRIPTION, it) }
                     }
                 }
             }

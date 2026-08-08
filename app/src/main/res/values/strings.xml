@@ -1039,6 +1039,8 @@ New dictionary:
     <string name="voice_typing_in_toolbar">Show in the toolbar</string>
     <string name="voice_typing_pinned">Pin above the keyboard</string>
     <string name="voice_typing_on_left">Place it on the left</string>
+    <!-- Title of the setting for inserting speech as it is spoken rather than at the end -->
+    <string name="voice_typing_live">Type as you speak</string>
     <string name="check_for_updates">Check for updates</string>
     <string name="check_for_updates_summary">Look for a newer version on GitHub</string>
     <string name="update_checking">Checking\u2026</string>

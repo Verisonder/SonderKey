@@ -1,0 +1,101 @@
+name: Build Test APK
+
+# Signed release APKs for trying a change on a real device before it goes anywhere public.
+#
+# Publishes as a DRAFT release, which is visible only to people with write access to the repo and
+# is never returned by the releases/latest endpoint - so the in-app updater cannot offer it to
+# anyone. Signed with the real release key so it installs straight over a published build and
+# keeps existing settings.
+#
+# Push to any test/** branch to get one. Delete the branch and the draft when finished.
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'test/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Decode Keystore
+        env:
+          RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE }}
+        if: ${{ env.RELEASE_KEYSTORE != '' }}
+        run: |
+          echo "${{ secrets.RELEASE_KEYSTORE }}" | base64 -d > sonderkey-release.jks
+          echo "keyAlias=${{ secrets.RELEASE_KEY_ALIAS }}" > keystore.properties
+          echo "keyPassword=${{ secrets.RELEASE_KEY_PASSWORD }}" >> keystore.properties
+          echo "storeFile=sonderkey-release.jks" >> keystore.properties
+          echo "storePassword=${{ secrets.RELEASE_STORE_PASSWORD }}" >> keystore.properties
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build Release APK
+        env:
+          GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx5g -XX:MaxMetaspaceSize=1g
+        run: |
+          set -o pipefail
+          ./gradlew --max-workers=2 assembleStandardfullRelease 2>&1 | tee -a gradle-build.log
+
+      - name: Report build failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          grep -in "e: \|error:\|FAILURE\|Caused by\|OutOfMemory\|Killed\|daemon disappeared\|Execution failed" gradle-build.log | tail -n 60 > err-index.txt || true
+          grep -i -B2 -A25 "FAILURE: Build failed\|Execution failed\|daemon disappeared" gradle-build.log | head -n 120 > ctx.txt || true
+          tail -n 80 gradle-build.log > tail.txt
+          cat ctx.txt tail.txt > combined.txt && mv combined.txt tail.txt
+          BODY="$(printf 'Branch: %s\n\nError index:\n```\n%s\n```\nLog tail:\n```\n%s\n```' "${{ github.ref_name }}" "$(cat err-index.txt)" "$(cat tail.txt)")"
+          gh api "repos/${{ github.repository }}/issues" -f title="Test build failure (run ${{ github.run_id }})" -f body="$BODY" || true
+
+      - name: Name the build after the branch and commit
+        id: naming
+        run: |
+          SLUG="$(echo "${{ github.ref_name }}" | sed 's|^test/||' | tr -c 'A-Za-z0-9._-' '-' | sed 's/-*$//')"
+          echo "slug=$SLUG" >> "$GITHUB_OUTPUT"
+          echo "tag=test-$SLUG" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Rename the APK so several test builds can coexist
+        run: |
+          SRC="$(ls app/build/outputs/apk/standardfull/release/*.apk | head -n 1)"
+          cp "$SRC" "SonderKey_test-${{ steps.naming.outputs.slug }}-${{ steps.naming.outputs.sha }}.apk"
+          ls -lh SonderKey_test-*.apk
+
+      # Draft releases are not public and are skipped by releases/latest, so the in-app updater
+      # never offers them. Replaced on each push to the same branch rather than piling up.
+      - name: Publish as a draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.naming.outputs.tag }}"
+          gh release delete "$TAG" --yes --cleanup-tag 2>/dev/null || true
+          gh release create "$TAG" \
+            --draft \
+            --title "TEST $TAG ($(git rev-parse --short HEAD))" \
+            --notes "Unlisted test build from \`${{ github.ref_name }}\` at \`$(git rev-parse --short HEAD)\`.
+
+          Signed with the release key, so it installs over a published build and keeps your settings.
+
+          Draft: not public, and the in-app updater will not offer it. Delete when done testing." \
+            --target "${{ github.sha }}" \
+            SonderKey_test-*.apk
+          echo "Draft release $TAG created."

@@ -26,6 +26,16 @@ class VoiceRecorder(private val context: Context) {
         /** Recording stops here regardless, so a forgotten mic cannot fill memory. */
         const val MAX_SECONDS = 60
 
+        /** Peak below this counts as silence. Set above room noise but below quiet speech. */
+        private const val SPEECH_THRESHOLD = 0.04f
+
+        /**
+         * Consecutive quiet reads before a phrase is cut. A read is roughly 50-100 ms, so this
+         * lands near half a second: long enough not to cut mid-sentence at a breath, short enough
+         * that text still feels like it is keeping up.
+         */
+        private const val QUIET_FRAMES_TO_CUT = 6
+
         fun hasPermission(context: Context) = ContextCompat.checkSelfPermission(
             context, Manifest.permission.RECORD_AUDIO
         ) == PackageManager.PERMISSION_GRANTED
@@ -35,7 +45,22 @@ class VoiceRecorder(private val context: Context) {
     @Volatile private var recording = false
     private val samples = ArrayList<Float>(SAMPLE_RATE * 10)
 
+    /** Emits finished phrases while recording continues, when live transcription is on. */
+    @Volatile private var onSegment: ((FloatArray) -> Unit)? = null
+    private var quietFrames = 0
+    private var segmentStart = 0
+    private var heardSpeechInSegment = false
+
     val isRecording get() = recording
+
+    /**
+     * Splits the audio at pauses and hands each finished phrase to [onSegment] without stopping
+     * the microphone, so a phrase can be transcribed while the next one is still being spoken.
+     *
+     * Cutting at pauses rather than re-transcribing everything keeps the cost of each turn flat:
+     * a phrase is decoded once, no matter how long the whole dictation runs.
+     */
+    fun setSegmentListener(listener: (FloatArray) -> Unit) { onSegment = listener }
 
     /** [onLevel] receives a 0..1 loudness value for the waveform, on a background thread. */
     fun start(onLevel: ((Float) -> Unit)? = null, onAutoStop: (() -> Unit)? = null): Boolean {
@@ -79,6 +104,7 @@ class VoiceRecorder(private val context: Context) {
                     }
                 }
                 onLevel?.invoke(peak)
+                if (onSegment != null) checkForPause(peak)
                 if (samples.size >= limit) {
                     recording = false
                     onAutoStop?.invoke()
@@ -86,6 +112,52 @@ class VoiceRecorder(private val context: Context) {
             }
         }
         return true
+    }
+
+    /**
+     * Cuts a phrase once the level has stayed low for [QUIET_FRAMES_TO_CUT] reads following actual
+     * speech. Requiring speech first stops a silent lead-in being emitted as an empty phrase, and
+     * requiring a minimum length stops a cough or a door closing being sent off for transcription.
+     */
+    private fun checkForPause(peak: Float) {
+        if (peak >= SPEECH_THRESHOLD) {
+            heardSpeechInSegment = true
+            quietFrames = 0
+            return
+        }
+        if (!heardSpeechInSegment) {
+            // Nothing said yet: keep the window sliding forward so leading silence is not
+            // prepended to the first phrase.
+            synchronized(samples) { if (samples.size - segmentStart > SAMPLE_RATE) segmentStart = samples.size }
+            return
+        }
+        quietFrames++
+        if (quietFrames < QUIET_FRAMES_TO_CUT) return
+
+        val segment = synchronized(samples) {
+            val end = samples.size
+            if (end - segmentStart < SAMPLE_RATE / 2) return@synchronized null
+            val slice = FloatArray(end - segmentStart)
+            for (i in slice.indices) slice[i] = samples[segmentStart + i]
+            segmentStart = end
+            slice
+        }
+        quietFrames = 0
+        heardSpeechInSegment = false
+        if (segment != null) onSegment?.invoke(segment)
+    }
+
+    /**
+     * Everything captured since the last cut. Used when recording ends, so a final phrase that
+     * never got a trailing pause is not silently dropped.
+     */
+    fun takeRemainder(): FloatArray? = synchronized(samples) {
+        val end = samples.size
+        if (end - segmentStart < SAMPLE_RATE / 3) return@synchronized null
+        val slice = FloatArray(end - segmentStart)
+        for (i in slice.indices) slice[i] = samples[segmentStart + i]
+        segmentStart = end
+        slice
     }
 
     /** Stops recording and returns what was captured, or null if it was too short to be speech. */
@@ -103,9 +175,13 @@ class VoiceRecorder(private val context: Context) {
 
     fun cancel() {
         recording = false
+        onSegment = null
         runCatching { record?.stop() }
         runCatching { record?.release() }
         record = null
-        samples.clear()
+        synchronized(samples) { samples.clear() }
+        segmentStart = 0
+        quietFrames = 0
+        heardSpeechInSegment = false
     }
 }
