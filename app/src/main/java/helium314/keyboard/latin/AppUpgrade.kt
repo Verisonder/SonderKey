@@ -81,7 +81,7 @@ object AppUpgrade {
         // A restore that leaves an upstream version code behind came from an upstream backup.
         // Those backups only contain settings the user actually changed, so everything they left
         // alone arrives unset and would otherwise pick up SonderKey's defaults - which differ from
-        // upstream's in fifteen places. Fill those in before the migration blocks, so a migration
+        // upstream's in sixteen places. Fill those in before the migration blocks, so a migration
         // that rewrites one of these keys still gets the last word.
         val isUpstreamBackup = isRestore && oldVersion >= SONDERKEY_VERSION_CODE_CEILING
         if (isUpstreamBackup)

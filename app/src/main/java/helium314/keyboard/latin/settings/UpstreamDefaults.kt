@@ -35,6 +35,7 @@ object UpstreamDefaults {
         Settings.PREF_ALWAYS_SHOW_SUGGESTIONS to false,
         Settings.PREF_ENABLE_SPLIT_KEYBOARD_LANDSCAPE to false,
         Settings.PREFS_LONG_PRESS_SYMBOLS_FOR_NUMPAD to false,
+        Settings.PREF_TOOLBAR_SWIPE_DOWN_DISMISS to false,
     )
 
     private val ints = mapOf(
