@@ -55,7 +55,7 @@ jobs:
       - name: Report build failure
         if: failure()
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.RELEASE_PAT || github.token }}
         run: |
           grep -in "e: \|error:\|FAILURE\|Caused by\|OutOfMemory\|Killed\|daemon disappeared\|Execution failed" gradle-build.log | tail -n 60 > err-index.txt || true
           grep -i -B2 -A25 "FAILURE: Build failed\|Execution failed\|daemon disappeared" gradle-build.log | head -n 120 > ctx.txt || true
@@ -80,6 +80,10 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/tags/beta-')
         with:
+          # Publish as the repository owner. The built-in token credits every release to
+          # github-actions[bot]. Falls back to it if the secret is ever missing, so a release
+          # still goes out rather than failing outright.
+          token: ${{ secrets.RELEASE_PAT || github.token }}
           prerelease: ${{ contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') || contains(github.ref_name, 'rc') }}
           body_path: docs/releasenote/release_notes_temp.md
           files: |

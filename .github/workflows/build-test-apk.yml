@@ -57,7 +57,7 @@ jobs:
       - name: Report build failure
         if: failure()
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.RELEASE_PAT || github.token }}
         run: |
           grep -in "e: \|error:\|FAILURE\|Caused by\|OutOfMemory\|Killed\|daemon disappeared\|Execution failed" gradle-build.log | tail -n 60 > err-index.txt || true
           grep -i -B2 -A25 "FAILURE: Build failed\|Execution failed\|daemon disappeared" gradle-build.log | head -n 120 > ctx.txt || true
@@ -84,7 +84,7 @@ jobs:
       # never offers them. Replaced on each push to the same branch rather than piling up.
       - name: Publish as a draft release
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.RELEASE_PAT || github.token }}
         run: |
           TAG="${{ steps.naming.outputs.tag }}"
           gh release delete "$TAG" --yes --cleanup-tag 2>/dev/null || true
