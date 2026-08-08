@@ -79,6 +79,7 @@ public class SettingsValues {
         public final java.util.List<String> mCommaPopupKeys;
         // Pulse the microphone key instead of taking the whole suggestion strip while dictating.
         public final boolean mVoicePulseIndicator;
+        public final boolean mVoiceAutoFormat;
         public final boolean mVarToolbarDirection;
         public final boolean mUsePersonalizedDicts;
         public final boolean mUseDoubleSpacePeriod;
@@ -262,6 +263,8 @@ public class SettingsValues {
                 mCommaPopupKeys = CommaPopupUtilsKt.getEnabledCommaPopupKeys(prefs);
                 mVoicePulseIndicator = prefs.getBoolean(Settings.PREF_VOICE_PULSE_INDICATOR,
                                 Defaults.PREF_VOICE_PULSE_INDICATOR);
+                mVoiceAutoFormat = prefs.getBoolean(Settings.PREF_VOICE_AUTO_FORMAT,
+                                Defaults.PREF_VOICE_AUTO_FORMAT);
                 mVarToolbarDirection = mToolbarMode != ToolbarMode.HIDDEN
                                 && prefs.getBoolean(Settings.PREF_VARIABLE_TOOLBAR_DIRECTION,
                                                 Defaults.PREF_VARIABLE_TOOLBAR_DIRECTION);

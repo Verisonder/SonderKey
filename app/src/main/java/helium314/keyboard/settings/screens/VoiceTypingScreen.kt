@@ -82,6 +82,9 @@ fun VoiceTypingScreen(onClickBack: () -> Unit) {
     var silenceStop by remember {
         mutableStateOf(prefs.getBoolean(Settings.PREF_VOICE_SILENCE_STOP, Defaults.PREF_VOICE_SILENCE_STOP))
     }
+    var autoFormat by remember {
+        mutableStateOf(prefs.getBoolean(Settings.PREF_VOICE_AUTO_FORMAT, Defaults.PREF_VOICE_AUTO_FORMAT))
+    }
     var silenceSeconds by remember {
         mutableIntStateOf(prefs.getInt(Settings.PREF_VOICE_SILENCE_SECONDS, Defaults.PREF_VOICE_SILENCE_SECONDS))
     }
@@ -275,6 +278,14 @@ fun VoiceTypingScreen(onClickBack: () -> Unit) {
                             modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp)
                         )
                     }
+                    ToggleRow(
+                        title = stringResource(R.string.voice_typing_auto_format),
+                        summary = stringResource(R.string.voice_typing_auto_format_summary),
+                        checked = autoFormat
+                    ) {
+                        autoFormat = it
+                        prefs.edit { putBoolean(Settings.PREF_VOICE_AUTO_FORMAT, it) }
+                    }
                     Text(
                         text = stringResource(R.string.voice_typing_mode),
                         style = MaterialTheme.typography.titleSmall,
@@ -340,14 +351,28 @@ private fun ChoiceRow(title: String, summary: String, selected: Boolean, onSelec
 }
 
 @Composable
-private fun ToggleRow(title: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+private fun ToggleRow(
+    title: String,
+    checked: Boolean,
+    summary: String? = null,
+    onChange: (Boolean) -> Unit
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 12.dp)
     ) {
-        Text(title, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+            if (summary != null) {
+                Text(
+                    summary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
         Switch(checked = checked, onCheckedChange = onChange)
     }
 }

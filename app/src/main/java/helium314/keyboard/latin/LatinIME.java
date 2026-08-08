@@ -1695,16 +1695,32 @@ public class LatinIME extends InputMethodService implements
         }
         final InputTransaction completeInputTransaction = mInputLogic.onCodeInput(mSettings.getCurrent(), event,
                 mKeyboardSwitcher.getKeyboardShiftMode(), mHandler);
-        // Typing during a live dictation ends the turn.
+        // Typing during a rolling dictation ends the turn.
         //
         // This used to just forget how much the turn had written, so that the next pass appended
         // instead of replacing and could not eat the user's own characters. But rolling re-decodes
         // the whole dictation every pass, so with nothing to delete each pass re-emitted everything
         // said so far, and the output doubled and kept doubling. Stopping is the honest answer: the
         // user has taken over, and rolling has already written everything up to about a second ago.
-        if (helium314.keyboard.latin.voice.VoiceTyping.INSTANCE.isLiveTurn()
-                && completeInputTransaction.didAffectContents()) {
-            cancelVoiceTyping();
+        //
+        // It applies to rolling alone. Pauses appends each phrase once and deletes nothing, so a
+        // keystroke cannot corrupt it, and cancelling there took away the one thing that mode is
+        // for: dictating and correcting by hand at the same time.
+        if (completeInputTransaction.didAffectContents()) {
+            if (helium314.keyboard.latin.voice.VoiceTyping.INSTANCE.isReplacingTurn()) {
+                cancelVoiceTyping();
+            } else if (mVoiceFinishPending) {
+                // The closing transcription is still decoding on another thread. Once the recorder
+                // is released the guard above stops firing, so keystrokes land in a window where a
+                // replacing insert is still on its way - it would then delete a stale number of
+                // characters from an editor that has moved on, eating what was just typed and
+                // re-committing the whole dictation over it. Retire the turn so that result is
+                // dropped when it arrives. Rolling has already written everything bar the last
+                // second, which is a far smaller loss than a mangled paragraph.
+                mVoiceTurnId++;
+                mVoiceFinishPending = false;
+                mVoiceInsertedLength = 0;
+            }
         }
         updateStateAfterInputTransaction(completeInputTransaction);
         mKeyboardSwitcher.onEvent(event, getCurrentAutoCapsState(), getCurrentRecapitalizeState());
@@ -1740,13 +1756,32 @@ public class LatinIME extends InputMethodService implements
         if (!started) hideVoiceStatus();
     }
 
+    /**
+     * Identifies the turn a closing transcription belongs to. Bumped whenever the editor moves out
+     * from under a turn, so a result decoded against the old state can be recognised and dropped.
+     */
+    private int mVoiceTurnId = 0;
+
+    /** True between asking for the closing transcription and it coming back. */
+    private boolean mVoiceFinishPending = false;
+
     /** Transcribes and inserts whatever the turn captured, then tears the indicator down. */
     private void finishVoiceTurn() {
         final helium314.keyboard.latin.voice.VoiceTyping voice = helium314.keyboard.latin.voice.VoiceTyping.INSTANCE;
         if (mVoiceStatusView != null) mVoiceStatusView.showTranscribing();
         final boolean anythingInserted = mVoiceInsertedLength > 0;
+        final int turnId = mVoiceTurnId;
+        mVoiceFinishPending = true;
         voice.stopAndTranscribe(this, (text, replaces) -> {
             hideVoiceStatus();
+            // A replacing insert is only safe against the editor the turn was measured on. If the
+            // user typed while this was decoding, that editor is gone. An appending insert carries
+            // no such assumption, so a pauses tail still lands wherever the cursor now is.
+            if (replaces && turnId != mVoiceTurnId) {
+                mVoiceFinishPending = false;
+                return kotlin.Unit.INSTANCE;
+            }
+            mVoiceFinishPending = false;
             if (text == null || text.isEmpty()) {
                 // Only complain when the whole turn produced nothing. In a live turn the
                 // earlier text already landed, so an empty tail is normal, not a failure.
@@ -1806,6 +1841,10 @@ public class LatinIME extends InputMethodService implements
      * capital included, which reads wrong in the middle of one.
      */
     private String fitVoiceTextToContext(final String text) {
+        // Dictating code, shell commands or markup wants exactly what was said and nothing else -
+        // an inserted space or a lowered capital is a defect there, not a courtesy. Off means the
+        // recogniser's output is committed untouched and the keyboard governs the rest.
+        if (!mSettings.getCurrent().mVoiceAutoFormat) return text;
         final CharSequence before = mInputLogic.getConnection()
                 .getTextBeforeCursor(VOICE_CONTEXT_LOOKBACK, 0);
         // Nothing behind the cursor: a fresh field, so the recogniser's own sentence casing stands.
@@ -1845,6 +1884,8 @@ public class LatinIME extends InputMethodService implements
         voice.cancel();
         hideVoiceStatus();
         mVoiceInsertedLength = 0;
+        mVoiceTurnId++;
+        mVoiceFinishPending = false;
     }
 
     /** True while the compact indicator is pulsing, so the right one gets torn down again. */
