@@ -6,6 +6,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -29,11 +30,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -49,6 +53,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 import androidx.compose.ui.unit.sp
 import androidx.core.content.edit
 import helium314.keyboard.keyboard.KeyboardSwitcher
@@ -98,6 +103,22 @@ fun SonderThemeScreen(onClickBack: () -> Unit) {
     var editing by remember { mutableIntStateOf(0) } // 0 accent, 1 keys, 2 functional, 3 background
     val current = when (editing) { 0 -> seed; 1 -> keyColor; 2 -> funcColor; else -> surface }
     var hexField by remember(editing) { mutableStateOf(current.toHex()) }
+    var topShape by remember {
+        mutableStateOf(prefs.getString(Settings.PREF_SONDER_TOP_SHAPE, Defaults.PREF_SONDER_TOP_SHAPE)
+            ?: Defaults.PREF_SONDER_TOP_SHAPE)
+    }
+
+    // Rebuilding the keyboard is expensive and disruptive: it is the live keyboard being torn down
+    // and recreated underneath the settings screen. Doing it on every change made dragging a slider
+    // flicker the keyboard away and back on each step, and firing it while the keyboard was busy
+    // handling a paste brought the app down. Changes are written through immediately; the rebuild
+    // waits until they stop coming.
+    var reloadTick by remember { mutableIntStateOf(0) }
+    LaunchedEffect(reloadTick) {
+        if (reloadTick == 0) return@LaunchedEffect
+        delay(250)
+        KeyboardSwitcher.getInstance().setThemeNeedsReload()
+    }
 
     fun apply(newValue: Int) {
         when (editing) {
@@ -107,7 +128,7 @@ fun SonderThemeScreen(onClickBack: () -> Unit) {
             else -> { surface = newValue; prefs.edit { putInt(Settings.PREF_SONDER_SURFACE_COLOR, newValue) } }
         }
         hexField = newValue.toHex()
-        KeyboardSwitcher.getInstance().setThemeNeedsReload()
+        reloadTick++
     }
 
     SearchSettingsScreen(
@@ -170,6 +191,45 @@ fun SonderThemeScreen(onClickBack: () -> Unit) {
                     Text(stringResource(R.string.sonder_theme_reset))
                 }
             }
+
+            SectionTitle(stringResource(R.string.sonder_theme_shape))
+            listOf(
+                "flat" to R.string.sonder_theme_top_flat,
+                "rounded" to R.string.sonder_theme_top_rounded,
+                "inverted" to R.string.sonder_theme_top_inverted
+            ).forEach { (value, label) ->
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            topShape = value
+                            prefs.edit { putString(Settings.PREF_SONDER_TOP_SHAPE, value) }
+                            reloadTick++
+                        }
+                        .padding(vertical = 2.dp)
+                ) {
+                    RadioButton(
+                        selected = topShape == value,
+                        onClick = {
+                            topShape = value
+                            prefs.edit { putString(Settings.PREF_SONDER_TOP_SHAPE, value) }
+                            reloadTick++
+                        }
+                    )
+                    Text(
+                        stringResource(label),
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
+            }
+            Text(
+                stringResource(R.string.sonder_theme_top_shape_summary),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp)
+            )
 
             Spacer(Modifier.height(20.dp))
             Text(
@@ -307,13 +367,20 @@ private fun Swatch(color: Int, selected: Boolean, onClick: () -> Unit) {
     )
 }
 
-/** Small pill showing one of the two colours; tapping it switches what the controls edit. */
+/**
+ * Small pill showing one channel; tapping it switches what the controls below edit.
+ *
+ * The selected one carries an outline, a filled container, a check and bolder text. A tint alone
+ * was too easy to miss, which left the swatches and sliders looking like they applied to nothing
+ * in particular.
+ */
 @Composable
 private fun ChannelChip(label: String, color: Color, selected: Boolean, onClick: () -> Unit) {
     Surface(
-        color = if (selected) MaterialTheme.colorScheme.secondaryContainer
+        color = if (selected) MaterialTheme.colorScheme.primaryContainer
                 else MaterialTheme.colorScheme.surfaceContainerHighest,
         shape = MaterialTheme.shapes.small,
+        border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
         modifier = Modifier.clickable(onClick = onClick)
     ) {
         Row(
@@ -326,12 +393,18 @@ private fun ChannelChip(label: String, color: Color, selected: Boolean, onClick:
                     .size(22.dp)
                     .clip(CircleShape)
                     .background(color)
-                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
+                    .border(
+                        if (selected) 2.dp else 1.dp,
+                        if (selected) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.outlineVariant,
+                        CircleShape
+                    )
             )
             Text(
                 label,
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (selected) MaterialTheme.colorScheme.onSecondaryContainer
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                color = if (selected) MaterialTheme.colorScheme.onPrimaryContainer
                         else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
