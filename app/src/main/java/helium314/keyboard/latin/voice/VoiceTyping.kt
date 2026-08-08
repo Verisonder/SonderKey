@@ -78,6 +78,12 @@ object VoiceTyping {
 
     val isRecording get() = recorder?.isRecording == true
 
+    /**
+     * True while a turn is running that writes text as it goes. On-stop turns are excluded: they
+     * have written nothing yet, so ending one early would throw the whole dictation away.
+     */
+    val isLiveTurn get() = isRecording && mode.isLive
+
     /** True when the engine and a model are both present, so the mic can do anything useful. */
     fun isReady(context: Context) =
         VoiceEngine.areLibrariesPresent(context) && VoiceModel.anyDownloaded(context)
