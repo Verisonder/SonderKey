@@ -74,6 +74,9 @@ fun VoiceTypingScreen(onClickBack: () -> Unit) {
     var pinned by remember {
         mutableStateOf(isToolbarKeyEnabled(prefs, Settings.PREF_PINNED_TOOLBAR_KEYS, defaultPinnedToolbarPref, ToolbarKey.VOICE))
     }
+    var pulseIndicator by remember {
+        mutableStateOf(prefs.getBoolean(Settings.PREF_VOICE_PULSE_INDICATOR, Defaults.PREF_VOICE_PULSE_INDICATOR))
+    }
     var transcriptionMode by remember {
         mutableStateOf(prefs.getString(Settings.PREF_VOICE_TRANSCRIPTION_MODE, Defaults.PREF_VOICE_TRANSCRIPTION_MODE)
             ?: Defaults.PREF_VOICE_TRANSCRIPTION_MODE)
@@ -232,6 +235,13 @@ fun VoiceTypingScreen(onClickBack: () -> Unit) {
                         voiceOnLeft = it
                         prefs.edit { putBoolean(Settings.PREF_VOICE_KEY_ON_LEFT, it) }
                         KeyboardSwitcher.getInstance().setThemeNeedsReload()
+                    }
+                    ToggleRow(
+                        title = stringResource(R.string.voice_typing_pulse_indicator),
+                        checked = pulseIndicator
+                    ) {
+                        pulseIndicator = it
+                        prefs.edit { putBoolean(Settings.PREF_VOICE_PULSE_INDICATOR, it) }
                     }
                     Text(
                         text = stringResource(R.string.voice_typing_mode),

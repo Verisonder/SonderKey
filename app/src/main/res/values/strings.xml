@@ -1039,6 +1039,8 @@ New dictionary:
     <string name="voice_typing_in_toolbar">Show in the toolbar</string>
     <string name="voice_typing_pinned">Pin above the keyboard</string>
     <string name="voice_typing_on_left">Place it on the left</string>
+    <!-- Toggle for the compact listening indicator: a pulsing mic key instead of the full strip -->
+    <string name="voice_typing_pulse_indicator">Pulse the microphone key while listening</string>
     <!-- Heading for the group of settings choosing when speech becomes text -->
     <string name="voice_typing_mode">When to type what you say</string>
     <!-- Option: transcribe only after recording is stopped -->

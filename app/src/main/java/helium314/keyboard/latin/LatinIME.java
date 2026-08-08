@@ -1836,8 +1836,18 @@ public class LatinIME extends InputMethodService implements
         mVoiceInsertedLength = 0;
     }
 
+    /** True while the compact indicator is pulsing, so the right one gets torn down again. */
+    private boolean mVoicePulseActive = false;
+
     private void showVoiceStatus() {
         if (!hasSuggestionStripView()) return;
+        // The compact indicator pulses a microphone key the user already has on screen. If there
+        // is none it cannot show anything, so fall through to the full-strip indicator rather
+        // than leave the microphone open with no sign of it anywhere.
+        if (mSettings.getCurrent().mVoicePulseIndicator && mSuggestionStripView.setVoicePulseActive(true)) {
+            mVoicePulseActive = true;
+            return;
+        }
         mVoiceStatusView = new helium314.keyboard.latin.voice.VoiceStatusView(this);
         // Claim the strip before attaching, otherwise the words produced by the dictation replace
         // the listening indicator and there is no sign the microphone is still open.
@@ -1847,10 +1857,14 @@ public class LatinIME extends InputMethodService implements
 
     private void hideVoiceStatus() {
         mVoiceStatusView = null;
-        if (hasSuggestionStripView()) {
-            mSuggestionStripView.setVoiceInputActive(false);
-            mSuggestionStripView.setExternalSuggestionView(null, false);
+        if (!hasSuggestionStripView()) return;
+        if (mVoicePulseActive) {
+            mVoicePulseActive = false;
+            mSuggestionStripView.setVoicePulseActive(false);
+            return;
         }
+        mSuggestionStripView.setVoiceInputActive(false);
+        mSuggestionStripView.setExternalSuggestionView(null, false);
     }
 
     public void onTextInput(final String rawText) {
