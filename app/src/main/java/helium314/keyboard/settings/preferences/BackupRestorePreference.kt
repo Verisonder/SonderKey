@@ -614,6 +614,10 @@ private fun getCategoryForPrefKey(key: String): BackupCategory {
         || key.startsWith("bottom_padding_scale")
         || key.startsWith("side_padding_scale")
         || key.startsWith("split_spacer_scale")
+        // The particle image is already filed here, and settings that arrive without the image
+        // they describe - or an image with no settings - are worse than either alone. Keeping
+        // the whole effect in one category means ticking Theme brings all of it or none of it.
+        || key.startsWith("key_press_effect")
     ) {
         return BackupCategory.THEME_APPEARANCE
     }
