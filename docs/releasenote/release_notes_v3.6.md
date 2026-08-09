@@ -1,4 +1,4 @@
-# SonderKey 4.0
+# SonderKey 3.6
 
 ## Voice typing
 
