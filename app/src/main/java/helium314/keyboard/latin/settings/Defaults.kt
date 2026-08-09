@@ -75,6 +75,10 @@ object Defaults {
     const val PREF_KEY_PRESS_EFFECT_GRAVITY = 1.0f
     const val PREF_KEY_PRESS_EFFECT_SPREAD = 0.55f
     const val PREF_KEY_PRESS_EFFECT_COLOR = "key_text"
+    // Not a const: an opaque ARGB value does not fit a signed Int literal, so it needs the
+    // conversion, and that stops it being compile-time constant. Without @JvmField Kotlin gives
+    // it a private backing field with a getter, which Java cannot see - as SettingsValues found.
+    @JvmField
     val PREF_KEY_PRESS_EFFECT_CUSTOM_COLOR = 0xFFFF6B6B.toInt()
 
     const val PREF_ENABLE_SPELL_CHECKER_SERVICE = true
