@@ -1132,6 +1132,8 @@ New dictionary:
     <string name="key_press_effect">Key press effect</string>
     <!-- Description for "key_press_effect" setting -->
     <string name="key_press_effect_summary">Scatter a small burst of colour from each key as you type</string>
+    <!-- Category for settings controlling how the key press effect looks -->
+    <string name="key_press_effect_category_appearance">Appearance</string>
     <!-- Category for settings controlling how the key press effect moves -->
     <string name="settings_category_motion">Motion</string>
     <!-- Setting for the shape of each particle -->

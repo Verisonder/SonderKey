@@ -51,7 +51,7 @@ fun KeyPressEffectScreen(
         // Everything below only means anything once the effect is on, and a screen of dead
         // controls invites fiddling with them and wondering why nothing happens.
         if (enabled) {
-            add(R.string.settings_category_visuals)
+            add(R.string.key_press_effect_category_appearance)
             add(Settings.PREF_KEY_PRESS_EFFECT_SHAPE)
             add(Settings.PREF_KEY_PRESS_EFFECT_COLOR)
             if (colorChoice == KeyPressEffectDrawingPreview.COLOR_CUSTOM)
