@@ -66,6 +66,7 @@ fun AppearanceScreen(
             Settings.PREF_THEME_DAY_NIGHT else null,
         if (dayNightMode) Settings.PREF_THEME_COLORS_NIGHT else null,
         Settings.PREF_NAVBAR_COLOR,
+        Settings.PREF_KEY_PRESS_EFFECT,
         SettingsWithoutKey.BACKGROUND_IMAGE,
         SettingsWithoutKey.BACKGROUND_IMAGE_LANDSCAPE,
         R.string.settings_category_miscellaneous,
@@ -203,6 +204,9 @@ fun createAppearanceSettings(context: Context) = listOf(
     },
     Setting(context, Settings.PREF_NAVBAR_COLOR, R.string.theme_navbar, R.string.day_night_mode_summary) {
         SwitchPreference(it, Defaults.PREF_NAVBAR_COLOR)
+    },
+    Setting(context, Settings.PREF_KEY_PRESS_EFFECT, R.string.key_press_effect, R.string.key_press_effect_summary) {
+        SwitchPreference(it, Defaults.PREF_KEY_PRESS_EFFECT) { KeyboardSwitcher.getInstance().reloadKeyboard() }
     },
     Setting(context, SettingsWithoutKey.BACKGROUND_IMAGE, R.string.customize_background_image) {
         BackgroundImagePref(it, false)

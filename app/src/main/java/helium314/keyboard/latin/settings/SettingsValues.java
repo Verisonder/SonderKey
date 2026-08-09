@@ -80,6 +80,7 @@ public class SettingsValues {
         // Pulse the microphone key instead of taking the whole suggestion strip while dictating.
         public final boolean mVoicePulseIndicator;
         public final boolean mVoiceAutoFormat;
+        public final boolean mKeyPressEffect;
         public final boolean mVarToolbarDirection;
         public final boolean mUsePersonalizedDicts;
         public final boolean mUseDoubleSpacePeriod;
@@ -265,6 +266,8 @@ public class SettingsValues {
                                 Defaults.PREF_VOICE_PULSE_INDICATOR);
                 mVoiceAutoFormat = prefs.getBoolean(Settings.PREF_VOICE_AUTO_FORMAT,
                                 Defaults.PREF_VOICE_AUTO_FORMAT);
+                mKeyPressEffect = prefs.getBoolean(Settings.PREF_KEY_PRESS_EFFECT,
+                                Defaults.PREF_KEY_PRESS_EFFECT);
                 mVarToolbarDirection = mToolbarMode != ToolbarMode.HIDDEN
                                 && prefs.getBoolean(Settings.PREF_VARIABLE_TOOLBAR_DIRECTION,
                                                 Defaults.PREF_VARIABLE_TOOLBAR_DIRECTION);

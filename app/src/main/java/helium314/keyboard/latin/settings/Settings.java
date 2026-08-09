@@ -254,6 +254,7 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static final String PREF_VOICE_SILENCE_SECONDS = "voice_silence_seconds";
     public static final String PREF_VOICE_AUTO_FORMAT = "voice_auto_format";
     public static final String PREF_VOICE_MODEL = "voice_model";
+    public static final String PREF_KEY_PRESS_EFFECT = "key_press_effect";
     public static final String PREF_EMOJI_MAX_SDK_FONT = "emoji_max_sdk_font";
     public static final String PREF_EMOJI_UNRENDERABLE = "emoji_unrenderable";
     public static final String PREF_EMOJI_RECENT_KEYS = "emoji_recent_keys";
