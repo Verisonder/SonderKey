@@ -68,8 +68,7 @@ fun KeyPressEffectScreen(
             add(Settings.PREF_KEY_PRESS_EFFECT_SIZE)
 
             add(R.string.settings_category_motion)
-            // A custom image always throws exactly one particle, so the slider would be a lie.
-            if (!custom) add(Settings.PREF_KEY_PRESS_EFFECT_COUNT)
+            add(Settings.PREF_KEY_PRESS_EFFECT_COUNT)
             add(Settings.PREF_KEY_PRESS_EFFECT_SPEED)
             add(Settings.PREF_KEY_PRESS_EFFECT_SPREAD)
             add(Settings.PREF_KEY_PRESS_EFFECT_GRAVITY)
@@ -107,7 +106,14 @@ fun createKeyPressEffectSettings(context: Context) = listOf(
                 ctx.getString(R.string.key_press_effect_shape_custom) to KeyPressEffectDrawingPreview.SHAPE_CUSTOM,
             ),
             Defaults.PREF_KEY_PRESS_EFFECT_SHAPE
-        )
+        ) { chosen ->
+            // Dropping to one on the way in, because a burst of a dozen copies of the same
+            // picture rarely reads well. Written to the setting rather than imposed, so it shows
+            // in the slider and can be raised again from there.
+            if (chosen == KeyPressEffectDrawingPreview.SHAPE_CUSTOM) {
+                ctx.prefs().edit { putInt(Settings.PREF_KEY_PRESS_EFFECT_COUNT, KeyPressEffectDrawingPreview.CUSTOM_DEFAULT_PARTICLES) }
+            }
+        }
     },
     Setting(context, Settings.PREF_KEY_PRESS_EFFECT_COLOR, R.string.key_press_effect_color) { def ->
         val ctx = LocalContext.current

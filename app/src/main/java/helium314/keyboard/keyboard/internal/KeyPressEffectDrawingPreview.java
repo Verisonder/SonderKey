@@ -60,13 +60,13 @@ public final class KeyPressEffectDrawingPreview extends AbstractDrawingPreview {
     public static final String SHAPE_CUSTOM = "custom";
 
     /**
-     * A custom image throws one particle per press however many the slider asks for.
+     * What the count is set to when a custom image is chosen.
      *
-     * The abstract shapes are small and read as a scatter; an image is a picture of something, and
-     * a dozen overlapping copies of it read as a mess rather than as a burst. One is also what
-     * keeps this affordable, since a bitmap costs far more to draw than a filled circle.
+     * A suggestion rather than a rule. An image is a picture of something and a dozen overlapping
+     * copies usually read as a mess, so one is the sensible starting point - but it is written to
+     * the setting where it can be raised again, not enforced behind the user's back.
      */
-    public static final int CUSTOM_PARTICLES_PER_PRESS = 1;
+    public static final int CUSTOM_DEFAULT_PARTICLES = 1;
 
     public static final String COLOR_KEY_TEXT = "key_text";
     public static final String COLOR_ACCENT = "accent";
@@ -169,10 +169,7 @@ public final class KeyPressEffectDrawingPreview extends AbstractDrawingPreview {
         mGravity = GRAVITY * settings.mKeyPressEffectGravity;
         final float originX = key.getX() + key.getWidth() / 2f;
         final float originY = key.getY() + key.getHeight() / 2f;
-        final boolean custom = SHAPE_CUSTOM.equals(mShape) && mCustomBitmap != null;
-        final int count = custom
-                ? CUSTOM_PARTICLES_PER_PRESS
-                : Math.min(settings.mKeyPressEffectCount, MAX_PARTICLES);
+        final int count = Math.min(settings.mKeyPressEffectCount, MAX_PARTICLES);
         for (int i = 0; i < count; i++) {
             spawn(originX, originY, settings);
         }

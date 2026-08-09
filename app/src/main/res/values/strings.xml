@@ -1146,7 +1146,7 @@ New dictionary:
     <!-- Setting to choose the image a custom particle is drawn from -->
     <string name="key_press_effect_image">Particle image</string>
     <!-- Description for "key_press_effect_image" setting -->
-    <string name="key_press_effect_image_summary">An image throws one particle per key press</string>
+    <string name="key_press_effect_image_summary">Drawn in place of a shape, using its own colours</string>
     <!-- Shown when confirming removal of the chosen particle image -->
     <string name="key_press_effect_image_remove">Remove the particle image?</string>
     <!-- Button to pick a different particle image instead of removing it -->
