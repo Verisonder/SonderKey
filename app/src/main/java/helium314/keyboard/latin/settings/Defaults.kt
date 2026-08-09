@@ -67,6 +67,15 @@ object Defaults {
     const val PREF_VOICE_AUTO_FORMAT = true
     const val PREF_VOICE_MODEL = ""
     const val PREF_KEY_PRESS_EFFECT = false
+    const val PREF_KEY_PRESS_EFFECT_SHAPE = "circle"
+    const val PREF_KEY_PRESS_EFFECT_COUNT = 12
+    const val PREF_KEY_PRESS_EFFECT_SIZE = 1.0f
+    const val PREF_KEY_PRESS_EFFECT_SPEED = 1.0f
+    const val PREF_KEY_PRESS_EFFECT_DURATION = 620
+    const val PREF_KEY_PRESS_EFFECT_GRAVITY = 1.0f
+    const val PREF_KEY_PRESS_EFFECT_SPREAD = 0.55f
+    const val PREF_KEY_PRESS_EFFECT_COLOR = "key_text"
+    val PREF_KEY_PRESS_EFFECT_CUSTOM_COLOR = 0xFFFF6B6B.toInt()
 
     const val PREF_ENABLE_SPELL_CHECKER_SERVICE = true
     const val PREF_ENABLE_CONTACTS_OBSERVER = false
