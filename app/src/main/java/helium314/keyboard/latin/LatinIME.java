@@ -909,6 +909,7 @@ public class LatinIME extends InputMethodService implements
         // running after the user switched apps, leaving a live microphone open over someone
         // else's field with no indicator anywhere on screen.
         cancelVoiceTyping();
+        releaseVoiceCursor();
         mHandler.onFinishInputView(finishingInput);
         mStatsUtilsManager.onFinishInputView();
         mGestureConsumer = GestureConsumer.NULL_GESTURE_CONSUMER;
@@ -1264,6 +1265,13 @@ public class LatinIME extends InputMethodService implements
         // view is not displayed we have no means of showing suggestions anyway, and if
         // it is then
         // we want to show suggestions anyway.
+        // A cursor that has landed anywhere other than where dictation left it was moved by
+        // someone, and the position they chose is meant to be respected rather than spaced away
+        // from. Compared rather than simply cleared, because our own inserts report here too.
+        if (mVoiceOwnsCursor && newSelStart != mVoiceCursorPosition) {
+            releaseVoiceCursor();
+        }
+
         final SettingsValues settingsValues = mSettings.getCurrent();
         if (isInputViewShown()
                 && mInputLogic.onUpdateSelection(oldSelStart, oldSelEnd, newSelStart, newSelEnd,
@@ -1711,6 +1719,8 @@ public class LatinIME extends InputMethodService implements
         // keystroke cannot corrupt it, and cancelling there took away the one thing that mode is
         // for: dictating and correcting by hand at the same time.
         if (completeInputTransaction.didAffectContents()) {
+            // Whatever is at the cursor now, the user put it there.
+            releaseVoiceCursor();
             if (helium314.keyboard.latin.voice.VoiceTyping.INSTANCE.isReplacingTurn()) {
                 cancelVoiceTyping();
             } else if (mVoiceFinishPending) {
@@ -1825,11 +1835,25 @@ public class LatinIME extends InputMethodService implements
             connection.commitText(toCommit, 1);
             connection.endBatchEdit();
             mVoiceInsertedLength = toCommit.length();
+            markVoiceOwnsCursor();
             return;
         }
         final String toInsert = fitVoiceTextToContext(text);
         onTextInput(toInsert);
         mVoiceInsertedLength += toInsert.length();
+        markVoiceOwnsCursor();
+    }
+
+    /** Records that dictation wrote the text at the cursor, and where the cursor then was. */
+    private void markVoiceOwnsCursor() {
+        mVoiceOwnsCursor = true;
+        mVoiceCursorPosition = mInputLogic.getConnection().getExpectedSelectionEnd();
+    }
+
+    /** Called when anything other than dictation moves the cursor or changes the text at it. */
+    private void releaseVoiceCursor() {
+        mVoiceOwnsCursor = false;
+        mVoiceCursorPosition = -1;
     }
 
     /** How far back we look through whitespace to work out where in a sentence the cursor sits. */
@@ -1865,6 +1889,25 @@ public class LatinIME extends InputMethodService implements
     }
 
     /**
+     * True while the character before the cursor is one this app's dictation put there, and the
+     * cursor has not moved since.
+     *
+     * Needed because a run of dictation is not the same thing as one turn. The silence timeout
+     * ends a turn after a few seconds of quiet, so someone thinking mid-sentence starts a fresh
+     * turn without meaning to, and to them it is all one dictation. Tracking the turn alone made
+     * every one of those boundaries run two words together.
+     *
+     * The cursor is what distinguishes the two cases. If dictation wrote the last thing here, the
+     * next phrase continues it and takes a space. If the cursor was placed by hand, the user chose
+     * that spot and the words are meant to meet - which is what someone dictating into the middle
+     * of an identifier wants.
+     */
+    private boolean mVoiceOwnsCursor = false;
+
+    /** Where the cursor sat after the last voice insert, to notice it being moved afterwards. */
+    private int mVoiceCursorPosition = -1;
+
+    /**
      * Keeps consecutive phrases of one dictation apart when context formatting is off.
      *
      * Leaving the text completely untouched sounded right and read wrong: pauses mode delivers a
@@ -1878,7 +1921,7 @@ public class LatinIME extends InputMethodService implements
      * there the cursor is wherever the user chose to put it, and nothing is ever recapitalised.
      */
     private String separateFromPreviousPhrase(final String text) {
-        if (text.isEmpty() || mVoiceInsertedLength <= 0) return text;
+        if (text.isEmpty() || !mVoiceOwnsCursor) return text;
         if (Character.isWhitespace(text.codePointAt(0))) return text;
         final CharSequence before = mInputLogic.getConnection().getTextBeforeCursor(1, 0);
         if (before != null && before.length() > 0 && Character.isWhitespace(before.charAt(0))) {
