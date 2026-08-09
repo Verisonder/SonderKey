@@ -15,6 +15,7 @@ import helium314.keyboard.settings.screens.createAppearanceSettings
 import helium314.keyboard.settings.screens.createBackgroundServicesSettings
 import helium314.keyboard.settings.screens.createCorrectionSettings
 import helium314.keyboard.settings.screens.createGestureTypingSettings
+import helium314.keyboard.settings.screens.createKeyPressEffectSettings
 import helium314.keyboard.settings.screens.createLanguageSettings
 import helium314.keyboard.settings.screens.createLayoutSettings
 import helium314.keyboard.settings.screens.createPreferencesSettings
@@ -124,6 +125,7 @@ private val modules = listOf(
     SettingsModule(SettingsWithoutKey.SCREEN_NAV_LANGUAGES, SettingsDestination.LanguagesList, R.string.languages_title, iconRes = R.drawable.ic_settings_languages),
     SettingsModule(SettingsWithoutKey.SCREEN_NAV_PREFERENCES, SettingsDestination.Preferences, R.string.settings_screen_preferences, iconRes = R.drawable.ic_settings_preferences, provider = ::createPreferencesSettings),
     SettingsModule(SettingsWithoutKey.SCREEN_NAV_APPEARANCE, SettingsDestination.Appearance, R.string.settings_screen_appearance, iconRes = R.drawable.ic_settings_appearance, provider = ::createAppearanceSettings),
+    SettingsModule(SettingsWithoutKey.SCREEN_NAV_KEY_PRESS_EFFECT, SettingsDestination.KeyPressEffect, R.string.key_press_effect, iconRes = R.drawable.ic_settings_key_press_effect, provider = ::createKeyPressEffectSettings),
     SettingsModule(SettingsWithoutKey.SCREEN_NAV_TOOLBAR, SettingsDestination.Toolbar, R.string.settings_screen_toolbar, iconRes = R.drawable.ic_settings_toolbar, provider = ::createToolbarSettings),
     SettingsModule(SettingsWithoutKey.SCREEN_NAV_GESTURES, SettingsDestination.GestureTyping, R.string.settings_screen_gesture, iconRes = R.drawable.ic_settings_gesture, provider = ::createGestureTypingSettings),
     SettingsModule(SettingsWithoutKey.SCREEN_NAV_TEXT_CORRECTION, SettingsDestination.TextCorrection, R.string.settings_screen_correction, iconRes = R.drawable.ic_settings_correction, provider = ::createCorrectionSettings),
@@ -186,6 +188,7 @@ object SettingsWithoutKey {
     const val SCREEN_NAV_LANGUAGES_AND_LAYOUTS = "screen_nav_languages_and_layouts"
     const val SCREEN_NAV_PREFERENCES = "screen_nav_preferences"
     const val SCREEN_NAV_APPEARANCE = "screen_nav_appearance"
+    const val SCREEN_NAV_KEY_PRESS_EFFECT = "screen_nav_key_press_effect"
     const val SCREEN_NAV_TOOLBAR = "screen_nav_toolbar"
     const val SCREEN_NAV_GESTURES = "screen_nav_gestures"
     const val SCREEN_NAV_TEXT_CORRECTION = "screen_nav_text_correction"

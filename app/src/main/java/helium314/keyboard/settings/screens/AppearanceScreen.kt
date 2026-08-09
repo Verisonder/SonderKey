@@ -66,7 +66,6 @@ fun AppearanceScreen(
             Settings.PREF_THEME_DAY_NIGHT else null,
         if (dayNightMode) Settings.PREF_THEME_COLORS_NIGHT else null,
         Settings.PREF_NAVBAR_COLOR,
-        "key_press_effect_entry",
         SettingsWithoutKey.BACKGROUND_IMAGE,
         SettingsWithoutKey.BACKGROUND_IMAGE_LANDSCAPE,
         R.string.settings_category_miscellaneous,
@@ -103,10 +102,7 @@ fun AppearanceScreen(
     )
 }
 
-// The key press effect has a screen of its own, reached from the row below, but its settings
-// are registered here: a Setting must exist in the container for its key to resolve anywhere, and
-// registering through the screen that owns the entry keeps the two together.
-fun createAppearanceSettings(context: Context) = createKeyPressEffectSettings(context) + listOf(
+fun createAppearanceSettings(context: Context) = listOf(
     Setting(context, "sonder_theme_entry", R.string.settings_screen_sonder_theme,
         R.string.settings_screen_sonder_theme_summary) {
         Preference(
@@ -207,13 +203,6 @@ fun createAppearanceSettings(context: Context) = createKeyPressEffectSettings(co
     },
     Setting(context, Settings.PREF_NAVBAR_COLOR, R.string.theme_navbar, R.string.day_night_mode_summary) {
         SwitchPreference(it, Defaults.PREF_NAVBAR_COLOR)
-    },
-    Setting(context, "key_press_effect_entry", R.string.key_press_effect, R.string.key_press_effect_summary) {
-        Preference(
-            name = it.title,
-            description = it.description,
-            onClick = { SettingsDestination.navigateTo(SettingsDestination.KeyPressEffect) }
-        ) { NextScreenIcon() }
     },
     Setting(context, SettingsWithoutKey.BACKGROUND_IMAGE, R.string.customize_background_image) {
         BackgroundImagePref(it, false)

@@ -1,0 +1,14 @@
+<!--
+    SPDX-FileCopyrightText: Material Design Authors / Google LLC
+    modified
+    SPDX-License-Identifier: Apache-2.0
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="32dp"
+    android:height="32dp"
+    android:viewportWidth="960"
+    android:viewportHeight="960">
+    <path
+        android:fillColor="@color/foreground"
+        android:pathData="M368 700 296 544 140 472 296 400 368 244 440 400 596 472 440 544 368 700ZM368 553 402 478 477 444 402 410 368 335 334 410 259 444 334 478 368 553ZM688 780 652 702 574 666 652 630 688 552 724 630 802 666 724 702 688 780ZM688 380 652 302 574 266 652 230 688 152 724 230 802 266 724 302 688 380Z"/>
+</vector>

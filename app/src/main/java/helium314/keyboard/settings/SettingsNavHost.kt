@@ -82,6 +82,7 @@ fun SettingsNavHost(
                 onClickLibraries = { navController.navigate(SettingsDestination.Libraries) },
                 onClickAdvanced = { navController.navigate(SettingsDestination.Advanced) },
                 onClickAppearance = { navController.navigate(SettingsDestination.Appearance) },
+                onClickKeyPressEffect = { navController.navigate(SettingsDestination.KeyPressEffect) },
                 onClickLanguage = { navController.navigate(SettingsDestination.Languages) },
                 onClickDictionaries = { navController.navigate(SettingsDestination.Dictionaries) },
                 onClickAIIntegration = { navController.navigate(SettingsDestination.AIIntegration) },
