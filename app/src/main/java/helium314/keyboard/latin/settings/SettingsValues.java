@@ -80,6 +80,16 @@ public class SettingsValues {
         // Pulse the microphone key instead of taking the whole suggestion strip while dictating.
         public final boolean mVoicePulseIndicator;
         public final boolean mVoiceAutoFormat;
+        public final boolean mKeyPressEffect;
+        public final String mKeyPressEffectShape;
+        public final int mKeyPressEffectCount;
+        public final float mKeyPressEffectSize;
+        public final float mKeyPressEffectSpeed;
+        public final int mKeyPressEffectDuration;
+        public final float mKeyPressEffectGravity;
+        public final float mKeyPressEffectSpread;
+        public final String mKeyPressEffectColor;
+        public final int mKeyPressEffectCustomColor;
         public final boolean mVarToolbarDirection;
         public final boolean mUsePersonalizedDicts;
         public final boolean mUseDoubleSpacePeriod;
@@ -265,6 +275,26 @@ public class SettingsValues {
                                 Defaults.PREF_VOICE_PULSE_INDICATOR);
                 mVoiceAutoFormat = prefs.getBoolean(Settings.PREF_VOICE_AUTO_FORMAT,
                                 Defaults.PREF_VOICE_AUTO_FORMAT);
+                mKeyPressEffect = prefs.getBoolean(Settings.PREF_KEY_PRESS_EFFECT,
+                                Defaults.PREF_KEY_PRESS_EFFECT);
+                mKeyPressEffectShape = prefs.getString(Settings.PREF_KEY_PRESS_EFFECT_SHAPE,
+                                Defaults.PREF_KEY_PRESS_EFFECT_SHAPE);
+                mKeyPressEffectCount = prefs.getInt(Settings.PREF_KEY_PRESS_EFFECT_COUNT,
+                                Defaults.PREF_KEY_PRESS_EFFECT_COUNT);
+                mKeyPressEffectSize = prefs.getFloat(Settings.PREF_KEY_PRESS_EFFECT_SIZE,
+                                Defaults.PREF_KEY_PRESS_EFFECT_SIZE);
+                mKeyPressEffectSpeed = prefs.getFloat(Settings.PREF_KEY_PRESS_EFFECT_SPEED,
+                                Defaults.PREF_KEY_PRESS_EFFECT_SPEED);
+                mKeyPressEffectDuration = prefs.getInt(Settings.PREF_KEY_PRESS_EFFECT_DURATION,
+                                Defaults.PREF_KEY_PRESS_EFFECT_DURATION);
+                mKeyPressEffectGravity = prefs.getFloat(Settings.PREF_KEY_PRESS_EFFECT_GRAVITY,
+                                Defaults.PREF_KEY_PRESS_EFFECT_GRAVITY);
+                mKeyPressEffectSpread = prefs.getFloat(Settings.PREF_KEY_PRESS_EFFECT_SPREAD,
+                                Defaults.PREF_KEY_PRESS_EFFECT_SPREAD);
+                mKeyPressEffectColor = prefs.getString(Settings.PREF_KEY_PRESS_EFFECT_COLOR,
+                                Defaults.PREF_KEY_PRESS_EFFECT_COLOR);
+                mKeyPressEffectCustomColor = prefs.getInt(Settings.PREF_KEY_PRESS_EFFECT_CUSTOM_COLOR,
+                                Defaults.PREF_KEY_PRESS_EFFECT_CUSTOM_COLOR);
                 mVarToolbarDirection = mToolbarMode != ToolbarMode.HIDDEN
                                 && prefs.getBoolean(Settings.PREF_VARIABLE_TOOLBAR_DIRECTION,
                                                 Defaults.PREF_VARIABLE_TOOLBAR_DIRECTION);

@@ -67,6 +67,7 @@ fun MainSettingsScreen(
     onClickGestureTyping: () -> Unit,
     onClickAdvanced: () -> Unit,
     onClickAppearance: () -> Unit,
+    onClickKeyPressEffect: () -> Unit,
     onClickLanguage: () -> Unit,
     onClickGesture: () -> Unit,
     onClickLibraries: () -> Unit,
@@ -175,6 +176,11 @@ fun MainSettingsScreen(
                             icon = R.drawable.ic_settings_appearance
                         ) { NextScreenIcon() }
                         Preference(
+                            name = stringResource(R.string.key_press_effect),
+                            onClick = onClickKeyPressEffect,
+                            icon = R.drawable.ic_settings_key_press_effect
+                        ) { NextScreenIcon() }
+                        Preference(
                             name = stringResource(R.string.settings_screen_toolbar),
                             onClick = onClickToolbar,
                             icon = R.drawable.ic_settings_toolbar
@@ -252,7 +258,7 @@ private fun PreviewScreen() {
     initPreview(LocalContext.current)
     Theme(previewDark) {
         Surface {
-            MainSettingsScreen({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
+            MainSettingsScreen({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
         }
     }
 }

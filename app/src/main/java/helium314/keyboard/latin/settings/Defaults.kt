@@ -66,6 +66,20 @@ object Defaults {
     const val PREF_VOICE_SILENCE_SECONDS = 3
     const val PREF_VOICE_AUTO_FORMAT = true
     const val PREF_VOICE_MODEL = ""
+    const val PREF_KEY_PRESS_EFFECT = false
+    const val PREF_KEY_PRESS_EFFECT_SHAPE = "square"
+    const val PREF_KEY_PRESS_EFFECT_COUNT = 10
+    const val PREF_KEY_PRESS_EFFECT_SIZE = 1.0f
+    const val PREF_KEY_PRESS_EFFECT_SPEED = 1.0f
+    const val PREF_KEY_PRESS_EFFECT_DURATION = 1000
+    const val PREF_KEY_PRESS_EFFECT_GRAVITY = 1.0f
+    const val PREF_KEY_PRESS_EFFECT_SPREAD = 0.55f
+    const val PREF_KEY_PRESS_EFFECT_COLOR = "accent"
+    // Not a const: an opaque ARGB value does not fit a signed Int literal, so it needs the
+    // conversion, and that stops it being compile-time constant. Without @JvmField Kotlin gives
+    // it a private backing field with a getter, which Java cannot see - as SettingsValues found.
+    @JvmField
+    val PREF_KEY_PRESS_EFFECT_CUSTOM_COLOR = 0xFFFF6B6B.toInt()
 
     const val PREF_ENABLE_SPELL_CHECKER_SERVICE = true
     const val PREF_ENABLE_CONTACTS_OBSERVER = false

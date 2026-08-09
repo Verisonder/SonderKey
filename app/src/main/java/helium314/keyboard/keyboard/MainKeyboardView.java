@@ -44,6 +44,7 @@ import helium314.keyboard.keyboard.internal.KeyPreviewDrawParams;
 import helium314.keyboard.keyboard.internal.KeyPreviewView;
 import helium314.keyboard.keyboard.internal.PopupKeySpec;
 import helium314.keyboard.keyboard.internal.NonDistinctMultitouchHelper;
+import helium314.keyboard.keyboard.internal.KeyPressEffectDrawingPreview;
 import helium314.keyboard.keyboard.internal.SlidingKeyInputDrawingPreview;
 import helium314.keyboard.keyboard.internal.TimerHandler;
 import helium314.keyboard.keyboard.internal.KeyboardIconsSet;
@@ -107,6 +108,7 @@ public final class MainKeyboardView extends KeyboardView implements DrawingProxy
     private final GestureFloatingTextDrawingPreview mGestureFloatingTextDrawingPreview;
     private final GestureTrailsDrawingPreview mGestureTrailsDrawingPreview;
     private final SlidingKeyInputDrawingPreview mSlidingKeyInputDrawingPreview;
+    private final KeyPressEffectDrawingPreview mKeyPressEffectDrawingPreview;
 
     // Key preview
     private final KeyPreviewDrawParams mKeyPreviewDrawParams;
@@ -208,6 +210,12 @@ public final class MainKeyboardView extends KeyboardView implements DrawingProxy
 
         mSlidingKeyInputDrawingPreview = new SlidingKeyInputDrawingPreview(mainKeyboardViewAttr);
         mSlidingKeyInputDrawingPreview.setDrawingView(drawingPreviewPlacerView);
+
+        // Shares the placer view with the previews above so a burst is not clipped to the key it
+        // came from, which is what lets particles carry on over the neighbouring keys.
+        mKeyPressEffectDrawingPreview = new KeyPressEffectDrawingPreview();
+        mKeyPressEffectDrawingPreview.setDrawingView(drawingPreviewPlacerView);
+        mKeyPressEffectDrawingPreview.setDensity(getResources().getDisplayMetrics().density);
         mainKeyboardViewAttr.recycle();
 
         mDrawingPreviewPlacerView = drawingPreviewPlacerView;
@@ -328,6 +336,11 @@ public final class MainKeyboardView extends KeyboardView implements DrawingProxy
         PointerTracker.setKeyDetector(mKeyDetector);
         mPopupKeysKeyboardCache.clear();
 
+        // Re-read on every keyboard build, which is what a settings change triggers.
+        mKeyPressEffectDrawingPreview.setPreviewEnabled(Settings.getValues().mKeyPressEffect);
+        mKeyPressEffectDrawingPreview.reloadCustomImage(
+                Settings.getKeyPressEffectImageFile(getContext()));
+
         mSpaceKey = keyboard.getKey(Constants.CODE_SPACE);
         final int keyHeight = keyboard.mMostCommonKeyHeight - keyboard.mVerticalGap;
         mLanguageOnSpacebarTextSize = keyHeight * mLanguageOnSpacebarTextRatio;
@@ -389,6 +402,12 @@ public final class MainKeyboardView extends KeyboardView implements DrawingProxy
         key.onPressed();
         startKeyPressAnimation(key, true);
         invalidateKey(key);
+
+        // No coordinate translation here: DrawingPreviewPlacerView.onDraw already shifts the
+        // canvas by the keyboard view origin, so a preview draws in the view's own coordinates
+        // and the key's own x/y are exactly right. The preview ignores the call when disabled.
+        locatePreviewPlacerView();
+        mKeyPressEffectDrawingPreview.onKeyPressed(key);
 
         final Keyboard keyboard = getKeyboard();
         if (keyboard == null) {

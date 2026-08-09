@@ -1128,6 +1128,49 @@ New dictionary:
     <!-- Description for "day_night_mode" option. -->
     <string name="day_night_mode_summary">Appearance will follow system settings</string>
     <!-- Option for setting navbar to follow keyboard color -->
+    <!-- Option to scatter particles from a key as it is pressed -->
+    <string name="key_press_effect">Key press effect</string>
+    <!-- Description for "key_press_effect" setting -->
+    <string name="key_press_effect_summary">Scatter a small burst of colour from each key as you type</string>
+    <!-- Category for settings controlling how the key press effect looks -->
+    <string name="key_press_effect_category_appearance">Appearance</string>
+    <!-- Category for settings controlling how the key press effect moves -->
+    <string name="settings_category_motion">Motion</string>
+    <!-- Setting for the shape of each particle -->
+    <string name="key_press_effect_shape">Particle shape</string>
+    <string name="key_press_effect_shape_circle">Circle</string>
+    <string name="key_press_effect_shape_ring">Ring</string>
+    <string name="key_press_effect_shape_square">Square</string>
+    <string name="key_press_effect_shape_star">Star</string>
+    <string name="key_press_effect_shape_custom">Custom image</string>
+    <!-- Setting to choose the image a custom particle is drawn from -->
+    <string name="key_press_effect_image">Particle image</string>
+    <!-- Description for "key_press_effect_image" setting -->
+    <string name="key_press_effect_image_summary">Drawn in place of a shape, using its own colours</string>
+    <!-- Shown when confirming removal of the chosen particle image -->
+    <string name="key_press_effect_image_remove">Remove the particle image?</string>
+    <!-- Button to pick a different particle image instead of removing it -->
+    <string name="key_press_effect_image_replace">Replace</string>
+    <!-- Shown when the chosen file could not be read as an image -->
+    <string name="key_press_effect_image_failed">That file could not be read as an image</string>
+    <!-- Setting for where particles take their colour from -->
+    <string name="key_press_effect_color">Colour</string>
+    <string name="key_press_effect_color_key_text">Key text colour</string>
+    <string name="key_press_effect_color_accent">Accent colour</string>
+    <string name="key_press_effect_color_trail">Gesture trail colour</string>
+    <string name="key_press_effect_color_random">Random</string>
+    <string name="key_press_effect_color_custom">Custom</string>
+    <string name="key_press_effect_custom_color">Custom colour</string>
+    <!-- Setting for how many particles each key press throws -->
+    <string name="key_press_effect_count">Particles per press</string>
+    <string name="key_press_effect_count_summary">Higher values cost more to draw while typing quickly</string>
+    <string name="key_press_effect_size">Particle size</string>
+    <string name="key_press_effect_speed">Speed</string>
+    <string name="key_press_effect_spread">Spread</string>
+    <string name="key_press_effect_spread_summary">From a narrow upward jet to a full circle</string>
+    <string name="key_press_effect_gravity">Gravity</string>
+    <string name="key_press_effect_gravity_summary">Below zero particles rise instead of falling</string>
+    <string name="key_press_effect_duration">Lifetime</string>
     <string name="theme_navbar">Color navigation bar</string>
     <!-- Theme name for light theme -->
     <string name="theme_name_light" tools:keep="@string/theme_name_light">Light</string>

@@ -254,6 +254,16 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static final String PREF_VOICE_SILENCE_SECONDS = "voice_silence_seconds";
     public static final String PREF_VOICE_AUTO_FORMAT = "voice_auto_format";
     public static final String PREF_VOICE_MODEL = "voice_model";
+    public static final String PREF_KEY_PRESS_EFFECT = "key_press_effect";
+    public static final String PREF_KEY_PRESS_EFFECT_SHAPE = "key_press_effect_shape";
+    public static final String PREF_KEY_PRESS_EFFECT_COUNT = "key_press_effect_count";
+    public static final String PREF_KEY_PRESS_EFFECT_SIZE = "key_press_effect_size";
+    public static final String PREF_KEY_PRESS_EFFECT_SPEED = "key_press_effect_speed";
+    public static final String PREF_KEY_PRESS_EFFECT_DURATION = "key_press_effect_duration";
+    public static final String PREF_KEY_PRESS_EFFECT_GRAVITY = "key_press_effect_gravity";
+    public static final String PREF_KEY_PRESS_EFFECT_SPREAD = "key_press_effect_spread";
+    public static final String PREF_KEY_PRESS_EFFECT_COLOR = "key_press_effect_color";
+    public static final String PREF_KEY_PRESS_EFFECT_CUSTOM_COLOR = "key_press_effect_custom_color";
     public static final String PREF_EMOJI_MAX_SDK_FONT = "emoji_max_sdk_font";
     public static final String PREF_EMOJI_UNRENDERABLE = "emoji_unrenderable";
     public static final String PREF_EMOJI_RECENT_KEYS = "emoji_recent_keys";
@@ -609,6 +619,11 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static File getCustomBackgroundFile(final Context context, final boolean night, final boolean landscape) {
         return new File(DeviceProtectedUtils.getFilesDir(context),
                 "custom_background_image" + (landscape ? "_landscape" : "") + (night ? "_night" : ""));
+    }
+
+    /** The image a custom particle is drawn from, when the shape is set to a custom one. */
+    public static File getKeyPressEffectImageFile(final Context context) {
+        return new File(DeviceProtectedUtils.getFilesDir(context), "key_press_effect_particle");
     }
 
     public static void clearCachedBackgroundImages() {
