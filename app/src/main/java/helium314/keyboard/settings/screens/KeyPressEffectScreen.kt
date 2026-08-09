@@ -150,7 +150,8 @@ fun createKeyPressEffectSettings(context: Context) = listOf(
             name = def.title,
             key = def.key,
             default = Defaults.PREF_KEY_PRESS_EFFECT_SIZE,
-            range = 0.3f..3f,
+            // 1x is what 3x used to be, and the top of the range is a good deal larger again.
+            range = 0.5f..10f,
             description = { times(it) }
         )
     },

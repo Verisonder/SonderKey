@@ -47,8 +47,11 @@ public final class KeyPressEffectDrawingPreview extends AbstractDrawingPreview {
     private static final float SPEED_MIN = 0.045f;
     private static final float SPEED_MAX = 0.14f;
     private static final float GRAVITY = 0.00035f;
-    private static final float RADIUS_MIN = 1.6f;
-    private static final float RADIUS_MAX = 3.4f;
+    // Tripled from what they were, because the old ceiling of 3x was still too small to see
+    // properly. Rebasing the constants rather than only widening the slider keeps the multiplier
+    // readable and leaves stored values meaning the same thing they did.
+    private static final float RADIUS_MIN = 4.8f;
+    private static final float RADIUS_MAX = 10.2f;
 
     public static final String SHAPE_CIRCLE = "circle";
     public static final String SHAPE_RING = "ring";
