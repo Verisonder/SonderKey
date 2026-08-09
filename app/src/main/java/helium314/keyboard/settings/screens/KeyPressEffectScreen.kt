@@ -28,6 +28,8 @@ import helium314.keyboard.latin.utils.prefs
 import helium314.keyboard.settings.Setting
 import helium314.keyboard.settings.SearchSettingsScreen
 import helium314.keyboard.settings.SettingsActivity
+import helium314.keyboard.settings.SettingsWithoutKey
+import helium314.keyboard.settings.preferences.KeyPressEffectImagePreference
 import helium314.keyboard.settings.dialogs.ColorPickerDialog
 import helium314.keyboard.settings.preferences.Preference
 import helium314.keyboard.settings.preferences.ListPreference
@@ -45,6 +47,8 @@ fun KeyPressEffectScreen(
         Log.v("irrelevant", "stupid way to trigger recomposition on preference change")
     val enabled = prefs.getBoolean(Settings.PREF_KEY_PRESS_EFFECT, Defaults.PREF_KEY_PRESS_EFFECT)
     val colorChoice = prefs.getString(Settings.PREF_KEY_PRESS_EFFECT_COLOR, Defaults.PREF_KEY_PRESS_EFFECT_COLOR)
+    val shape = prefs.getString(Settings.PREF_KEY_PRESS_EFFECT_SHAPE, Defaults.PREF_KEY_PRESS_EFFECT_SHAPE)
+    val custom = shape == KeyPressEffectDrawingPreview.SHAPE_CUSTOM
 
     val items = buildList {
         add(Settings.PREF_KEY_PRESS_EFFECT)
@@ -53,13 +57,19 @@ fun KeyPressEffectScreen(
         if (enabled) {
             add(R.string.key_press_effect_category_appearance)
             add(Settings.PREF_KEY_PRESS_EFFECT_SHAPE)
-            add(Settings.PREF_KEY_PRESS_EFFECT_COLOR)
-            if (colorChoice == KeyPressEffectDrawingPreview.COLOR_CUSTOM)
-                add(Settings.PREF_KEY_PRESS_EFFECT_CUSTOM_COLOR)
+            if (custom) {
+                add(SettingsWithoutKey.KEY_PRESS_EFFECT_IMAGE)
+            } else {
+                // An image carries its own colours; tinting it would be destroying them.
+                add(Settings.PREF_KEY_PRESS_EFFECT_COLOR)
+                if (colorChoice == KeyPressEffectDrawingPreview.COLOR_CUSTOM)
+                    add(Settings.PREF_KEY_PRESS_EFFECT_CUSTOM_COLOR)
+            }
             add(Settings.PREF_KEY_PRESS_EFFECT_SIZE)
 
             add(R.string.settings_category_motion)
-            add(Settings.PREF_KEY_PRESS_EFFECT_COUNT)
+            // A custom image always throws exactly one particle, so the slider would be a lie.
+            if (!custom) add(Settings.PREF_KEY_PRESS_EFFECT_COUNT)
             add(Settings.PREF_KEY_PRESS_EFFECT_SPEED)
             add(Settings.PREF_KEY_PRESS_EFFECT_SPREAD)
             add(Settings.PREF_KEY_PRESS_EFFECT_GRAVITY)
@@ -81,6 +91,10 @@ fun createKeyPressEffectSettings(context: Context) = listOf(
         R.string.key_press_effect, R.string.key_press_effect_summary) {
         SwitchPreference(it, Defaults.PREF_KEY_PRESS_EFFECT)
     },
+    Setting(context, SettingsWithoutKey.KEY_PRESS_EFFECT_IMAGE,
+        R.string.key_press_effect_image, R.string.key_press_effect_image_summary) {
+        KeyPressEffectImagePreference(it)
+    },
     Setting(context, Settings.PREF_KEY_PRESS_EFFECT_SHAPE, R.string.key_press_effect_shape) { def ->
         val ctx = LocalContext.current
         ListPreference(
@@ -90,6 +104,7 @@ fun createKeyPressEffectSettings(context: Context) = listOf(
                 ctx.getString(R.string.key_press_effect_shape_ring) to KeyPressEffectDrawingPreview.SHAPE_RING,
                 ctx.getString(R.string.key_press_effect_shape_square) to KeyPressEffectDrawingPreview.SHAPE_SQUARE,
                 ctx.getString(R.string.key_press_effect_shape_star) to KeyPressEffectDrawingPreview.SHAPE_STAR,
+                ctx.getString(R.string.key_press_effect_shape_custom) to KeyPressEffectDrawingPreview.SHAPE_CUSTOM,
             ),
             Defaults.PREF_KEY_PRESS_EFFECT_SHAPE
         )

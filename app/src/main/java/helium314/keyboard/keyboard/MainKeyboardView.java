@@ -338,6 +338,8 @@ public final class MainKeyboardView extends KeyboardView implements DrawingProxy
 
         // Re-read on every keyboard build, which is what a settings change triggers.
         mKeyPressEffectDrawingPreview.setPreviewEnabled(Settings.getValues().mKeyPressEffect);
+        mKeyPressEffectDrawingPreview.reloadCustomImage(
+                Settings.getKeyPressEffectImageFile(getContext()));
 
         mSpaceKey = keyboard.getKey(Constants.CODE_SPACE);
         final int keyHeight = keyboard.mMostCommonKeyHeight - keyboard.mVerticalGap;

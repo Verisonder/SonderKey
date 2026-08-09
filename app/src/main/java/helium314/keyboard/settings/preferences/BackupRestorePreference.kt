@@ -341,6 +341,7 @@ private fun restoreLauncher(
                             File(filesDir, "custom_emoji_font").delete()
                             deviceProtectedFilesDir.listFiles()?.forEach {
                                 if (it.name.startsWith("custom_background_image")) it.delete()
+                                if (it.name == "key_press_effect_particle") it.delete()
                             }
                         }
                         if (selectedCategories.contains(BackupCategory.CLIPBOARD)) {
@@ -574,6 +575,7 @@ private val backupFilePatterns by lazy { listOf(
     Regex.escape(JniUtils.JNI_LIB_IMPORT_FILE_NAME).toRegex(),
     "UserHistoryDictionary.*${File.separator}UserHistoryDictionary.*\\.(body|header)".toRegex(),
     "custom_background_image.*".toRegex(),
+    "key_press_effect_particle".toRegex(),
     "custom_font".toRegex(),
     "custom_emoji_font".toRegex(),
 ) }
@@ -639,7 +641,8 @@ private fun getCategoryForFilePath(path: String): BackupCategory? {
     if (path.startsWith("layouts${File.separator}") || path.contains("layouts/")) {
         return BackupCategory.LAYOUTS
     }
-    if (path.startsWith("custom_background_image") || path == "custom_font" || path == "custom_emoji_font" || path == FLOATING_KEYBOARD_PREFS_FILE_NAME) {
+    if (path.startsWith("custom_background_image") || path == "custom_font" || path == "custom_emoji_font"
+        || path == "key_press_effect_particle" || path == FLOATING_KEYBOARD_PREFS_FILE_NAME) {
         return BackupCategory.THEME_APPEARANCE
     }
     // The learned words and the downloaded dictionaries share a directory but not a purpose:

@@ -1142,6 +1142,17 @@ New dictionary:
     <string name="key_press_effect_shape_ring">Ring</string>
     <string name="key_press_effect_shape_square">Square</string>
     <string name="key_press_effect_shape_star">Star</string>
+    <string name="key_press_effect_shape_custom">Custom image</string>
+    <!-- Setting to choose the image a custom particle is drawn from -->
+    <string name="key_press_effect_image">Particle image</string>
+    <!-- Description for "key_press_effect_image" setting -->
+    <string name="key_press_effect_image_summary">An image throws one particle per key press</string>
+    <!-- Shown when confirming removal of the chosen particle image -->
+    <string name="key_press_effect_image_remove">Remove the particle image?</string>
+    <!-- Button to pick a different particle image instead of removing it -->
+    <string name="key_press_effect_image_replace">Replace</string>
+    <!-- Shown when the chosen file could not be read as an image -->
+    <string name="key_press_effect_image_failed">That file could not be read as an image</string>
     <!-- Setting for where particles take their colour from -->
     <string name="key_press_effect_color">Colour</string>
     <string name="key_press_effect_color_key_text">Key text colour</string>

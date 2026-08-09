@@ -189,6 +189,7 @@ object SettingsWithoutKey {
     const val SCREEN_NAV_PREFERENCES = "screen_nav_preferences"
     const val SCREEN_NAV_APPEARANCE = "screen_nav_appearance"
     const val SCREEN_NAV_KEY_PRESS_EFFECT = "screen_nav_key_press_effect"
+    const val KEY_PRESS_EFFECT_IMAGE = "key_press_effect_image"
     const val SCREEN_NAV_TOOLBAR = "screen_nav_toolbar"
     const val SCREEN_NAV_GESTURES = "screen_nav_gestures"
     const val SCREEN_NAV_TEXT_CORRECTION = "screen_nav_text_correction"

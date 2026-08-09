@@ -57,6 +57,16 @@ public final class KeyPressEffectDrawingPreview extends AbstractDrawingPreview {
     public static final String SHAPE_RING = "ring";
     public static final String SHAPE_SQUARE = "square";
     public static final String SHAPE_STAR = "star";
+    public static final String SHAPE_CUSTOM = "custom";
+
+    /**
+     * A custom image throws one particle per press however many the slider asks for.
+     *
+     * The abstract shapes are small and read as a scatter; an image is a picture of something, and
+     * a dozen overlapping copies of it read as a mess rather than as a burst. One is also what
+     * keeps this affordable, since a bitmap costs far more to draw than a filled circle.
+     */
+    public static final int CUSTOM_PARTICLES_PER_PRESS = 1;
 
     public static final String COLOR_KEY_TEXT = "key_text";
     public static final String COLOR_ACCENT = "accent";
@@ -64,11 +74,22 @@ public final class KeyPressEffectDrawingPreview extends AbstractDrawingPreview {
     public static final String COLOR_CUSTOM = "custom";
     public static final String COLOR_RANDOM = "random";
 
-    private final Paint mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint mPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
     private final Random mRandom = new Random();
     private final Handler mHandler = new Handler(Looper.getMainLooper());
     /** A unit star built once, then scaled per particle rather than recomputed. */
     private final Path mStarPath = new Path();
+    private final android.graphics.Rect mBitmapSource = new android.graphics.Rect();
+    private final android.graphics.RectF mBitmapDest = new android.graphics.RectF();
+
+    /**
+     * The user's image, decoded once and held.
+     *
+     * Decoding is far too slow to do while drawing, so it happens when the keyboard is built and
+     * the result is kept. Null means either no image has been chosen or the file would not
+     * decode, and both fall back to a circle rather than drawing nothing.
+     */
+    private android.graphics.Bitmap mCustomBitmap;
 
     private final float[] mX = new float[MAX_PARTICLES];
     private final float[] mY = new float[MAX_PARTICLES];
@@ -115,6 +136,24 @@ public final class KeyPressEffectDrawingPreview extends AbstractDrawingPreview {
     }
 
     /**
+     * Decodes the custom particle image, or forgets it when there is none.
+     *
+     * Called when the keyboard is built rather than when the file changes, which is enough: a
+     * newly chosen image only needs to appear the next time the keyboard is shown, and reading
+     * the disk on a keystroke is out of the question.
+     */
+    public void reloadCustomImage(final java.io.File file) {
+        mCustomBitmap = null;
+        if (file == null || !file.isFile()) return;
+        // Capped well below the largest particle anyone can ask for, so a photograph straight off
+        // a camera is not held in memory at full size for something drawn a few millimetres wide.
+        mCustomBitmap = helium314.keyboard.latin.utils.BitmapUtils.decodeSampledBitmap(file, 256, false);
+        if (mCustomBitmap != null) {
+            mBitmapSource.set(0, 0, mCustomBitmap.getWidth(), mCustomBitmap.getHeight());
+        }
+    }
+
+    /**
      * Throws a burst from the centre of {@code key}.
      *
      * Coordinates are the keyboard view's own, because {@link DrawingPreviewPlacerView} translates
@@ -130,7 +169,10 @@ public final class KeyPressEffectDrawingPreview extends AbstractDrawingPreview {
         mGravity = GRAVITY * settings.mKeyPressEffectGravity;
         final float originX = key.getX() + key.getWidth() / 2f;
         final float originY = key.getY() + key.getHeight() / 2f;
-        final int count = Math.min(settings.mKeyPressEffectCount, MAX_PARTICLES);
+        final boolean custom = SHAPE_CUSTOM.equals(mShape) && mCustomBitmap != null;
+        final int count = custom
+                ? CUSTOM_PARTICLES_PER_PRESS
+                : Math.min(settings.mKeyPressEffectCount, MAX_PARTICLES);
         for (int i = 0; i < count; i++) {
             spawn(originX, originY, settings);
         }
@@ -225,6 +267,9 @@ public final class KeyPressEffectDrawingPreview extends AbstractDrawingPreview {
         final boolean ring = SHAPE_RING.equals(mShape);
         final boolean square = SHAPE_SQUARE.equals(mShape);
         final boolean star = SHAPE_STAR.equals(mShape);
+        // A missing or unreadable image falls through to a circle, so a broken file leaves the
+        // effect looking plain rather than leaving the user wondering why nothing happens.
+        final boolean custom = SHAPE_CUSTOM.equals(mShape) && mCustomBitmap != null;
         mPaint.setStyle(ring ? Paint.Style.STROKE : Paint.Style.FILL);
         for (int i = 0; i < MAX_PARTICLES; i++) {
             final float life = mLife[i];
@@ -233,9 +278,13 @@ public final class KeyPressEffectDrawingPreview extends AbstractDrawingPreview {
             // Fading and shrinking together reads as dissipating rather than simply vanishing.
             // Squaring the fade keeps particles solid most of their flight then drops them away.
             final float size = mRadius[i] * remaining;
-            mPaint.setColor(mColor[i]);
+            // A colour would tint the user's image; only its transparency should be touched.
+            if (!custom) mPaint.setColor(mColor[i]);
             mPaint.setAlpha((int) (255 * remaining * remaining));
-            if (star) {
+            if (custom) {
+                mBitmapDest.set(mX[i] - size, mY[i] - size, mX[i] + size, mY[i] + size);
+                canvas.drawBitmap(mCustomBitmap, mBitmapSource, mBitmapDest, mPaint);
+            } else if (star) {
                 canvas.save();
                 canvas.translate(mX[i], mY[i]);
                 canvas.scale(size, size);

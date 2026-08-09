@@ -621,6 +621,11 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
                 "custom_background_image" + (landscape ? "_landscape" : "") + (night ? "_night" : ""));
     }
 
+    /** The image a custom particle is drawn from, when the shape is set to a custom one. */
+    public static File getKeyPressEffectImageFile(final Context context) {
+        return new File(DeviceProtectedUtils.getFilesDir(context), "key_press_effect_particle");
+    }
+
     public static void clearCachedBackgroundImages() {
         Arrays.fill(sCachedBackgroundImages, null);
     }
