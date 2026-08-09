@@ -377,40 +377,17 @@ private fun restoreLauncher(
                                 }
                             } else if (entry.name == PREFS_FILE_NAME) {
                                 val prefLines = String(zip.readBytes()).split("\n")
-                                val prefs = ctx.prefs()
-                                prefs.edit(commit = true) {
-                                    prefs.all.keys.forEach { key ->
-                                        if (selectedCategories.contains(getCategoryForPrefKey(key))) {
-                                            remove(key)
-                                        }
-                                    }
-                                }
-                                readJsonLinesToSettings(prefLines, prefs, selectedCategories)
+                                restoreJsonLinesToSettings(prefLines, ctx.prefs(), selectedCategories)
                             } else if (entry.name == PROTECTED_PREFS_FILE_NAME) {
                                 val prefLines = String(zip.readBytes()).split("\n")
-                                val protectedPrefs = ctx.protectedPrefs()
-                                protectedPrefs.edit(commit = true) {
-                                    protectedPrefs.all.keys.forEach { key ->
-                                        if (selectedCategories.contains(getCategoryForPrefKey(key))) {
-                                            remove(key)
-                                        }
-                                    }
-                                }
-                                readJsonLinesToSettings(prefLines, protectedPrefs, selectedCategories)
+                                restoreJsonLinesToSettings(prefLines, ctx.protectedPrefs(), selectedCategories)
                             } else {
                                 val auxPrefs = auxiliaryPrefsToBackUp(ctx)[entry.name]
                                 if (auxPrefs != null) {
                                     val cat = getCategoryForFilePath(entry.name)
                                     if (cat == null || selectedCategories.contains(cat)) {
                                         val prefLines = String(zip.readBytes()).split("\n")
-                                        auxPrefs.edit(commit = true) {
-                                            auxPrefs.all.keys.forEach { key ->
-                                                if (selectedCategories.contains(getCategoryForPrefKey(key))) {
-                                                    remove(key)
-                                                }
-                                            }
-                                        }
-                                        readJsonLinesToSettings(prefLines, auxPrefs, selectedCategories)
+                                        restoreJsonLinesToSettings(prefLines, auxPrefs, selectedCategories)
                                     }
                                 }
                             }
@@ -473,36 +450,82 @@ private fun settingsToJsonStream(settings: Map<String?, Any?>, out: OutputStream
     out.write(Json.encodeToString(stringSets).toByteArray())
 }
 
-private fun readJsonLinesToSettings(list: List<String>, prefs: SharedPreferences, selectedCategories: Set<BackupCategory>): Boolean {
+/** Every value a restore intends to write, held before anything is touched. */
+private class ParsedPreferences {
+    val booleans = mutableMapOf<String, Boolean>()
+    val ints = mutableMapOf<String, Int>()
+    val longs = mutableMapOf<String, Long>()
+    val floats = mutableMapOf<String, Float>()
+    val strings = mutableMapOf<String, String>()
+    val stringSets = mutableMapOf<String, Set<String>>()
+}
+
+/**
+ * Reads a backup's preference file without touching anything, and throws if it cannot.
+ *
+ * Parsing is kept apart from writing on purpose. The restore used to clear the selected keys in
+ * its own committed edit and only then start decoding, so a file that failed to parse - one
+ * malformed line, one truncated section, one value of the wrong type - left the settings deleted
+ * and nothing written back in their place.
+ *
+ * Every failure here is now allowed to escape to the caller. It swallowed exceptions and returned
+ * a boolean that all three call sites ignored, which meant a wiped configuration was reported to
+ * the user as "Backup restored".
+ */
+private fun parseJsonLines(list: List<String>, selectedCategories: Set<BackupCategory>): ParsedPreferences {
+    val parsed = ParsedPreferences()
     val i = list.iterator()
-    val e = prefs.edit()
-    try {
-        while (i.hasNext()) {
-            when (i.next()) {
-                "boolean settings" -> Json.decodeFromString<Map<String, Boolean>>(i.next())
-                    .filter { selectedCategories.contains(getCategoryForPrefKey(it.key)) }
-                    .forEach { e.putBoolean(it.key, it.value) }
-                "int settings" -> Json.decodeFromString<Map<String, Int>>(i.next())
-                    .filter { selectedCategories.contains(getCategoryForPrefKey(it.key)) }
-                    .forEach { e.putInt(it.key, it.value) }
-                "long settings" -> Json.decodeFromString<Map<String, Long>>(i.next())
-                    .filter { selectedCategories.contains(getCategoryForPrefKey(it.key)) }
-                    .forEach { e.putLong(it.key, it.value) }
-                "float settings" -> Json.decodeFromString<Map<String, Float>>(i.next())
-                    .filter { selectedCategories.contains(getCategoryForPrefKey(it.key)) }
-                    .forEach { e.putFloat(it.key, it.value) }
-                "string settings" -> Json.decodeFromString<Map<String, String>>(i.next())
-                    .filter { selectedCategories.contains(getCategoryForPrefKey(it.key)) }
-                    .forEach { e.putString(it.key, it.value) }
-                "string set settings" -> Json.decodeFromString<Map<String, Set<String>>>(i.next())
-                    .filter { selectedCategories.contains(getCategoryForPrefKey(it.key)) }
-                    .forEach { e.putStringSet(it.key, it.value) }
-            }
+    // Each heading is followed by its data on the next line. A file ending on a heading is
+    // truncated, and saying so beats the NoSuchElementException that used to be swallowed.
+    fun body(heading: String): String {
+        if (!i.hasNext()) throw IllegalArgumentException("the backup ends after \"$heading\" with no data")
+        return i.next()
+    }
+    fun wanted(key: String) = selectedCategories.contains(getCategoryForPrefKey(key))
+    while (i.hasNext()) {
+        val heading = i.next()
+        when (heading) {
+            "boolean settings" -> parsed.booleans.putAll(
+                Json.decodeFromString<Map<String, Boolean>>(body(heading)).filterKeys(::wanted))
+            "int settings" -> parsed.ints.putAll(
+                Json.decodeFromString<Map<String, Int>>(body(heading)).filterKeys(::wanted))
+            "long settings" -> parsed.longs.putAll(
+                Json.decodeFromString<Map<String, Long>>(body(heading)).filterKeys(::wanted))
+            "float settings" -> parsed.floats.putAll(
+                Json.decodeFromString<Map<String, Float>>(body(heading)).filterKeys(::wanted))
+            "string settings" -> parsed.strings.putAll(
+                Json.decodeFromString<Map<String, String>>(body(heading)).filterKeys(::wanted))
+            "string set settings" -> parsed.stringSets.putAll(
+                Json.decodeFromString<Map<String, Set<String>>>(body(heading)).filterKeys(::wanted))
         }
-        e.commit()
-        return true
-    } catch (e: Exception) {
-        return false
+    }
+    return parsed
+}
+
+/**
+ * Replaces the selected categories of [prefs] with what the backup holds.
+ *
+ * The clearing and the writing are one edit and one commit, so the old settings survive right up
+ * until the new ones are ready to take their place. If the file cannot be read, this throws
+ * before reaching the edit and the existing settings are left exactly as they were - the restore
+ * then fails visibly, which is the point.
+ */
+private fun restoreJsonLinesToSettings(
+    list: List<String>,
+    prefs: SharedPreferences,
+    selectedCategories: Set<BackupCategory>
+) {
+    val parsed = parseJsonLines(list, selectedCategories)
+    prefs.edit(commit = true) {
+        prefs.all.keys.forEach { key ->
+            if (selectedCategories.contains(getCategoryForPrefKey(key))) remove(key)
+        }
+        parsed.booleans.forEach { putBoolean(it.key, it.value) }
+        parsed.ints.forEach { putInt(it.key, it.value) }
+        parsed.longs.forEach { putLong(it.key, it.value) }
+        parsed.floats.forEach { putFloat(it.key, it.value) }
+        parsed.strings.forEach { putString(it.key, it.value) }
+        parsed.stringSets.forEach { putStringSet(it.key, it.value) }
     }
 }
 
