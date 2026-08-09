@@ -44,7 +44,7 @@ fun TestBuildPreference(name: String) {
         name = name,
         description = when {
             state.isNotEmpty() -> state
-            pending != null -> "${pending!!.tag} - ${pending!!.published}"
+            pending != null -> pending!!.label
             unlocked -> stringResource(R.string.test_build_check)
             else -> stringResource(R.string.test_build_locked)
         },

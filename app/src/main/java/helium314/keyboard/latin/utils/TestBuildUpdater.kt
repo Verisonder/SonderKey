@@ -30,7 +30,18 @@ object TestBuildUpdater {
     private const val RELEASES =
         "https://api.github.com/repos/Verisonder/vs-artifacts/releases?per_page=10"
 
-    data class Build(val tag: String, val published: String, val apkUrl: String, val sizeBytes: Long)
+    data class Build(
+        val tag: String,
+        /** Short commit the build was cut from, so one build can be told from the next. */
+        val commit: String,
+        /** Publication time in the phone's own zone, since that is the one being read. */
+        val published: String,
+        val apkUrl: String,
+        val sizeBytes: Long
+    ) {
+        /** What the settings row shows: which branch, which commit, and when. */
+        val label get() = listOf(tag, commit, published).filter { it.isNotEmpty() }.joinToString(" ")
+    }
 
     fun isSupported() = AppUpdater.isSupported()
 
@@ -49,7 +60,8 @@ object TestBuildUpdater {
                     return@withContext Result.success(
                         Build(
                             tag = release.getString("tag_name"),
-                            published = release.optString("published_at", "").take(10),
+                            commit = commitOf(release.optString("name", ""), name),
+                            published = localTimeOf(release.optString("published_at", "")),
                             apkUrl = asset.getString("browser_download_url"),
                             sizeBytes = asset.optLong("size", 0)
                         )
@@ -66,6 +78,39 @@ object TestBuildUpdater {
     /** Reuses the ordinary download and install path; only the source of the URL differs. */
     fun asUpdate(build: Build) =
         AppUpdater.Update(build.tag, build.apkUrl, build.sizeBytes, "")
+
+    /**
+     * Digs the commit out of what the release is called, falling back to the file name.
+     *
+     * Both are built from it - the release is titled "<tag> <sha>" and the file is named
+     * "SonderKey_<tag>-<sha>.apk" - so either will do, and having two means a release renamed by
+     * hand still gives an answer rather than showing nothing.
+     */
+    private fun commitOf(releaseName: String, assetName: String): String {
+        val fromTitle = releaseName.substringAfterLast(' ', "").trim()
+        if (fromTitle.isNotEmpty() && fromTitle != releaseName) return fromTitle
+        return assetName.removeSuffix(".apk").substringAfterLast('-', "")
+    }
+
+    /**
+     * Turns GitHub's UTC timestamp into a local clock time.
+     *
+     * The date was what this showed before and it was the less useful half: several builds land
+     * on one day, so the date cannot tell them apart, while the time always can. Shown in the
+     * phone's own zone rather than UTC, because that is the clock being compared against.
+     */
+    private fun localTimeOf(iso: String): String {
+        if (iso.isEmpty()) return ""
+        return try {
+            val parser = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", java.util.Locale.US)
+            parser.timeZone = java.util.TimeZone.getTimeZone("UTC")
+            val parsed = parser.parse(iso) ?: return ""
+            java.text.SimpleDateFormat("HH:mm", java.util.Locale.US).format(parsed)
+        } catch (t: Throwable) {
+            Log.w(TAG, "could not read the published time", t)
+            ""
+        }
+    }
 
     private fun fetchText(url: String): String {
         val connection = (java.net.URL(url).openConnection() as java.net.HttpURLConnection).apply {
