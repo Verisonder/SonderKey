@@ -2,12 +2,11 @@ name: Build Test APK
 
 # Signed release APKs for trying a change on a real device before it goes anywhere public.
 #
-# Publishes as a DRAFT release, which is visible only to people with write access to the repo and
-# is never returned by the releases/latest endpoint - so the in-app updater cannot offer it to
-# anyone. Signed with the real release key so it installs straight over a published build and
-# keeps existing settings.
+# Publishes to Verisonder/vs-artifacts rather than to this repository, so nothing appears on the
+# releases page here and there is no draft to clean up afterwards. Signed with the real release
+# key, so it installs straight over a published build and keeps existing settings.
 #
-# Push to any test/** branch to get one. Delete the branch and the draft when finished.
+# Push to any test/** branch to get one. Delete the branch when finished.
 
 on:
   workflow_dispatch:
@@ -80,22 +79,26 @@ jobs:
           cp "$SRC" "SonderKey_test-${{ steps.naming.outputs.slug }}-${{ steps.naming.outputs.sha }}.apk"
           ls -lh SonderKey_test-*.apk
 
-      # Draft releases are not public and are skipped by releases/latest, so the in-app updater
-      # never offers them. Replaced on each push to the same branch rather than piling up.
-      - name: Publish as a draft release
+      # Builds go to the artifacts repository, where the app can reach them. A draft release on
+      # this repository was the older arrangement and is no longer cut: it is readable only with a
+      # token, so the app could never offer it, and keeping both meant two copies of every build
+      # and a draft to tidy up afterwards. Skipped when the secret is absent rather than failing.
+      - name: Publish to the artifacts repository
         env:
-          GH_TOKEN: ${{ secrets.RELEASE_PAT || github.token }}
+          GH_TOKEN: ${{ secrets.ARTIFACTS_PAT }}
         run: |
+          # Tested in the shell rather than in an `if:`, because the secrets context is not
+          # dependable in a step condition and a missing secret would silently skip nothing.
+          if [ -z "$GH_TOKEN" ]; then
+            echo "ARTIFACTS_PAT is not set, nothing published to the artifacts repository."
+            exit 0
+          fi
           TAG="${{ steps.naming.outputs.tag }}"
-          gh release delete "$TAG" --yes --cleanup-tag 2>/dev/null || true
+          REPO="Verisonder/vs-artifacts"
+          gh release delete "$TAG" --repo "$REPO" --yes --cleanup-tag 2>/dev/null || true
           gh release create "$TAG" \
-            --draft \
-            --title "TEST $TAG ($(git rev-parse --short HEAD))" \
-            --notes "Unlisted test build from \`${{ github.ref_name }}\` at \`$(git rev-parse --short HEAD)\`.
-
-          Signed with the release key, so it installs over a published build and keeps your settings.
-
-          Draft: not public, and the in-app updater will not offer it. Delete when done testing." \
-            --target "${{ github.sha }}" \
+            --repo "$REPO" \
+            --title "$TAG ${{ steps.naming.outputs.sha }}" \
+            --notes "Build from \`${{ github.ref_name }}\` at \`${{ steps.naming.outputs.sha }}\`, $(date -u '+%Y-%m-%d %H:%M UTC')." \
             SonderKey_test-*.apk
-          echo "Draft release $TAG created."
+          echo "Published $TAG to $REPO."

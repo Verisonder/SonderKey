@@ -64,6 +64,8 @@ object Defaults {
     const val PREF_VOICE_PULSE_INDICATOR = true
     const val PREF_VOICE_SILENCE_STOP = true
     const val PREF_VOICE_SILENCE_SECONDS = 3
+    const val PREF_VOICE_AUTO_FORMAT = true
+    const val PREF_VOICE_MODEL = ""
 
     const val PREF_ENABLE_SPELL_CHECKER_SERVICE = true
     const val PREF_ENABLE_CONTACTS_OBSERVER = false
@@ -145,7 +147,7 @@ object Defaults {
     const val PREF_AUTOSPACE_AFTER_GESTURE_TYPING = true
     const val PREF_AUTOSPACE_BEFORE_GESTURE_TYPING = true
     const val PREF_SHIFT_REMOVES_AUTOSPACE = false
-    const val PREF_PRESERVE_SPACE_BEFORE_PUNCTUATION = false
+    const val PREF_PRESERVE_SPACE_BEFORE_PUNCTUATION = true
     const val PREF_ALWAYS_INCOGNITO_MODE = false
     const val PREF_BIGRAM_PREDICTIONS = true
     const val PREF_PRIORITIZE_PERSONAL_SUGGESTIONS = false

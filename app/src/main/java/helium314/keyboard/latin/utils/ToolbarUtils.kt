@@ -84,6 +84,11 @@ fun createToolbarKey(context: Context, key: ToolbarKey): ImageButton {
         .getBoolean(Settings.PREF_TOOLBAR_LONG_PRESS_HINT, Defaults.PREF_TOOLBAR_LONG_PRESS_HINT)
     val finalDrawable = if (rawDrawable != null && showLongPressHint
         && getCodeForToolbarKeyLongClick(key) != KeyCode.UNSPECIFIED
+        // The microphone is left alone. It has a long press like any other key, but it is also
+        // the one key that changes colour to say something: the pulse indicator turns it red
+        // while a dictation turn is open. A permanent coloured dot in the corner competes with
+        // the only signal telling the user their microphone is live, and that signal has to win.
+        && key != ToolbarKey.VOICE
     ) {
         LongPressHintDrawable(rawDrawable)
     } else {
@@ -284,6 +289,7 @@ fun getCodeForToolbarKeyLongClick(key: ToolbarKey) = Settings.getInstance().getC
     PAGE_UP -> KeyCode.MOVE_START_OF_PAGE
     PAGE_DOWN -> KeyCode.MOVE_END_OF_PAGE
     TRANSLATE -> KeyCode.SHOW_TRANSLATE_LANGUAGES
+    VOICE -> KeyCode.VOICE_INPUT_MODE
     else -> KeyCode.UNSPECIFIED
 }
 

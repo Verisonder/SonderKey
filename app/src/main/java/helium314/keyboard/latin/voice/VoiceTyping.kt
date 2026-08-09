@@ -79,10 +79,17 @@ object VoiceTyping {
     val isRecording get() = recorder?.isRecording == true
 
     /**
-     * True while a turn is running that writes text as it goes. On-stop turns are excluded: they
-     * have written nothing yet, so ending one early would throw the whole dictation away.
+     * True while a turn is running that rewrites what it has already put in the editor.
+     *
+     * Only rolling does that. It re-decodes the whole dictation each pass and deletes its own
+     * previous output before writing the next one, so a keystroke landing in the middle throws
+     * the character count off and the pass re-emits everything.
+     *
+     * Pauses appends each phrase once and never deletes, so typing alongside it corrupts nothing -
+     * and dictating while correcting by hand is the reason that mode exists. On-stop has written
+     * nothing yet, so ending one early would throw the whole dictation away.
      */
-    val isLiveTurn get() = isRecording && mode.isLive
+    val isReplacingTurn get() = isRecording && mode == Mode.ROLLING
 
     /** True when the engine and a model are both present, so the mic can do anything useful. */
     fun isReady(context: Context) =
@@ -196,7 +203,10 @@ object VoiceTyping {
     private fun transcribeLocked(context: Context, samples: FloatArray): String? {
         synchronized(decodeLock) {
             VoiceRecognizer.lastError = null
-            val model = VoiceModel.ALL.firstOrNull { it.isDownloaded(context) } ?: return null
+            val model = VoiceModel.active(
+                context,
+                context.prefs().getString(Settings.PREF_VOICE_MODEL, Defaults.PREF_VOICE_MODEL)
+            ) ?: return null
             val text = VoiceRecognizer.get(context, model)?.transcribe(samples)
             if (text == null) VoiceRecognizer.lastError?.let { Log.w(TAG, "pass failed: $it") }
             return text

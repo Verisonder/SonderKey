@@ -55,3 +55,7 @@ node_modules/
 
 # Temporary generated files
 docs/releasenote/release_notes_temp.md
+
+# Python bytecode from the tooling in tools/
+__pycache__/
+*.pyc

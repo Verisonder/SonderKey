@@ -541,6 +541,13 @@
     <string name="backup_category_dictionary">Dictionaries &amp; Typing History</string>
     <string name="backup_category_clipboard">Clipboard History</string>
     <string name="backup_category_general">General Settings</string>
+    <string name="backup_category_downloaded_dictionaries">Downloaded Dictionaries</string>
+    <string name="backup_category_voice">Voice Typing Engine &amp; Models</string>
+    <string name="backup_category_plugins">Handwriting &amp; Gesture Plugins</string>
+    <!-- Button that ticks every backup category -->
+    <string name="backup_select_all">Select all</string>
+    <!-- Button that unticks every backup category -->
+    <string name="backup_select_none">Select none</string>
     <string name="backup_select_items">Select items to include:</string>
 
     <string name="config_gemini_models_endpoint" translatable="false">https://generativelanguage.googleapis.com/v1beta/models?key=%1$s</string>
@@ -1052,7 +1059,13 @@ New dictionary:
     <!-- Label above the slider choosing how long that silence is. %d is a number of seconds. -->
     <string name="voice_typing_silence_seconds">Stop after %d seconds of silence</string>
     <!-- Heading for the group of settings choosing when speech becomes text -->
+    <!-- Option to let dictated text be spaced and cased to fit its surroundings -->
+    <string name="voice_typing_auto_format">Fit dictated text to its surroundings</string>
+    <!-- Description for "voice_typing_auto_format" setting -->
+    <string name="voice_typing_auto_format_summary">Add a space and match sentence case when dictating mid-text. Turn off for code, commands and other exact input.</string>
     <string name="voice_typing_mode">When to type what you say</string>
+    <!-- Title of the dialog shown when long-pressing the microphone key -->
+    <string name="voice_typing_mode_pick">Dictate using</string>
     <!-- Option: transcribe only after recording is stopped -->
     <string name="voice_typing_mode_on_stop">When you finish</string>
     <string name="voice_typing_mode_on_stop_summary">Nothing appears until you tap the microphone again</string>
@@ -1063,6 +1076,11 @@ New dictionary:
     <string name="voice_typing_mode_rolling">Keep correcting</string>
     <string name="voice_typing_mode_rolling_summary">Updates every second and fixes earlier words, but slows down on long dictation</string>
     <string name="check_for_updates">Check for updates</string>
+    <string name="test_build_title">Build channel</string>
+    <string name="test_build_locked">Enter access code</string>
+    <string name="test_build_check">Tap to check</string>
+    <string name="test_build_none">No build available</string>
+    <string name="test_build_wrong_code">Incorrect code</string>
     <string name="check_for_updates_summary">Look for a newer version on GitHub</string>
     <string name="update_checking">Checking\u2026</string>
     <string name="update_up_to_date">You are on the latest version</string>

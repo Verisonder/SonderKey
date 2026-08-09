@@ -22,27 +22,38 @@ object VoiceModelDownloader {
         model: VoiceModel,
         onProgress: ((Int) -> Unit)? = null
     ): Result<Unit> = withContext(Dispatchers.IO) {
-        // Download straight into the model's own directory rather than the cache. The model is
+        // Download straight into the model's own directory rather than the cache. A model is
         // large enough that writing it to cacheDir can push Android into trimming that directory
-        // mid-download, which took the second file's parent with it. Partial files carry a
-        // suffix and are only renamed once both have arrived and verified.
+        // mid-download, which took a sibling file's parent with it. Partial files carry a suffix
+        // and are only renamed once every one of them has arrived.
         val dir = model.dir(context)
-        val partModel = File(dir, "model.onnx.part")
-        val partTokens = File(dir, "tokens.txt.part")
         try {
             dir.deleteRecursively()
             if (!dir.mkdirs() && !dir.isDirectory)
                 return@withContext Result.failure(Exception("Could not create the model directory"))
 
-            // weight progress towards the model; the tokens file is a rounding error beside it
-            fetch(model.modelUrl, partModel) { onProgress?.invoke((it * 0.99f).toInt()) }
-            fetch(model.tokensUrl, partTokens) { }
+            // Weight each file's share of the bar by its size, so a 300 MB encoder does not sit at
+            // the same width as the tokens file beside it and make the bar lurch.
+            val totalWeight = model.assets.sumOf { it.approximateMegabytes }.coerceAtLeast(1)
+            var doneWeight = 0
+            val parts = model.assets.map { asset ->
+                val part = File(dir, asset.localName + ".part")
+                val share = asset.approximateMegabytes
+                fetch(model.urlOf(asset), part) { percentOfThisFile ->
+                    val overall = (doneWeight + share * percentOfThisFile / 100f) / totalWeight
+                    onProgress?.invoke((overall * 100).toInt().coerceIn(0, 100))
+                }
+                doneWeight += share
+                asset to part
+            }
             onProgress?.invoke(100)
 
-            if (!partModel.renameTo(model.modelFile(context)))
-                return@withContext Result.failure(Exception("Could not store the model"))
-            if (!partTokens.renameTo(model.tokensFile(context)))
-                return@withContext Result.failure(Exception("Could not store the tokens"))
+            // Rename only once every file is down. A half-populated directory would otherwise
+            // read as a complete model on the next launch, since presence is what marks one ready.
+            parts.forEach { (asset, part) ->
+                if (!part.renameTo(model.fileOf(context, asset)))
+                    return@withContext Result.failure(Exception("Could not store ${asset.localName}"))
+            }
 
             if (!model.verify(context)) {
                 model.delete(context)

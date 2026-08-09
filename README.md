@@ -50,15 +50,16 @@ Full documentation: **[docs/FEATURES.md](docs/FEATURES.md)**
 
 ## 🗺️ Where SonderKey is going
 
-**Shipped in 2.4.0**
+**Shipped so far**
 
 - ✅ **Offline voice typing** — on-device speech recognition, built on sherpa-onnx with NVIDIA's Parakeet. Your voice never leaves your phone, which mainstream keyboards structurally cannot offer.
 - ✅ **Sonder theme** — four independently set colours driving both the keyboard and the settings app, derived on a perceptual curve so any hue stays balanced.
 - ✅ **Emoji independence** — the emoji set no longer depends on the age of your device's system font.
+- ✅ **Dictation you can type alongside** — pause mode leaves the keyboard usable mid-turn, and a switch turns off the spacing and capitalisation for exact input like code and shell commands.
 
 **Next**
 
-1. **🌍 More voice languages** — the model registry takes one entry per model; a multilingual option is the obvious next step
+1. **🌍 More voice languages** — a model is described as a set of files, so a differently shaped architecture is one entry away
 2. **🎨 Theme sharing** — presets gallery and shareable `.sonderkey` theme files
 3. **🔍 Privacy dashboard** — see exactly which permissions are active and prove to yourself that nothing leaves the device
 
