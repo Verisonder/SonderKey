@@ -32,6 +32,9 @@ fun AutopilotScreen(
         add(Settings.PREF_AUTOPILOT)
         if (enabled) {
             add(Settings.PREF_AUTOPILOT_STRENGTH)
+            add(Settings.PREF_AUTOPILOT_VISUAL)
+            if (prefs.getBoolean(Settings.PREF_AUTOPILOT_VISUAL, Defaults.PREF_AUTOPILOT_VISUAL))
+                add(Settings.PREF_AUTOPILOT_VISUAL_STRENGTH)
             add(Settings.PREF_AUTOPILOT_DEBUG)
         }
     }
@@ -55,6 +58,22 @@ fun createAutopilotSettings(context: Context) = listOf(
             // One is a couple of pixels and barely perceptible; ten is as far as this should ever
             // go, since past thirty percent of a key's width a press near an edge stops belonging
             // to the key it landed on and the keyboard starts feeling like it is arguing.
+            range = 1f..10f,
+            description = { it.toString() }
+        )
+    },
+    Setting(context, Settings.PREF_AUTOPILOT_VISUAL,
+        R.string.autopilot_visual, R.string.autopilot_visual_summary) {
+        SwitchPreference(it, Defaults.PREF_AUTOPILOT_VISUAL)
+    },
+    Setting(context, Settings.PREF_AUTOPILOT_VISUAL_STRENGTH,
+        R.string.autopilot_visual_strength, R.string.autopilot_visual_strength_summary) { def ->
+        SliderPreference(
+            name = def.title,
+            key = def.key,
+            default = Defaults.PREF_AUTOPILOT_VISUAL_STRENGTH,
+            // Two to twenty percent. Past that a key visibly swallows its neighbour while the
+            // touch area has moved nowhere near as far, so the picture stops being truthful.
             range = 1f..10f,
             description = { it.toString() }
         )

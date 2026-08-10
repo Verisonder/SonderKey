@@ -355,6 +355,11 @@ public final class MainKeyboardView extends KeyboardView implements DrawingProxy
         mAutopilotDebugDrawingPreview.setShiftRatio(
                 autopilotValues.mAutopilot ? autopilotValues.mAutopilotStrength * 0.03f : 0f);
         mAutopilotDebugDrawingPreview.setKeyboard(keyboard);
+        // Two to twenty percent. Beyond that a grown key swallows its neighbour on screen
+        // while the touch area has moved by nowhere near as much, so what is drawn stops
+        // being a fair picture of where the boundaries actually are.
+        setAutopilotVisualRatio(autopilotValues.mAutopilot && autopilotValues.mAutopilotVisual
+                ? autopilotValues.mAutopilotVisualStrength * 0.02f : 0f);
         mKeyPressEffectDrawingPreview.setPreviewEnabled(autopilotValues.mKeyPressEffect);
         mKeyPressEffectDrawingPreview.reloadCustomImage(
                 Settings.getKeyPressEffectImageFile(getContext()));
@@ -954,9 +959,15 @@ public final class MainKeyboardView extends KeyboardView implements DrawingProxy
     }
 
     @Override
-    /** Redraws the autopilot debug outlines after the expected letters have changed. */
+    /** Redraws after the expected letters have changed. */
     public void refreshAutopilotDebug() {
         mAutopilotDebugDrawingPreview.invalidateFromOutside();
+        // The keys themselves are only redrawn when something asks; nothing else notices that
+        // what the dictionary expects has moved, so every key has to be repainted here or the
+        // grown ones would keep the size they had for the previous letter.
+        if (Settings.getValues().mAutopilot && Settings.getValues().mAutopilotVisual) {
+            invalidateAllKeys();
+        }
     }
 
     public void deallocateMemory() {

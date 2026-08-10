@@ -256,6 +256,8 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static final String PREF_VOICE_MODEL = "voice_model";
     public static final String PREF_AUTOPILOT = "autopilot";
     public static final String PREF_AUTOPILOT_STRENGTH = "autopilot_strength";
+    public static final String PREF_AUTOPILOT_VISUAL = "autopilot_visual";
+    public static final String PREF_AUTOPILOT_VISUAL_STRENGTH = "autopilot_visual_strength";
     public static final String PREF_AUTOPILOT_DEBUG = "autopilot_debug";
     public static final String PREF_KEY_PRESS_EFFECT = "key_press_effect";
     public static final String PREF_KEY_PRESS_EFFECT_SHAPE = "key_press_effect_shape";
