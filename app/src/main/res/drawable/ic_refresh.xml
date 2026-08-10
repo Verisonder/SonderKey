@@ -7,9 +7,11 @@
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="960"
-    android:viewportHeight="960"
-    android:tint="?attr/colorControlNormal">
+    android:viewportHeight="960">
+    <!-- Plain white, tinted by the Icon that draws it, as every other drawable here does.
+         A theme attribute reference fails resource linking: this project's theme does not
+         carry colorControlNormal. -->
     <path
-        android:fillColor="@android:color/white"
+        android:fillColor="#FFF"
         android:pathData="M480 800Q346 800 253 707 160 614 160 480 160 346 253 253 346 160 480 160 549 160 612 188.5 675 217 720 270L720 160 800 160 800 440 520 440 520 360 665 360Q633 303 578 271.5 523 240 480 240 380 240 310 310 240 380 240 480 240 580 310 650 380 720 480 720 557 720 619 676 681 632 704 560L788 560Q763 665 680 732.5 597 800 480 800Z"/>
 </vector>
