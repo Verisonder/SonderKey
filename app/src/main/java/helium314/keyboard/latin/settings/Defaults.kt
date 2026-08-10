@@ -67,7 +67,7 @@ object Defaults {
     const val PREF_VOICE_AUTO_FORMAT = true
     const val PREF_VOICE_MODEL = ""
     const val PREF_AUTOPILOT = false
-    const val PREF_AUTOPILOT_STRENGTH = 4
+    const val PREF_AUTOPILOT_STRENGTH = 8
     const val PREF_AUTOPILOT_VISUAL = false
     const val PREF_AUTOPILOT_VISUAL_STRENGTH = 5
     const val PREF_AUTOPILOT_DEBUG = false
