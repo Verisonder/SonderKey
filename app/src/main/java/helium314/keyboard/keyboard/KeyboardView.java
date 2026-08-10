@@ -29,6 +29,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import helium314.keyboard.keyboard.emoji.EmojiPageKeyboardView;
+import helium314.keyboard.keyboard.internal.AutopilotHints;
 import helium314.keyboard.keyboard.internal.KeyDrawParams;
 import helium314.keyboard.keyboard.internal.KeyVisualAttributes;
 import helium314.keyboard.keyboard.internal.keyboard_parser.floris.KeyCode;
@@ -249,11 +250,38 @@ public class KeyboardView extends View {
     private static final long PRESS_ANIM_DURATION_MS = 110;
     private static final float PRESS_ANIM_SCALE = 0.93f;
     private final java.util.HashMap<Key, long[]> mPressAnimations = new java.util.HashMap<>();
+    private float mAutopilotVisualRatio;
 
     /** Starts (pressed = true) or reverses (pressed = false) the press scale animation for a key. */
     public void startKeyPressAnimation(@NonNull final Key key, final boolean pressed) {
         mPressAnimations.put(key, new long[] { android.os.SystemClock.uptimeMillis(), pressed ? 1L : 0L });
         invalidateKey(key);
+    }
+
+    /**
+     * How much bigger a key should be drawn because the dictionary expects it next.
+     *
+     * The touch target moves whether or not this is on; this only decides whether the movement is
+     * shown. Seeing it is not purely cosmetic - a target that grows invisibly is impossible to
+     * aim at deliberately, and impossible to distrust when it gets something wrong.
+     *
+     * Grown keys overlap their neighbours slightly. That is honest rather than a defect: the
+     * touch areas overlap too, and the drawing order puts later keys on top, which is stable
+     * frame to frame because the keyboard's key order does not change.
+     */
+    private float getAutopilotScale(@NonNull final Key key) {
+        final float ratio = mAutopilotVisualRatio;
+        if (ratio <= 0f) return 1f;
+        final int code = key.getCode();
+        if (code <= 0 || !Character.isLetter(code)) return 1f;
+        final AutopilotHints hints = AutopilotHints.getInstance();
+        if (!hints.isEnabled() || hints.isEmpty()) return 1f;
+        return 1f + ratio * hints.weightOf(code);
+    }
+
+    /** Fraction a fully expected key grows by on screen. Zero switches the growth off. */
+    public void setAutopilotVisualRatio(final float ratio) {
+        mAutopilotVisualRatio = ratio;
     }
 
     private float getKeyPressScale(@NonNull final Key key) {
@@ -391,7 +419,9 @@ public class KeyboardView extends View {
         final int keyDrawY = key.getY() + getPaddingTop();
         canvas.translate(keyDrawX, keyDrawY);
 
-        final float pressScale = getKeyPressScale(key);
+        // Composed with the press animation rather than replacing it, so a key that is both
+        // expected and being pressed grows once by the two together instead of one winning.
+        final float pressScale = getKeyPressScale(key) * getAutopilotScale(key);
         final boolean scaled = pressScale != 1f && !key.isSpacer();
         if (scaled) {
             canvas.save();
