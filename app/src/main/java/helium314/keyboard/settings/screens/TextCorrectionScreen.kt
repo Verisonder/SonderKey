@@ -59,6 +59,7 @@ fun TextCorrectionScreen(
     val suggestionsEnabled = suggestionsVisible && prefs.getBoolean(Settings.PREF_SHOW_SUGGESTIONS, Defaults.PREF_SHOW_SUGGESTIONS)
     val gestureEnabled = prefs.getBoolean(Settings.PREF_GESTURE_INPUT, Defaults.PREF_GESTURE_INPUT)
     val items = listOf(
+        "autopilot_entry",
 
         R.string.settings_category_correction,
         Settings.PREF_BLOCK_POTENTIALLY_OFFENSIVE,
@@ -113,7 +114,17 @@ fun TextCorrectionScreen(
     )
 }
 
-fun createCorrectionSettings(context: Context) = listOf(
+// Autopilot has a screen of its own, reached from the row below, but its settings are registered
+// here: a Setting must exist in the container for its key to resolve anywhere.
+fun createCorrectionSettings(context: Context) = createAutopilotSettings(context) + listOf(
+
+    Setting(context, "autopilot_entry", R.string.autopilot, R.string.autopilot_summary) {
+        Preference(
+            name = it.title,
+            description = it.description,
+            onClick = { SettingsDestination.navigateTo(SettingsDestination.Autopilot) }
+        ) { NextScreenIcon() }
+    },
 
     Setting(context, Settings.PREF_BLOCK_POTENTIALLY_OFFENSIVE,
         R.string.prefs_block_potentially_offensive_title, R.string.prefs_block_potentially_offensive_summary

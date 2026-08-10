@@ -80,6 +80,9 @@ public class SettingsValues {
         // Pulse the microphone key instead of taking the whole suggestion strip while dictating.
         public final boolean mVoicePulseIndicator;
         public final boolean mVoiceAutoFormat;
+        public final boolean mAutopilot;
+        public final int mAutopilotStrength;
+        public final boolean mAutopilotDebug;
         public final boolean mKeyPressEffect;
         public final String mKeyPressEffectShape;
         public final int mKeyPressEffectCount;
@@ -275,6 +278,11 @@ public class SettingsValues {
                                 Defaults.PREF_VOICE_PULSE_INDICATOR);
                 mVoiceAutoFormat = prefs.getBoolean(Settings.PREF_VOICE_AUTO_FORMAT,
                                 Defaults.PREF_VOICE_AUTO_FORMAT);
+                mAutopilot = prefs.getBoolean(Settings.PREF_AUTOPILOT, Defaults.PREF_AUTOPILOT);
+                mAutopilotStrength = prefs.getInt(Settings.PREF_AUTOPILOT_STRENGTH,
+                                Defaults.PREF_AUTOPILOT_STRENGTH);
+                mAutopilotDebug = prefs.getBoolean(Settings.PREF_AUTOPILOT_DEBUG,
+                                Defaults.PREF_AUTOPILOT_DEBUG);
                 mKeyPressEffect = prefs.getBoolean(Settings.PREF_KEY_PRESS_EFFECT,
                                 Defaults.PREF_KEY_PRESS_EFFECT);
                 mKeyPressEffectShape = prefs.getString(Settings.PREF_KEY_PRESS_EFFECT_SHAPE,

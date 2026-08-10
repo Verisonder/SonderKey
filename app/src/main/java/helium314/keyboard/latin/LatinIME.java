@@ -2106,6 +2106,13 @@ public class LatinIME extends InputMethodService implements
     private void setSuggestedWords(final SuggestedWords suggestedWords) {
         final SettingsValues currentSettingsValues = mSettings.getCurrent();
         mInputLogic.setSuggestedWords(suggestedWords);
+        // Done before the early returns below. Those exist to decide whether the strip is worth
+        // drawing, which has nothing to do with whether the next keystroke can be anticipated -
+        // and a hidden strip is exactly when someone is typing quickly enough to want the help.
+        helium314.keyboard.keyboard.internal.AutopilotHints.getInstance().update(
+                suggestedWords, mInputLogic.getWordComposer().getTypedWord());
+        final MainKeyboardView autopilotView = mKeyboardSwitcher.getMainKeyboardView();
+        if (autopilotView != null) autopilotView.refreshAutopilotDebug();
         // TODO: Modify this when we support suggestions with hard keyboard
         if (!hasSuggestionStripView()) {
             return;

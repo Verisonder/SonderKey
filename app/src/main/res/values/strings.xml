@@ -1128,6 +1128,16 @@ New dictionary:
     <!-- Description for "day_night_mode" option. -->
     <string name="day_night_mode_summary">Appearance will follow system settings</string>
     <!-- Option for setting navbar to follow keyboard color -->
+    <!-- Setting that widens the touch target of letters the dictionary expects next -->
+    <string name="autopilot">Autopilot</string>
+    <!-- Description for "autopilot" setting -->
+    <string name="autopilot_summary">Quietly widen the touch area of letters you are likely to type next</string>
+    <string name="autopilot_strength">Strength</string>
+    <!-- Description for "autopilot_strength" setting -->
+    <string name="autopilot_strength_summary">How far a boundary between two keys may move. Lower is safer.</string>
+    <string name="autopilot_debug">Show boundaries</string>
+    <!-- Description for "autopilot_debug" setting -->
+    <string name="autopilot_debug_summary">Outline the widened touch areas on the keyboard, for tuning</string>
     <!-- Option to scatter particles from a key as it is pressed -->
     <string name="key_press_effect">Key press effect</string>
     <!-- Description for "key_press_effect" setting -->

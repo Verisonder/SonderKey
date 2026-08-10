@@ -44,6 +44,7 @@ import helium314.keyboard.keyboard.internal.KeyPreviewDrawParams;
 import helium314.keyboard.keyboard.internal.KeyPreviewView;
 import helium314.keyboard.keyboard.internal.PopupKeySpec;
 import helium314.keyboard.keyboard.internal.NonDistinctMultitouchHelper;
+import helium314.keyboard.keyboard.internal.AutopilotDebugDrawingPreview;
 import helium314.keyboard.keyboard.internal.KeyPressEffectDrawingPreview;
 import helium314.keyboard.keyboard.internal.SlidingKeyInputDrawingPreview;
 import helium314.keyboard.keyboard.internal.TimerHandler;
@@ -109,6 +110,7 @@ public final class MainKeyboardView extends KeyboardView implements DrawingProxy
     private final GestureTrailsDrawingPreview mGestureTrailsDrawingPreview;
     private final SlidingKeyInputDrawingPreview mSlidingKeyInputDrawingPreview;
     private final KeyPressEffectDrawingPreview mKeyPressEffectDrawingPreview;
+    private final AutopilotDebugDrawingPreview mAutopilotDebugDrawingPreview;
 
     // Key preview
     private final KeyPreviewDrawParams mKeyPreviewDrawParams;
@@ -216,6 +218,9 @@ public final class MainKeyboardView extends KeyboardView implements DrawingProxy
         mKeyPressEffectDrawingPreview = new KeyPressEffectDrawingPreview();
         mKeyPressEffectDrawingPreview.setDrawingView(drawingPreviewPlacerView);
         mKeyPressEffectDrawingPreview.setDensity(getResources().getDisplayMetrics().density);
+
+        mAutopilotDebugDrawingPreview = new AutopilotDebugDrawingPreview();
+        mAutopilotDebugDrawingPreview.setDrawingView(drawingPreviewPlacerView);
         mainKeyboardViewAttr.recycle();
 
         mDrawingPreviewPlacerView = drawingPreviewPlacerView;
@@ -337,7 +342,20 @@ public final class MainKeyboardView extends KeyboardView implements DrawingProxy
         mPopupKeysKeyboardCache.clear();
 
         // Re-read on every keyboard build, which is what a settings change triggers.
-        mKeyPressEffectDrawingPreview.setPreviewEnabled(Settings.getValues().mKeyPressEffect);
+        final helium314.keyboard.latin.settings.SettingsValues autopilotValues = Settings.getValues();
+        helium314.keyboard.keyboard.internal.AutopilotHints.getInstance()
+                .setEnabled(autopilotValues.mAutopilot);
+        // Strength 1 to 10 maps to a boundary shift of three to thirty percent of a key's width.
+        // Three percent is a couple of pixels and barely perceptible; thirty is as far as this
+        // should ever go, since beyond it a press near an edge stops belonging to the key under it.
+        mKeyDetector.setAutopilotShiftRatio(
+                autopilotValues.mAutopilot ? autopilotValues.mAutopilotStrength * 0.03f : 0f);
+        mAutopilotDebugDrawingPreview.setPreviewEnabled(
+                autopilotValues.mAutopilot && autopilotValues.mAutopilotDebug);
+        mAutopilotDebugDrawingPreview.setShiftRatio(
+                autopilotValues.mAutopilot ? autopilotValues.mAutopilotStrength * 0.03f : 0f);
+        mAutopilotDebugDrawingPreview.setKeyboard(keyboard);
+        mKeyPressEffectDrawingPreview.setPreviewEnabled(autopilotValues.mKeyPressEffect);
         mKeyPressEffectDrawingPreview.reloadCustomImage(
                 Settings.getKeyPressEffectImageFile(getContext()));
 
@@ -936,6 +954,11 @@ public final class MainKeyboardView extends KeyboardView implements DrawingProxy
     }
 
     @Override
+    /** Redraws the autopilot debug outlines after the expected letters have changed. */
+    public void refreshAutopilotDebug() {
+        mAutopilotDebugDrawingPreview.invalidateFromOutside();
+    }
+
     public void deallocateMemory() {
         super.deallocateMemory();
         mDrawingPreviewPlacerView.deallocateMemory();
