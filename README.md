@@ -35,7 +35,9 @@ No tracking. No analytics. No accounts. No data collection of any kind.
 
 ## ✨ Features
 
-- 🎙️ **On-device voice typing** — speech to text that runs entirely on your phone. Audio is never written to storage and never sent anywhere. Optional download, English.
+- 🎙️ **On-device voice typing** — speech to text that runs entirely on your phone. Audio is never written to storage and never sent anywhere. Dictate as you finish, at every pause, or continuously; type alongside it; turn the spacing and capitalisation off for code. Optional download, English.
+- 🎯 **Autopilot** — the keyboard quietly widens the touch area of letters you are likely to type next, so near misses land where you meant. Nothing on screen moves and nothing you typed is ever rewritten.
+- ✨ **Key press effects** — a burst of particles from each key as you press it, in any shape, size, colour or image you like.
 - 🎨 **Deep customization** — the Sonder theme sets keys, function keys, accent and background independently, with presets, sliders, hex entry and a live preview. Plus the full color editor, key styles, adjustable layouts, custom toolbar and image backgrounds.
 - 🧠 **Optional AI assistance** — proofread & translate with **Gemini** (default), Groq, or any OpenAI-compatible provider, using *your* key — never on by default
 - 👆 **Gesture typing** — fast swipe input powered by a native engine
@@ -56,6 +58,8 @@ Full documentation: **[docs/FEATURES.md](docs/FEATURES.md)**
 - ✅ **Sonder theme** — four independently set colours driving both the keyboard and the settings app, derived on a perceptual curve so any hue stays balanced.
 - ✅ **Emoji independence** — the emoji set no longer depends on the age of your device's system font.
 - ✅ **Dictation you can type alongside** — pause mode leaves the keyboard usable mid-turn, and a switch turns off the spacing and capitalisation for exact input like code and shell commands.
+- ✅ **Autopilot** — touch targets that follow what the dictionary expects next, capped so a deliberate press is never overridden, with an overlay that shows you exactly what it is doing.
+- ✅ **Key press effects** — nine settings' worth of particles, including your own image.
 
 **Next**
 
@@ -67,7 +71,9 @@ Follow the [releases](https://github.com/Verisonder/SonderKey/releases) to watch
 
 ## 📥 Download
 
-Grab the latest APK from **[Releases](https://github.com/Verisonder/SonderKey/releases)**. Development builds are available from [GitHub Actions](https://github.com/Verisonder/SonderKey/actions) artifacts.
+Grab the latest APK from **[Releases](https://github.com/Verisonder/SonderKey/releases)**.
+
+Once installed, SonderKey checks for updates itself — there is no store and no account.
 
 ## 🛠️ Building
 
