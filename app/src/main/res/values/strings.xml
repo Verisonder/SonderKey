@@ -1059,6 +1059,10 @@ New dictionary:
     <!-- Label above the slider choosing how long that silence is. %d is a number of seconds. -->
     <string name="voice_typing_silence_seconds">Stop after %d seconds of silence</string>
     <!-- Heading for the group of settings choosing when speech becomes text -->
+    <!-- Option to write spoken numbers as digits rather than words -->
+    <string name="voice_typing_numbers_as_digits">Write numbers as digits</string>
+    <!-- Description for "voice_typing_numbers_as_digits" setting -->
+    <string name="voice_typing_numbers_as_digits_summary">Turn "twenty five" into "25". Words that are only sometimes numbers, like a lone "one", are left alone.</string>
     <!-- Option to let dictated text be spaced and cased to fit its surroundings -->
     <string name="voice_typing_auto_format">Fit dictated text to its surroundings</string>
     <!-- Description for "voice_typing_auto_format" setting -->

@@ -82,6 +82,9 @@ fun VoiceTypingScreen(onClickBack: () -> Unit) {
     var silenceStop by remember {
         mutableStateOf(prefs.getBoolean(Settings.PREF_VOICE_SILENCE_STOP, Defaults.PREF_VOICE_SILENCE_STOP))
     }
+    var numbersAsDigits by remember {
+        mutableStateOf(prefs.getBoolean(Settings.PREF_VOICE_NUMBERS_AS_DIGITS, Defaults.PREF_VOICE_NUMBERS_AS_DIGITS))
+    }
     var autoFormat by remember {
         mutableStateOf(prefs.getBoolean(Settings.PREF_VOICE_AUTO_FORMAT, Defaults.PREF_VOICE_AUTO_FORMAT))
     }
@@ -277,6 +280,14 @@ fun VoiceTypingScreen(onClickBack: () -> Unit) {
                             steps = 13,
                             modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp)
                         )
+                    }
+                    ToggleRow(
+                        title = stringResource(R.string.voice_typing_numbers_as_digits),
+                        summary = stringResource(R.string.voice_typing_numbers_as_digits_summary),
+                        checked = numbersAsDigits
+                    ) {
+                        numbersAsDigits = it
+                        prefs.edit { putBoolean(Settings.PREF_VOICE_NUMBERS_AS_DIGITS, it) }
                     }
                     ToggleRow(
                         title = stringResource(R.string.voice_typing_auto_format),

@@ -254,6 +254,7 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static final String PREF_VOICE_SILENCE_SECONDS = "voice_silence_seconds";
     public static final String PREF_VOICE_AUTO_FORMAT = "voice_auto_format";
     public static final String PREF_VOICE_MODEL = "voice_model";
+    public static final String PREF_VOICE_NUMBERS_AS_DIGITS = "voice_numbers_as_digits";
     public static final String PREF_AUTOPILOT = "autopilot";
     public static final String PREF_AUTOPILOT_STRENGTH = "autopilot_strength";
     public static final String PREF_AUTOPILOT_VISUAL = "autopilot_visual";

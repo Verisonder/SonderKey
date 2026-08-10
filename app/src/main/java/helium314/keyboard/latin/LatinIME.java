@@ -1822,8 +1822,13 @@ public class LatinIME extends InputMethodService implements
      * removed first; otherwise the text is appended. Either way the text is fitted to whatever is
      * actually before the cursor by {@link #fitVoiceTextToContext}.
      */
-    private void insertVoiceText(final String text, final boolean replaces) {
-        if (text == null || text.isEmpty()) return;
+    private void insertVoiceText(final String rawText, final boolean replaces) {
+        if (rawText == null || rawText.isEmpty()) return;
+        // Before any formatting decision, and for every mode, since a spoken number is wrong in
+        // all of them. The recogniser writes numbers out as words and nothing else converts them.
+        final String text = mSettings.getCurrent().mVoiceNumbersAsDigits
+                ? helium314.keyboard.latin.voice.SpokenNumbers.INSTANCE.toDigits(rawText)
+                : rawText;
         if (replaces) {
             final helium314.keyboard.latin.RichInputConnection connection = mInputLogic.getConnection();
             connection.beginBatchEdit();
