@@ -1062,7 +1062,7 @@ New dictionary:
     <!-- Option to let dictated text be spaced and cased to fit its surroundings -->
     <string name="voice_typing_auto_format">Fit dictated text to its surroundings</string>
     <!-- Description for "voice_typing_auto_format" setting -->
-    <string name="voice_typing_auto_format_summary">Add a space and match sentence case when dictating mid-text. Turn off for code, commands and other exact input.</string>
+    <string name="voice_typing_auto_format_summary">Add a space, match sentence case, and keep the sentence punctuation the recogniser adds. Turn off for code, commands and other exact input.</string>
     <string name="voice_typing_mode">When to type what you say</string>
     <!-- Title of the dialog shown when long-pressing the microphone key -->
     <string name="voice_typing_mode_pick">Dictate using</string>

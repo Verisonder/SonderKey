@@ -1872,7 +1872,9 @@ public class LatinIME extends InputMethodService implements
         // Dictating code, shell commands or markup wants exactly what was said and nothing else -
         // an inserted space or a lowered capital is a defect there, not a courtesy. Off means the
         // recogniser's output is committed untouched and the keyboard governs the rest.
-        if (!mSettings.getCurrent().mVoiceAutoFormat) return separateFromPreviousPhrase(text);
+        if (!mSettings.getCurrent().mVoiceAutoFormat) {
+            return separateFromPreviousPhrase(stripModelSentenceFormatting(text));
+        }
         final CharSequence before = mInputLogic.getConnection()
                 .getTextBeforeCursor(VOICE_CONTEXT_LOOKBACK, 0);
         // Nothing behind the cursor: a fresh field, so the recogniser's own sentence casing stands.
@@ -1920,6 +1922,55 @@ public class LatinIME extends InputMethodService implements
      * the surrounding text: no space is added where this turn has written nothing yet, because
      * there the cursor is wherever the user chose to put it, and nothing is ever recapitalised.
      */
+    /**
+     * Undoes the sentence formatting the speech model applies of its own accord.
+     *
+     * Parakeet is trained with punctuation and capitalisation and treats every utterance as a
+     * sentence, so a single dictated word comes back as "Word." - a capital and a full stop that
+     * nobody asked for. Turning off the formatting switch left those in place, because they were
+     * never ours to begin with, which made the switch look broken: to the person reading the
+     * screen a capital is a capital, whoever put it there.
+     *
+     * So off now means off. The opening letter is lowered and one trailing sentence terminator is
+     * dropped, which is also the long-standing complaint about excessive periods in pause mode,
+     * where every phrase is its own utterance and so ends up with its own full stop.
+     *
+     * Two things are deliberately left alone: a word that is entirely capitals, since that is an
+     * acronym rather than a sentence opening, and the English "I", which is capitalised wherever
+     * it appears. Question and exclamation marks stay too - those are not decoration, they are
+     * the only record of how something was said.
+     */
+    private String stripModelSentenceFormatting(final String text) {
+        if (text.isEmpty()) return text;
+        String result = text;
+        final int last = result.length() - 1;
+        if (result.charAt(last) == '.' && last > 0) {
+            // Only a lone full stop. An ellipsis is a choice, and a decimal point or an
+            // abbreviation would be mangled by taking the character before it as a sentence end.
+            if (result.charAt(last - 1) != '.') {
+                result = result.substring(0, last);
+            }
+        }
+        if (result.isEmpty()) return result;
+        final int first = result.codePointAt(0);
+        if (!Character.isUpperCase(first)) return result;
+        final int firstLength = Character.charCount(first);
+        final String rest = result.substring(firstLength);
+        // "I" and "I'm" keep their capital; so does an all-capitals word, which is an acronym.
+        if (rest.isEmpty() || rest.startsWith("'")) {
+            if (first == 'I') return result;
+        }
+        // A capital anywhere else in the same word means the word is spelled that way rather than
+        // merely starting a sentence - an acronym, or a name like "HeliBoard", which lowering the
+        // first letter of would turn into "heliBoard".
+        for (int i = 0; i < rest.length(); i++) {
+            final char c = rest.charAt(i);
+            if (Character.isWhitespace(c)) break;
+            if (Character.isUpperCase(c)) return result;
+        }
+        return new String(Character.toChars(Character.toLowerCase(first))) + rest;
+    }
+
     private String separateFromPreviousPhrase(final String text) {
         if (text.isEmpty() || !mVoiceOwnsCursor) return text;
         if (Character.isWhitespace(text.codePointAt(0))) return text;
