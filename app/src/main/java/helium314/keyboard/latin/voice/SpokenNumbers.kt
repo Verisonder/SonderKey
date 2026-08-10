@@ -35,7 +35,16 @@ object SpokenNumbers {
      * offender by a distance - "one of them", "one more time", "the one I meant" - but "oh" is
      * only a digit inside a spoken sequence, never on its own.
      */
-    private val AMBIGUOUS_ALONE = setOf("one", "a", "oh")
+    private val AMBIGUOUS_ALONE = setOf("a", "oh")
+
+    /**
+     * "one" is a number far more often than not, so it converts like every other word - but it is
+     * also the one number word that doubles as a pronoun, and "1 of them" is worse damage than
+     * leaving a quantity spelled out. Rather than refusing it outright, which made it the only
+     * number that never converted, it is judged by the company it keeps.
+     */
+    private val PRONOUN_BEFORE_ONE = setOf("the", "this", "that", "which", "any", "every", "each", "no", "only")
+    private val PRONOUN_AFTER_ONE = setOf("of", "more", "another", "or")
 
     /** Joins parts of a single number without ending it: "one hundred and two". */
     private const val FILLER = "and"
@@ -46,6 +55,16 @@ object SpokenNumbers {
     private const val KIND_TEEN = 2
     private const val KIND_UNIT = 3
     private const val KIND_SCALE = 4
+
+    /** True when a lone "one" is being used as a pronoun rather than as a quantity. */
+    private fun isPronounOne(pieces: List<String>, index: Int): Boolean {
+        val word = pieces[index].trim(',', '.', '?', '!', ';', ':').lowercase()
+        if (word != "one") return false
+        val before = pieces.getOrNull(index - 1)?.trim(',', '.', '?', '!', ';', ':')?.lowercase()
+        if (before in PRONOUN_BEFORE_ONE) return true
+        val after = pieces.getOrNull(index + 1)?.trim(',', '.', '?', '!', ';', ':')?.lowercase()
+        return after in PRONOUN_AFTER_ONE
+    }
 
     fun toDigits(text: String): String {
         if (text.isEmpty()) return text
@@ -113,8 +132,8 @@ object SpokenNumbers {
             if (lastWasFiller) runEnd--
 
             val wordCount = runEnd - runStart
-            val lone = wordCount == 1 &&
-                pieces[runStart].trim(',', '.', '?', '!', ';', ':').lowercase() in AMBIGUOUS_ALONE
+            val loneWord = pieces[runStart].trim(',', '.', '?', '!', ';', ':').lowercase()
+            val lone = wordCount == 1 && (loneWord in AMBIGUOUS_ALONE || isPronounOne(pieces, runStart))
             if (sawNumber && wordCount > 0 && !lone) {
                 // The whole run collapses to one token, so only the separator that followed the
                 // last word of it survives - the spaces inside the run are gone with the words.
