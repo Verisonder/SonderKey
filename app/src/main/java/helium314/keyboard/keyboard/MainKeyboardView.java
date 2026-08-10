@@ -958,7 +958,6 @@ public final class MainKeyboardView extends KeyboardView implements DrawingProxy
         mIncognitoIcon.setAlpha(255); // Reset alpha
     }
 
-    @Override
     /** Redraws after the expected letters have changed. */
     public void refreshAutopilotDebug() {
         mAutopilotDebugDrawingPreview.invalidateFromOutside();
@@ -970,6 +969,7 @@ public final class MainKeyboardView extends KeyboardView implements DrawingProxy
         }
     }
 
+    @Override
     public void deallocateMemory() {
         super.deallocateMemory();
         mDrawingPreviewPlacerView.deallocateMemory();

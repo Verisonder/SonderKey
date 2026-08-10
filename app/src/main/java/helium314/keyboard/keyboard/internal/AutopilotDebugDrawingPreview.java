@@ -66,6 +66,13 @@ public final class AutopilotDebugDrawingPreview extends AbstractDrawingPreview {
     }
 
     @Override
+    public void onDeallocateMemory() {
+        // Holds nothing but a reference to the keyboard, which is released here so a torn down
+        // keyboard is not kept alive by a preview that outlives it.
+        mKeyboard = null;
+    }
+
+    @Override
     public void drawPreview(@NonNull final Canvas canvas) {
         if (!isPreviewEnabled() || mKeyboard == null || mShiftRatio <= 0) return;
         final AutopilotHints hints = AutopilotHints.getInstance();
