@@ -66,6 +66,8 @@ object Defaults {
     const val PREF_VOICE_SILENCE_SECONDS = 3
     const val PREF_VOICE_AUTO_FORMAT = true
     const val PREF_VOICE_MODEL = ""
+    const val PREF_VOICE_NUMBERS_AS_DIGITS = true
+    const val PREF_VOICE_STRIP_PUNCTUATION = true
     const val PREF_AUTOPILOT = false
     const val PREF_AUTOPILOT_STRENGTH = 8
     const val PREF_AUTOPILOT_VISUAL = false

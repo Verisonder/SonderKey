@@ -62,6 +62,16 @@ object VoiceTyping {
     private const val ROLLING_INTERVAL_MS = 1000L
 
     /**
+     * Speech that must remain live behind the newest pause before anything is frozen. The
+     * recogniser is least sure of what it has only just heard, so freezing up to the most recent
+     * silence would settle exactly the words most likely still to change.
+     */
+    private const val MIN_UNFROZEN_SAMPLES = 16000 * 4
+
+    /** Not worth freezing less than this; the pass costs more than it saves. */
+    private const val MIN_FREEZE_SAMPLES = 16000 * 2
+
+    /**
      * Serialises every use of the recogniser. A live pass and the closing tail can otherwise decode
      * at the same moment, and both go through the one cached sherpa recogniser.
      */
@@ -73,6 +83,10 @@ object VoiceTyping {
     private var queue: LinkedBlockingQueue<FloatArray>? = null
     private var worker: Thread? = null
     private var roller: Thread? = null
+
+    /** Transcription of the audio before [frozenUntil], settled and no longer re-decoded. */
+    @Volatile private var frozenText = ""
+    @Volatile private var frozenUntil = 0
     @Volatile private var cancelled = false
     @Volatile private var mode = Mode.ON_STOP
 
@@ -180,16 +194,50 @@ object VoiceTyping {
      * shows one consistent transcription rather than phrases glued together.
      */
     private fun startRoller(context: Context, r: VoiceRecorder, onText: ((String, Boolean) -> Unit)?) {
+        frozenText = ""
+        frozenUntil = 0
         roller = thread(name = "SonderKeyRollingTranscribe") {
             while (!cancelled && r.isRecording) {
                 try { Thread.sleep(ROLLING_INTERVAL_MS) } catch (_: InterruptedException) { break }
                 if (cancelled || !r.isRecording) break
-                val audio = r.snapshot() ?: continue
-                val text = transcribeLocked(context, audio) ?: continue
+
+                // Settle anything old enough to be safe, so it stops being re-decoded.
+                //
+                // Re-decoding the whole dictation every second means a word the recogniser got
+                // right early can be replaced by a worse reading later, once more audio has
+                // changed its mind - "HeliBoard" arrives correct and drifts into "Heli board",
+                // and because each pass rewrites everything, the good version is gone. Once a
+                // stretch of audio is behind a real pause and has several seconds of speech after
+                // it, it is as well understood as it will ever be, so it is transcribed once and
+                // that text is fixed. Only the tail keeps being reconsidered.
+                val cut = r.freezePoint(frozenUntil, MIN_UNFROZEN_SAMPLES)
+                if (cut > frozenUntil && cut - frozenUntil >= MIN_FREEZE_SAMPLES) {
+                    val settled = r.snapshotRange(frozenUntil, cut)
+                    if (settled != null) {
+                        val settledText = transcribeLocked(context, settled)
+                        if (settledText != null) {
+                            frozenText = joinPhrases(frozenText, settledText)
+                            frozenUntil = cut
+                        }
+                    }
+                }
                 if (cancelled) break
-                main.post { onText?.invoke(text, true) }
+
+                val audio = r.snapshotFrom(frozenUntil) ?: continue
+                val tail = transcribeLocked(context, audio) ?: continue
+                if (cancelled) break
+                val combined = joinPhrases(frozenText, tail)
+                main.post { onText?.invoke(combined, true) }
             }
         }
+    }
+
+    /** Frozen text is a finished phrase, so the tail needs a space rather than butting against it. */
+    private fun joinPhrases(head: String, tail: String): String = when {
+        head.isEmpty() -> tail
+        tail.isEmpty() -> head
+        head.last().isWhitespace() -> head + tail
+        else -> "$head $tail"
     }
 
     private fun stopWorker() {
@@ -227,17 +275,24 @@ object VoiceTyping {
         // the speaker stops talking and releases the key in one motion.
         val audio = when (turnMode) {
             Mode.PAUSES -> r.takeRemainder().also { r.stop() }
-            Mode.ROLLING -> r.snapshot().also { r.stop() }
+            // Only the tail is decoded here as well; the frozen prefix is already correct and
+            // re-transcribing it would reintroduce exactly the drift freezing exists to stop.
+            Mode.ROLLING -> r.snapshotFrom(frozenUntil).also { r.stop() }
             Mode.ON_STOP -> r.stop()
         }
         stopWorker()
         if (audio == null) { onResult(null, replaces); return }
         thread(name = "SonderKeyTranscribe") {
-            val text = transcribeLocked(context, audio)
+            val tail = transcribeLocked(context, audio)
+            // A replacing result stands in for the whole dictation, so the frozen prefix has to be
+            // put back in front of it. Sending the tail alone would delete everything already
+            // settled and leave only the last few seconds on screen.
+            val text = if (turnMode == Mode.ROLLING && tail != null) joinPhrases(frozenText, tail)
+                       else tail
             // Report the reason rather than letting every failure read as silence. In a live turn
             // earlier text already landed, so a failed tail is not a silent whole turn.
             val error = VoiceRecognizer.lastError
-            if (text == null && error != null && !turnMode.isLive) toast(context, error)
+            if (tail == null && error != null && !turnMode.isLive) toast(context, error)
             main.post { onResult(text, replaces) }
         }
     }

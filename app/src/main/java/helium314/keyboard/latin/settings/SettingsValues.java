@@ -80,6 +80,8 @@ public class SettingsValues {
         // Pulse the microphone key instead of taking the whole suggestion strip while dictating.
         public final boolean mVoicePulseIndicator;
         public final boolean mVoiceAutoFormat;
+        public final boolean mVoiceNumbersAsDigits;
+        public final boolean mVoiceStripPunctuation;
         public final boolean mAutopilot;
         public final int mAutopilotStrength;
         public final boolean mAutopilotVisual;
@@ -280,6 +282,10 @@ public class SettingsValues {
                                 Defaults.PREF_VOICE_PULSE_INDICATOR);
                 mVoiceAutoFormat = prefs.getBoolean(Settings.PREF_VOICE_AUTO_FORMAT,
                                 Defaults.PREF_VOICE_AUTO_FORMAT);
+                mVoiceNumbersAsDigits = prefs.getBoolean(Settings.PREF_VOICE_NUMBERS_AS_DIGITS,
+                                Defaults.PREF_VOICE_NUMBERS_AS_DIGITS);
+                mVoiceStripPunctuation = prefs.getBoolean(Settings.PREF_VOICE_STRIP_PUNCTUATION,
+                                Defaults.PREF_VOICE_STRIP_PUNCTUATION);
                 mAutopilot = prefs.getBoolean(Settings.PREF_AUTOPILOT, Defaults.PREF_AUTOPILOT);
                 mAutopilotStrength = prefs.getInt(Settings.PREF_AUTOPILOT_STRENGTH,
                                 Defaults.PREF_AUTOPILOT_STRENGTH);

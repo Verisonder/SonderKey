@@ -1059,10 +1059,18 @@ New dictionary:
     <!-- Label above the slider choosing how long that silence is. %d is a number of seconds. -->
     <string name="voice_typing_silence_seconds">Stop after %d seconds of silence</string>
     <!-- Heading for the group of settings choosing when speech becomes text -->
+    <!-- Option to drop the punctuation the recogniser writes -->
+    <string name="voice_typing_strip_punctuation">Remove punctuation</string>
+    <!-- Description for "voice_typing_strip_punctuation" setting -->
+    <string name="voice_typing_strip_punctuation_summary">Drop commas, full stops and question marks from dictated text. Apostrophes and hyphens are kept.</string>
+    <!-- Option to write spoken numbers as digits rather than words -->
+    <string name="voice_typing_numbers_as_digits">Write numbers as digits</string>
+    <!-- Description for "voice_typing_numbers_as_digits" setting -->
+    <string name="voice_typing_numbers_as_digits_summary">Turn "twenty five" into "25". Words that are only sometimes numbers, like a lone "one", are left alone.</string>
     <!-- Option to let dictated text be spaced and cased to fit its surroundings -->
     <string name="voice_typing_auto_format">Fit dictated text to its surroundings</string>
     <!-- Description for "voice_typing_auto_format" setting -->
-    <string name="voice_typing_auto_format_summary">Add a space and match sentence case when dictating mid-text. Turn off for code, commands and other exact input.</string>
+    <string name="voice_typing_auto_format_summary">Add a space, match sentence case, and keep the sentence punctuation the recogniser adds. Turn off for code, commands and other exact input.</string>
     <string name="voice_typing_mode">When to type what you say</string>
     <!-- Title of the dialog shown when long-pressing the microphone key -->
     <string name="voice_typing_mode_pick">Dictate using</string>

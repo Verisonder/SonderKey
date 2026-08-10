@@ -37,6 +37,9 @@ class VoiceRecorder(private val context: Context) {
          */
         private const val QUIET_FRAMES_TO_CUT = 6
 
+        /** Plenty for any dictation, and a hard stop on the list growing without bound. */
+        private const val MAX_QUIET_POINTS = 512
+
         /**
          * Audio kept ahead of a phrase when the window slides forward through silence. A fifth of
          * a second is comfortably longer than one read, so no word can begin in the gap.
@@ -63,6 +66,9 @@ class VoiceRecorder(private val context: Context) {
     /** Emits finished phrases while recording continues, when live transcription is on. */
     @Volatile private var onSegment: ((FloatArray) -> Unit)? = null
     private var quietFrames = 0
+    private var quietRun = 0
+    private var heardSpeechForQuietPoints = false
+    private val quietPoints = ArrayList<Int>()
     private var segmentStart = 0
     private var heardSpeechInSegment = false
 
@@ -100,6 +106,9 @@ class VoiceRecorder(private val context: Context) {
 
         record = audioRecord
         samples.clear()
+        synchronized(quietPoints) { quietPoints.clear() }
+        quietRun = 0
+        heardSpeechForQuietPoints = false
         recording = true
         lastLoudAt = SystemClock.elapsedRealtime()
         audioRecord.startRecording()
@@ -120,6 +129,7 @@ class VoiceRecorder(private val context: Context) {
                     }
                 }
                 onLevel?.invoke(peak)
+                trackQuietPoints(peak)
                 if (onSegment != null) checkForPause(peak)
                 val now = SystemClock.elapsedRealtime()
                 if (peak >= SPEECH_THRESHOLD) lastLoudAt = now
@@ -142,6 +152,61 @@ class VoiceRecorder(private val context: Context) {
      * speech. Requiring speech first stops a silent lead-in being emitted as an empty phrase, and
      * requiring a minimum length stops a cough or a door closing being sent off for transcription.
      */
+    /**
+     * Remembers where the speaker stopped for breath, in every mode.
+     *
+     * Rolling mode needs somewhere safe to stop re-decoding: audio can be frozen behind a silence
+     * without cutting a word in half, and cannot be frozen anywhere else. The pause detection
+     * below only runs when a segment listener is attached, which is pause mode alone, so this
+     * keeps its own count. Deliberately cheap - a comparison and an integer per read.
+     */
+    private fun trackQuietPoints(peak: Float) {
+        if (peak >= SPEECH_THRESHOLD) {
+            quietRun = 0
+            heardSpeechForQuietPoints = true
+            return
+        }
+        if (!heardSpeechForQuietPoints) return
+        quietRun++
+        if (quietRun != QUIET_FRAMES_TO_CUT) return
+        synchronized(quietPoints) {
+            quietPoints.add(synchronized(samples) { samples.size })
+            if (quietPoints.size > MAX_QUIET_POINTS) quietPoints.removeAt(0)
+        }
+    }
+
+    /**
+     * The latest pause that still leaves [minTailSamples] of audio after it, or -1 if there is
+     * none. The tail requirement matters: freezing right up to the newest silence would settle
+     * the words the recogniser has only just heard, which is where it is least sure of them.
+     */
+    fun freezePoint(after: Int, minTailSamples: Int): Int {
+        val end = synchronized(samples) { samples.size }
+        synchronized(quietPoints) {
+            for (i in quietPoints.indices.reversed()) {
+                val point = quietPoints[i]
+                if (point > after && end - point >= minTailSamples) return point
+            }
+        }
+        return -1
+    }
+
+    /** The audio between two points, for transcribing a stretch that is about to be frozen. */
+    fun snapshotRange(start: Int, end: Int): FloatArray? = synchronized(samples) {
+        if (start < 0 || end > samples.size || end - start < SAMPLE_RATE / 3) return@synchronized null
+        val copy = FloatArray(end - start)
+        for (i in copy.indices) copy[i] = samples[start + i]
+        copy
+    }
+
+    /** Everything captured from [start] onwards, for re-decoding only the unfrozen tail. */
+    fun snapshotFrom(start: Int): FloatArray? = synchronized(samples) {
+        if (start < 0 || samples.size - start < SAMPLE_RATE / 3) return@synchronized null
+        val copy = FloatArray(samples.size - start)
+        for (i in copy.indices) copy[i] = samples[start + i]
+        copy
+    }
+
     private fun checkForPause(peak: Float) {
         if (peak >= SPEECH_THRESHOLD) {
             heardSpeechInSegment = true
