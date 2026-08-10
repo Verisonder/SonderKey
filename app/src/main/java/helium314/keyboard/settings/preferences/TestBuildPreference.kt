@@ -10,7 +10,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.ui.res.painterResource
 import helium314.keyboard.latin.R
 import helium314.keyboard.latin.utils.AppUpdater
 import helium314.keyboard.latin.utils.TestBuildUpdater
@@ -39,6 +42,24 @@ fun TestBuildPreference(name: String) {
     var state by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     var pending by remember { mutableStateOf<TestBuildUpdater.Build?>(null) }
+
+    fun check() {
+        if (busy) return
+        if (!TestBuildUpdater.isSupported()) {
+            state = ctx.getString(R.string.update_not_available_offline)
+            return
+        }
+        busy = true
+        state = ctx.getString(R.string.update_checking)
+        scope.launch {
+            val result = TestBuildUpdater.check()
+            busy = false
+            result.onSuccess { build ->
+                if (build == null) state = ctx.getString(R.string.test_build_none)
+                else { pending = build; state = "" }
+            }.onFailure { t -> state = t.message ?: "Check failed" }
+        }
+    }
 
     Preference(
         name = name,
@@ -73,19 +94,19 @@ fun TestBuildPreference(name: String) {
                 }
                 return@onClick
             }
-            busy = true
-            state = ctx.getString(R.string.update_checking)
-            scope.launch {
-                val result = TestBuildUpdater.check()
-                busy = false
-                result.onSuccess { build ->
-                    if (build == null) state = ctx.getString(R.string.test_build_none)
-                    else { pending = build; state = "" }
-                }.onFailure { t -> state = t.message ?: "Check failed" }
-            }
+            check()
         },
         icon = R.drawable.ic_settings_about_update
-    )
+    ) {
+        // Once a build has been found the row itself installs it, which left no way back to
+        // looking for a newer one: leaving the screen was the only route, and that meant entering
+        // the code again. A build published while this sits open is exactly the common case.
+        if (unlocked && !busy) {
+            IconButton(onClick = { pending = null; check() }) {
+                Icon(painterResource(R.drawable.ic_refresh), stringResource(R.string.test_build_check))
+            }
+        }
+    }
 
     if (asking) {
         TextInputDialog(
