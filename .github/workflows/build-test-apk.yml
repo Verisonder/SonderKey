@@ -53,18 +53,49 @@ jobs:
           set -o pipefail
           ./gradlew --max-workers=2 assembleStandardfullRelease 2>&1 | tee -a gradle-build.log
 
-      - name: Report build failure
+      # Failures are written to the artifacts repository rather than opened as issues here.
+      # An auto-opened issue lands on the owner's public profile timeline as activity, which is a
+      # misleading thing to advertise: a failed test build is a normal step in developing a branch,
+      # not a defect anyone needs to see. The log is just as reachable in a file.
+      - name: Record build failure
         if: failure()
         env:
-          GH_TOKEN: ${{ secrets.RELEASE_PAT || github.token }}
+          GH_TOKEN: ${{ secrets.ARTIFACTS_PAT }}
         run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "ARTIFACTS_PAT is not set, failure log not recorded."
+            exit 0
+          fi
           grep -in "e: \|error:\|FAILURE\|Caused by\|OutOfMemory\|Killed\|daemon disappeared\|Execution failed" gradle-build.log | tail -n 60 > err-index.txt || true
           grep -i -B2 -A25 "FAILURE: Build failed\|Execution failed\|daemon disappeared" gradle-build.log | head -n 120 > ctx.txt || true
           tail -n 80 gradle-build.log > tail.txt
-          cat ctx.txt tail.txt > combined.txt && mv combined.txt tail.txt
-          BODY="$(printf 'Branch: %s\n\nError index:\n```\n%s\n```\nLog tail:\n```\n%s\n```' "${{ github.ref_name }}" "$(cat err-index.txt)" "$(cat tail.txt)")"
-          gh api "repos/${{ github.repository }}/issues" -f title="Test build failure (run ${{ github.run_id }})" -f body="$BODY" || true
-
+          {
+            echo "Workflow: ${{ github.workflow }}"
+            echo "Branch:   ${{ github.ref_name }}"
+            echo "Run:      ${{ github.run_id }}"
+            echo
+            echo "--- error index ---"
+            cat err-index.txt
+            echo
+            echo "--- context ---"
+            cat ctx.txt
+            echo
+            echo "--- log tail ---"
+            cat tail.txt
+          } > failure.txt
+          REPO="Verisonder/vs-artifacts"
+          PATH_IN_REPO="failures/latest.txt"
+          SHA="$(gh api "repos/$REPO/contents/$PATH_IN_REPO" --jq .sha 2>/dev/null || true)"
+          if [ -n "$SHA" ]; then
+            gh api --method PUT "repos/$REPO/contents/$PATH_IN_REPO" \
+              -f message="Record build failure" \
+              -f content="$(base64 -w0 failure.txt)" -f sha="$SHA" >/dev/null || true
+          else
+            gh api --method PUT "repos/$REPO/contents/$PATH_IN_REPO" \
+              -f message="Record build failure" \
+              -f content="$(base64 -w0 failure.txt)" >/dev/null || true
+          fi
+          echo "Failure log written to $REPO/$PATH_IN_REPO"
       - name: Name the build after the branch and commit
         id: naming
         run: |
