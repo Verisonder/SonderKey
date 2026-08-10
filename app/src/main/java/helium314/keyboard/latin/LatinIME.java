@@ -1826,9 +1826,14 @@ public class LatinIME extends InputMethodService implements
         if (rawText == null || rawText.isEmpty()) return;
         // Before any formatting decision, and for every mode, since a spoken number is wrong in
         // all of them. The recogniser writes numbers out as words and nothing else converts them.
-        final String text = mSettings.getCurrent().mVoiceNumbersAsDigits
+        final SettingsValues voiceValues = mSettings.getCurrent();
+        String text = voiceValues.mVoiceNumbersAsDigits
                 ? helium314.keyboard.latin.voice.SpokenNumbers.INSTANCE.toDigits(rawText)
                 : rawText;
+        // After the numbers, so "twenty five" still becomes 25 rather than being stripped of the
+        // punctuation it never had, and before any spacing decision, which reads the last character.
+        if (voiceValues.mVoiceStripPunctuation) text = stripPunctuation(text);
+        if (text.isEmpty()) return;
         if (replaces) {
             final helium314.keyboard.latin.RichInputConnection connection = mInputLogic.getConnection();
             connection.beginBatchEdit();
@@ -1860,6 +1865,12 @@ public class LatinIME extends InputMethodService implements
         mVoiceOwnsCursor = false;
         mVoiceCursorPosition = -1;
     }
+
+    /**
+     * Punctuation a speech model adds of its own accord, and nothing else. Sentence marks in
+     * several scripts, but never an apostrophe or a hyphen, which are parts of words.
+     */
+    private static final String SENTENCE_PUNCTUATION = ".,;:?!\u2026\u00A1\u00BF\u060C\u061B\u061F\u3001\u3002\uFF0C\uFF01\uFF1F\uFF1B\uFF1A";
 
     /** How far back we look through whitespace to work out where in a sentence the cursor sits. */
     private static final int VOICE_CONTEXT_LOOKBACK = 8;
@@ -1927,6 +1938,36 @@ public class LatinIME extends InputMethodService implements
      * the surrounding text: no space is added where this turn has written nothing yet, because
      * there the cursor is wherever the user chose to put it, and nothing is ever recapitalised.
      */
+    /**
+     * Removes the punctuation the recogniser writes, leaving the words alone.
+     *
+     * Parakeet punctuates as it goes, which is wanted most of the time and unwanted the rest -
+     * dictating a list, a search query, or anything that will be pasted somewhere that treats a
+     * comma as a delimiter. Doing it here rather than teaching the model not to produce it means
+     * the same model serves both.
+     *
+     * Apostrophes and hyphens survive: they belong to words rather than to sentences, and losing
+     * them would turn "don't" into "dont" and "well-known" into "wellknown", which is damage
+     * rather than tidying. Any gap left behind is closed up so no double spaces are committed.
+     */
+    private String stripPunctuation(final String text) {
+        final StringBuilder out = new StringBuilder(text.length());
+        for (int i = 0; i < text.length(); i++) {
+            final char c = text.charAt(i);
+            if (SENTENCE_PUNCTUATION.indexOf(c) >= 0) continue;
+            if (Character.isWhitespace(c) && out.length() > 0
+                    && Character.isWhitespace(out.charAt(out.length() - 1))) {
+                continue;
+            }
+            out.append(c);
+        }
+        // A phrase that ended in punctuation now ends in the space that preceded it.
+        while (out.length() > 0 && Character.isWhitespace(out.charAt(out.length() - 1))) {
+            out.setLength(out.length() - 1);
+        }
+        return out.toString();
+    }
+
     /**
      * Undoes the sentence formatting the speech model applies of its own accord.
      *

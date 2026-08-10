@@ -82,6 +82,9 @@ fun VoiceTypingScreen(onClickBack: () -> Unit) {
     var silenceStop by remember {
         mutableStateOf(prefs.getBoolean(Settings.PREF_VOICE_SILENCE_STOP, Defaults.PREF_VOICE_SILENCE_STOP))
     }
+    var stripPunctuation by remember {
+        mutableStateOf(prefs.getBoolean(Settings.PREF_VOICE_STRIP_PUNCTUATION, Defaults.PREF_VOICE_STRIP_PUNCTUATION))
+    }
     var numbersAsDigits by remember {
         mutableStateOf(prefs.getBoolean(Settings.PREF_VOICE_NUMBERS_AS_DIGITS, Defaults.PREF_VOICE_NUMBERS_AS_DIGITS))
     }
@@ -280,6 +283,14 @@ fun VoiceTypingScreen(onClickBack: () -> Unit) {
                             steps = 13,
                             modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp)
                         )
+                    }
+                    ToggleRow(
+                        title = stringResource(R.string.voice_typing_strip_punctuation),
+                        summary = stringResource(R.string.voice_typing_strip_punctuation_summary),
+                        checked = stripPunctuation
+                    ) {
+                        stripPunctuation = it
+                        prefs.edit { putBoolean(Settings.PREF_VOICE_STRIP_PUNCTUATION, it) }
                     }
                     ToggleRow(
                         title = stringResource(R.string.voice_typing_numbers_as_digits),
