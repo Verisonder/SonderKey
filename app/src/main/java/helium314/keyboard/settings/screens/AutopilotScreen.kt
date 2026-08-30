@@ -33,8 +33,6 @@ fun AutopilotScreen(
         if (enabled) {
             add(Settings.PREF_AUTOPILOT_STRENGTH)
             add(Settings.PREF_AUTOPILOT_VISUAL)
-            if (prefs.getBoolean(Settings.PREF_AUTOPILOT_VISUAL, Defaults.PREF_AUTOPILOT_VISUAL))
-                add(Settings.PREF_AUTOPILOT_VISUAL_STRENGTH)
             add(Settings.PREF_AUTOPILOT_DEBUG)
         }
     }
@@ -65,19 +63,6 @@ fun createAutopilotSettings(context: Context) = listOf(
     Setting(context, Settings.PREF_AUTOPILOT_VISUAL,
         R.string.autopilot_visual, R.string.autopilot_visual_summary) {
         SwitchPreference(it, Defaults.PREF_AUTOPILOT_VISUAL)
-    },
-    Setting(context, Settings.PREF_AUTOPILOT_VISUAL_STRENGTH,
-        R.string.autopilot_visual_strength, R.string.autopilot_visual_strength_summary) { def ->
-        SliderPreference(
-            name = def.title,
-            key = def.key,
-            default = Defaults.PREF_AUTOPILOT_VISUAL_STRENGTH,
-            // Six to sixty percent. Below about thirty a key only grows into the gap beside it
-            // and reads as a slightly larger key; past that it sits over its neighbours, which
-            // is what makes the favoured letter obvious without looking for it.
-            range = 1f..10f,
-            description = { it.toString() }
-        )
     },
     Setting(context, Settings.PREF_AUTOPILOT_DEBUG,
         R.string.autopilot_debug, R.string.autopilot_debug_summary) {

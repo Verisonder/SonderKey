@@ -348,19 +348,17 @@ public final class MainKeyboardView extends KeyboardView implements DrawingProxy
         // Strength 1 to 10 maps to a boundary shift of three to thirty percent of a key's width.
         // Three percent is a couple of pixels and barely perceptible; thirty is as far as this
         // should ever go, since beyond it a press near an edge stops belonging to the key under it.
-        mKeyDetector.setAutopilotShiftRatio(
-                autopilotValues.mAutopilot ? autopilotValues.mAutopilotStrength * 0.03f : 0f);
+        final float autopilotShiftRatio =
+                autopilotValues.mAutopilot ? autopilotValues.mAutopilotStrength * 0.03f : 0f;
+        mKeyDetector.setAutopilotShiftRatio(autopilotShiftRatio);
         mAutopilotDebugDrawingPreview.setPreviewEnabled(
                 autopilotValues.mAutopilot && autopilotValues.mAutopilotDebug);
-        mAutopilotDebugDrawingPreview.setShiftRatio(
-                autopilotValues.mAutopilot ? autopilotValues.mAutopilotStrength * 0.03f : 0f);
+        mAutopilotDebugDrawingPreview.setShiftRatio(autopilotShiftRatio);
         mAutopilotDebugDrawingPreview.setKeyboard(keyboard);
-        // Six to sixty percent. Twenty was too little to read: key gaps are roughly a quarter
-        // of a key's width, so anything under about thirty percent grows into the gap and stops
-        // there, which looks like a slightly bigger key rather than one claiming ground. Sixty
-        // puts a fully expected letter clearly over both its neighbours, which is the point.
-        setAutopilotVisualRatio(autopilotValues.mAutopilot && autopilotValues.mAutopilotVisual
-                ? autopilotValues.mAutopilotVisualStrength * 0.06f : 0f);
+        // The one ratio, handed to all three. Growing the keys is a way of seeing what autopilot
+        // is doing, not a second effect with a size of its own, so there is nothing here to set
+        // independently and nothing that can drift away from the boundary it is describing.
+        setAutopilotVisualRatio(autopilotValues.mAutopilotVisual ? autopilotShiftRatio : 0f);
         mKeyPressEffectDrawingPreview.setPreviewEnabled(autopilotValues.mKeyPressEffect);
         mKeyPressEffectDrawingPreview.reloadCustomImage(
                 Settings.getKeyPressEffectImageFile(getContext()));

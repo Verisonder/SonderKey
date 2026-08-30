@@ -71,7 +71,6 @@ object Defaults {
     const val PREF_AUTOPILOT = false
     const val PREF_AUTOPILOT_STRENGTH = 8
     const val PREF_AUTOPILOT_VISUAL = false
-    const val PREF_AUTOPILOT_VISUAL_STRENGTH = 5
     const val PREF_AUTOPILOT_DEBUG = false
     const val PREF_KEY_PRESS_EFFECT = false
     const val PREF_KEY_PRESS_EFFECT_SHAPE = "square"

@@ -259,27 +259,36 @@ public class KeyboardView extends View {
     }
 
     /**
-     * How much bigger a key should be drawn because the dictionary expects it next.
+     * How far a key's touch area currently reaches beyond each of its own edges, in pixels.
      *
-     * The touch target moves whether or not this is on; this only decides whether the movement is
-     * shown. Seeing it is not purely cosmetic - a target that grows invisibly is impossible to
-     * aim at deliberately, and impossible to distrust when it gets something wrong.
+     * This is the same figure {@link helium314.keyboard.keyboard.KeyDetector} allows the key to
+     * claim - {@code width * shiftRatio * weight} - so what is drawn is the boundary actually in
+     * force rather than a picture with a scale of its own. A drawing with its own scale would
+     * sooner or later disagree with the thing it claims to describe, which is worse than not
+     * drawing it at all.
      *
-     * Grown keys overlap their neighbours slightly. That is honest rather than a defect: the
-     * touch areas overlap too, and the drawing order puts later keys on top, which is stable
-     * frame to frame because the keyboard's key order does not change.
+     * The touch target moves whether or not this is switched on; the switch only decides whether
+     * the movement is shown. Seeing it is not decoration - a target that grows invisibly is
+     * impossible to aim at deliberately and impossible to distrust when it gets something wrong.
+     *
+     * @return 0 when this key is not expected, or when the effect is not being drawn.
      */
-    private float getAutopilotScale(@NonNull final Key key) {
+    private float autopilotReach(@NonNull final Key key) {
         final float ratio = mAutopilotVisualRatio;
-        if (ratio <= 0f) return 1f;
+        if (ratio <= 0f) return 0f;
         final int code = key.getCode();
-        if (code <= 0 || !Character.isLetter(code)) return 1f;
+        if (code <= 0 || !Character.isLetter(code)) return 0f;
         final AutopilotHints hints = AutopilotHints.getInstance();
-        if (!hints.isEnabled() || hints.isEmpty()) return 1f;
-        return 1f + ratio * hints.weightOf(code);
+        if (!hints.isEnabled() || hints.isEmpty()) return 0f;
+        return key.getWidth() * ratio * hints.weightOf(code);
     }
 
-    /** Fraction a fully expected key grows by on screen. Zero switches the growth off. */
+    /**
+     * The boundary shift ratio the key detector is working to. Zero stops the effect being drawn.
+     *
+     * Deliberately the detector's own figure and not a separate one: the whole value of drawing
+     * this is that it says where the boundary really is.
+     */
     public void setAutopilotVisualRatio(final float ratio) {
         mAutopilotVisualRatio = ratio;
     }
@@ -390,11 +399,11 @@ public class KeyboardView extends View {
             // left and beneath the one to its right - lopsided, and worse the larger it gets.
             // A second pass puts every grown key above the lot.
             for (final Key key : keyboard.getSortedKeys()) {
-                if (getAutopilotScale(key) != 1f) continue;
+                if (autopilotReach(key) > 0f) continue;
                 onDrawKey(key, canvas, paint);
             }
             for (final Key key : keyboard.getSortedKeys()) {
-                if (getAutopilotScale(key) == 1f) continue;
+                if (autopilotReach(key) <= 0f) continue;
                 onDrawKey(key, canvas, paint);
             }
         } else {
@@ -429,11 +438,20 @@ public class KeyboardView extends View {
 
         // Composed with the press animation rather than replacing it, so a key that is both
         // expected and being pressed grows once by the two together instead of one winning.
-        final float pressScale = getKeyPressScale(key) * getAutopilotScale(key);
-        final boolean scaled = pressScale != 1f && !key.isSpacer();
+        //
+        // Per axis, because autopilot reaches the same number of pixels past every edge while a
+        // key is not square. One factor for both would push a tall key further up and down than
+        // its touch area actually goes, and the point of drawing this is that it is true.
+        final float pressScale = getKeyPressScale(key);
+        final float reach = autopilotReach(key);
+        final int drawWidth = key.getDrawWidth();
+        final int drawHeight = key.getHeight();
+        final float scaleX = pressScale * (drawWidth > 0 ? 1f + 2f * reach / drawWidth : 1f);
+        final float scaleY = pressScale * (drawHeight > 0 ? 1f + 2f * reach / drawHeight : 1f);
+        final boolean scaled = (scaleX != 1f || scaleY != 1f) && !key.isSpacer();
         if (scaled) {
             canvas.save();
-            canvas.scale(pressScale, pressScale, key.getDrawWidth() / 2f, key.getHeight() / 2f);
+            canvas.scale(scaleX, scaleY, drawWidth / 2f, drawHeight / 2f);
         }
 
         final KeyVisualAttributes attr = key.getVisualAttributes();
