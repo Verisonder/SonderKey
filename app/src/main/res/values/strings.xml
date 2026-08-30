@@ -1142,7 +1142,7 @@ New dictionary:
     <string name="autopilot_summary">Quietly widen the touch area of letters you are likely to type next</string>
     <string name="autopilot_strength">Strength</string>
     <!-- Description for "autopilot_strength" setting -->
-    <string name="autopilot_strength_summary">How far a boundary between two keys may move. Lower is safer.</string>
+    <string name="autopilot_strength_summary">How far a favoured letter may reach into the keys beside it. Lower is safer.</string>
     <!-- Option to draw an expected key at the size its touch area has reached -->
     <string name="autopilot_visual">Show the effect</string>
     <!-- Description for "autopilot_visual" setting -->

@@ -345,11 +345,20 @@ public final class MainKeyboardView extends KeyboardView implements DrawingProxy
         final helium314.keyboard.latin.settings.SettingsValues autopilotValues = Settings.getValues();
         helium314.keyboard.keyboard.internal.AutopilotHints.getInstance()
                 .setEnabled(autopilotValues.mAutopilot);
-        // Strength 1 to 10 maps to a boundary shift of three to thirty percent of a key's width.
-        // Three percent is a couple of pixels and barely perceptible; thirty is as far as this
-        // should ever go, since beyond it a press near an edge stops belonging to the key under it.
+        // Strength 1 to 10 maps to a boundary shift of six to sixty percent of a key's width.
+        //
+        // Thirty was the old ceiling and it was quietly useless at the top: the gap between two
+        // keys is roughly a quarter of a key's width, so a thirty percent reach fills the gap and
+        // stops exactly at the neighbour's edge. A favoured letter could never actually claim
+        // ground from the letter beside it, which is the whole point of the feature.
+        //
+        // Past fifty percent the reach exceeds half a key's width, and applyAutopilot's first
+        // guard - a press deeper inside its own key than the reach is left alone - stops firing.
+        // From there every letter press is eligible for override rather than only ones near an
+        // edge. That is a real change in character, which is why it sits at the top of a slider
+        // that is off by default rather than being the default itself.
         final float autopilotShiftRatio =
-                autopilotValues.mAutopilot ? autopilotValues.mAutopilotStrength * 0.03f : 0f;
+                autopilotValues.mAutopilot ? autopilotValues.mAutopilotStrength * 0.06f : 0f;
         mKeyDetector.setAutopilotShiftRatio(autopilotShiftRatio);
         mAutopilotDebugDrawingPreview.setPreviewEnabled(
                 autopilotValues.mAutopilot && autopilotValues.mAutopilotDebug);
