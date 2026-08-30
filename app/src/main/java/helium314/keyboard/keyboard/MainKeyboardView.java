@@ -355,9 +355,9 @@ public final class MainKeyboardView extends KeyboardView implements DrawingProxy
                 autopilotValues.mAutopilot && autopilotValues.mAutopilotDebug);
         mAutopilotDebugDrawingPreview.setShiftRatio(autopilotShiftRatio);
         mAutopilotDebugDrawingPreview.setKeyboard(keyboard);
-        // The one ratio, handed to all three. Growing the keys is a way of seeing what autopilot
-        // is doing, not a second effect with a size of its own, so there is nothing here to set
-        // independently and nothing that can drift away from the boundary it is describing.
+        // The one ratio, handed to all three. Drawing the key larger is a way of seeing what
+        // autopilot is doing, not a second effect with a size of its own, so there is nothing
+        // here to set independently and nothing that can drift from what it is describing.
         setAutopilotVisualRatio(autopilotValues.mAutopilotVisual ? autopilotShiftRatio : 0f);
         mKeyPressEffectDrawingPreview.setPreviewEnabled(autopilotValues.mKeyPressEffect);
         mKeyPressEffectDrawingPreview.reloadCustomImage(

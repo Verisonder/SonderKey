@@ -1143,13 +1143,13 @@ New dictionary:
     <string name="autopilot_strength">Strength</string>
     <!-- Description for "autopilot_strength" setting -->
     <string name="autopilot_strength_summary">How far a boundary between two keys may move. Lower is safer.</string>
-    <!-- Option to draw expected keys larger as well as widening their touch area -->
-    <string name="autopilot_visual">Grow the keys</string>
+    <!-- Option to draw an expected key at the size its touch area has reached -->
+    <string name="autopilot_visual">Show the effect</string>
     <!-- Description for "autopilot_visual" setting -->
-    <string name="autopilot_visual_summary">Draw a favoured letter at the size its touch area has actually grown to, so you can see what Strength is doing</string>
-    <string name="autopilot_debug">Show boundaries</string>
+    <string name="autopilot_visual_summary">Draw a favoured letter at the size its touch area has grown to, so you can see what Strength is doing</string>
+    <string name="autopilot_debug">Outline the touch areas</string>
     <!-- Description for "autopilot_debug" setting -->
-    <string name="autopilot_debug_summary">Outline the widened touch areas on the keyboard, for tuning</string>
+    <string name="autopilot_debug_summary">Draw the exact boundary each expected letter has claimed, for tuning</string>
     <!-- Option to scatter particles from a key as it is pressed -->
     <string name="key_press_effect">Key press effect</string>
     <!-- Description for "key_press_effect" setting -->
