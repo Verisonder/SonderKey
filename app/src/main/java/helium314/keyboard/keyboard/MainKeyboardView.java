@@ -355,11 +355,12 @@ public final class MainKeyboardView extends KeyboardView implements DrawingProxy
         mAutopilotDebugDrawingPreview.setShiftRatio(
                 autopilotValues.mAutopilot ? autopilotValues.mAutopilotStrength * 0.03f : 0f);
         mAutopilotDebugDrawingPreview.setKeyboard(keyboard);
-        // Two to twenty percent. Beyond that a grown key swallows its neighbour on screen
-        // while the touch area has moved by nowhere near as much, so what is drawn stops
-        // being a fair picture of where the boundaries actually are.
+        // Six to sixty percent. Twenty was too little to read: key gaps are roughly a quarter
+        // of a key's width, so anything under about thirty percent grows into the gap and stops
+        // there, which looks like a slightly bigger key rather than one claiming ground. Sixty
+        // puts a fully expected letter clearly over both its neighbours, which is the point.
         setAutopilotVisualRatio(autopilotValues.mAutopilot && autopilotValues.mAutopilotVisual
-                ? autopilotValues.mAutopilotVisualStrength * 0.02f : 0f);
+                ? autopilotValues.mAutopilotVisualStrength * 0.06f : 0f);
         mKeyPressEffectDrawingPreview.setPreviewEnabled(autopilotValues.mKeyPressEffect);
         mKeyPressEffectDrawingPreview.reloadCustomImage(
                 Settings.getKeyPressEffectImageFile(getContext()));

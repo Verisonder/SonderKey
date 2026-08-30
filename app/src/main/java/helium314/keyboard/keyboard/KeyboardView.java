@@ -385,8 +385,16 @@ public class KeyboardView extends View {
                 canvas.drawColor(Color.BLACK, PorterDuff.Mode.CLEAR);
                 background.draw(canvas);
             }
-            // Draw all keys.
+            // Draw all keys, ungrown ones first. A key grown by autopilot overlaps its
+            // neighbours, and a single pass in sorted order would leave it above the key to its
+            // left and beneath the one to its right - lopsided, and worse the larger it gets.
+            // A second pass puts every grown key above the lot.
             for (final Key key : keyboard.getSortedKeys()) {
+                if (getAutopilotScale(key) != 1f) continue;
+                onDrawKey(key, canvas, paint);
+            }
+            for (final Key key : keyboard.getSortedKeys()) {
+                if (getAutopilotScale(key) == 1f) continue;
                 onDrawKey(key, canvas, paint);
             }
         } else {

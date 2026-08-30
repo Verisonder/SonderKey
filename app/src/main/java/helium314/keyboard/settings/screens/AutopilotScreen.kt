@@ -72,8 +72,9 @@ fun createAutopilotSettings(context: Context) = listOf(
             name = def.title,
             key = def.key,
             default = Defaults.PREF_AUTOPILOT_VISUAL_STRENGTH,
-            // Two to twenty percent. Past that a key visibly swallows its neighbour while the
-            // touch area has moved nowhere near as far, so the picture stops being truthful.
+            // Six to sixty percent. Below about thirty a key only grows into the gap beside it
+            // and reads as a slightly larger key; past that it sits over its neighbours, which
+            // is what makes the favoured letter obvious without looking for it.
             range = 1f..10f,
             description = { it.toString() }
         )
