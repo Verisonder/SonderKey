@@ -22,8 +22,8 @@ android {
         applicationId = "com.verisonder.sonderkey"
         minSdk = 21
         targetSdk = 35
-        versionCode = 150
-        versionName = "5.0.0"
+        versionCode = 151
+        versionName = "5.1.0"
 
         proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         
