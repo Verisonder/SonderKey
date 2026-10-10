@@ -239,6 +239,9 @@ object Defaults {
     const val PREF_CLIPBOARD_FOLD_PINNED = false
     const val PREF_CLEAR_CLIPBOARD_ICON = "bin"
     const val PREF_ADD_TO_PERSONAL_DICTIONARY = true
+    // uses of an unknown word before it is added; 4 matches the old history-frequency rule
+    const val PREF_PERSONAL_DICT_ADD_AFTER = 4
+    const val PREF_PERSONAL_DICT_REVIEW = false
     @JvmField
     val PREF_NAVBAR_COLOR = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
     const val PREF_NARROW_KEY_GAPS = false

@@ -110,6 +110,66 @@
     <string name="add_to_personal_dictionary">Add words to personal dictionary</string>
     <!-- Description for option to add learned words to system-wide user dictionary -->
     <string name="add_to_personal_dictionary_summary">Use device personal dictionary to store learned words</string>
+    <!-- How many times an unknown word must be typed before it goes into the personal dictionary -->
+    <string name="personal_dict_add_after">Add after</string>
+    <plurals name="personal_dict_add_after_value">
+        <item quantity="one">%d use</item>
+        <item quantity="other">%d uses</item>
+    </plurals>
+    <!-- Hold words for approval instead of adding them automatically -->
+    <string name="personal_dict_review">Ask before adding</string>
+    <string name="personal_dict_review_summary">New words wait under Learned words until you add or dismiss them</string>
+    <!-- Screen listing words the keyboard learned from typing -->
+    <string name="learned_words">Learned words</string>
+    <string name="learned_words_new_header">Not in the dictionary</string>
+    <string name="learned_words_all_header">Everything learned</string>
+    <string name="learned_words_show_all">Show everything learned</string>
+    <string name="learned_words_show_new">Show only new words</string>
+    <string name="learned_words_pending">Waiting for approval</string>
+    <string name="learned_words_unavailable">Open the keyboard once, then come back to see what it has learned.</string>
+    <string name="learned_words_loading">Loading…</string>
+    <plurals name="learned_words_uses">
+        <item quantity="one">typed %d time</item>
+        <item quantity="other">typed %d times</item>
+    </plurals>
+    <string name="learned_words_add">Add to personal dictionary</string>
+    <string name="learned_words_add_summary">Keep it as a known word</string>
+    <string name="learned_words_dismiss">Dismiss</string>
+    <string name="learned_words_forget">Forget</string>
+    <string name="learned_words_forget_summary">Remove it from what was learned. Typing it again relearns it.</string>
+    <string name="learned_words_block">Block</string>
+    <string name="learned_words_block_summary">Never suggest it, and remove it from every dictionary</string>
+    <string name="learned_words_clear_dismissed">Allow dismissed words again</string>
+    <string name="learned_words_forget_all">Forget everything learned</string>
+    <string name="learned_words_forget_all_confirmation">Forget every word the keyboard has learned from your typing? The personal dictionary is not affected.</string>
+    <!-- Sorting and selection in word lists -->
+    <string name="sort_alphabetical">Sort A–Z</string>
+    <string name="sort_most_used">Sort by most used</string>
+    <string name="sort_by_weight">Sort by weight</string>
+    <string name="user_dict_select">Select words</string>
+    <string name="user_dict_select_all">Select all</string>
+    <string name="user_dict_delete_selected">Delete selected</string>
+    <plurals name="user_dict_selected">
+        <item quantity="one">%d selected</item>
+        <item quantity="other">%d selected</item>
+    </plurals>
+    <plurals name="user_dict_delete_selected_confirmation">
+        <item quantity="one">Delete %d word?</item>
+        <item quantity="other">Delete %d words?</item>
+    </plurals>
+    <!-- Import and export of the personal dictionary -->
+    <string name="user_dict_export">Export</string>
+    <string name="user_dict_import">Import</string>
+    <plurals name="user_dict_exported">
+        <item quantity="one">Exported %d word</item>
+        <item quantity="other">Exported %d words</item>
+    </plurals>
+    <plurals name="user_dict_imported">
+        <item quantity="one">Imported %d word</item>
+        <item quantity="other">Imported %d words</item>
+    </plurals>
+    <string name="user_dict_export_failed">Export failed: %1$s</string>
+    <string name="user_dict_import_failed">Import failed: %1$s</string>
     <!-- Option name for enabling or disabling the double-space period feature that lets double tap on spacebar insert a period followed by a space -->
     <string name="use_double_space_period">Double-space period</string>
     <!-- Description for option enabling or disabling the double-space period feature that lets double tap on spacebar insert a period followed by a space -->

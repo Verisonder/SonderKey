@@ -150,6 +150,8 @@ public class SettingsValues {
         public final boolean mQuickPinToolbarKeys;
         public final int mScreenMetrics;
         public final boolean mAddToPersonalDictionary;
+        public final int mPersonalDictAddAfter;
+        public final boolean mPersonalDictReview;
         public final boolean mUseContactsDictionary;
         public final boolean mUseAppsDictionary;
         public final boolean mEnableSpellCheckerService;
@@ -504,6 +506,10 @@ public class SettingsValues {
                 mPopupKeyLabelSources = SubtypeUtilsKt.getPopupKeyLabelSources(selectedSubtype, prefs);
                 mAddToPersonalDictionary = prefs.getBoolean(Settings.PREF_ADD_TO_PERSONAL_DICTIONARY,
                                 Defaults.PREF_ADD_TO_PERSONAL_DICTIONARY);
+                mPersonalDictAddAfter = prefs.getInt(Settings.PREF_PERSONAL_DICT_ADD_AFTER,
+                                Defaults.PREF_PERSONAL_DICT_ADD_AFTER);
+                mPersonalDictReview = prefs.getBoolean(Settings.PREF_PERSONAL_DICT_REVIEW,
+                                Defaults.PREF_PERSONAL_DICT_REVIEW);
                 mUseContactsDictionary = SettingsValues.readUseContactsEnabled(prefs, context);
                 mUseAppsDictionary = prefs.getBoolean(Settings.PREF_USE_APPS, Defaults.PREF_USE_APPS);
                 mCustomNavBarColor = prefs.getBoolean(Settings.PREF_NAVBAR_COLOR, Defaults.PREF_NAVBAR_COLOR);

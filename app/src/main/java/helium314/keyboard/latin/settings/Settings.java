@@ -207,6 +207,8 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static final String PREF_CLEAR_CLIPBOARD_ICON = "clear_clipboard_icon";
 
     public static final String PREF_ADD_TO_PERSONAL_DICTIONARY = "add_to_personal_dictionary";
+    public static final String PREF_PERSONAL_DICT_ADD_AFTER = "personal_dict_add_after";
+    public static final String PREF_PERSONAL_DICT_REVIEW = "personal_dict_review";
     public static final String PREF_NAVBAR_COLOR = "navbar_color";
     public static final String PREF_NARROW_KEY_GAPS = "narrow_key_gaps";
     public static final String PREF_NARROW_KEY_GAPS_LEVEL = "narrow_key_gaps_level";

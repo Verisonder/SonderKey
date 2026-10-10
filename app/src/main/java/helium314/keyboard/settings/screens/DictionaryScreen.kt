@@ -166,6 +166,36 @@ fun DictionaryScreen(
                             color = MaterialTheme.colorScheme.outlineVariant
                         )
 
+                        // Learned Words Entry
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { SettingsDestination.navigateTo(SettingsDestination.LearnedWords) }
+                                .padding(vertical = 14.dp, horizontal = 16.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_dictionary),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(end = 12.dp).size(24.dp)
+                                )
+                                Text(
+                                    stringResource(R.string.learned_words),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                            NextScreenIcon()
+                        }
+
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant
+                        )
+
                         // Blocked Words Entry
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -277,6 +307,50 @@ fun DictionaryScreen(
                                 ctx.prefs().edit { putBoolean(Settings.PREF_ADD_TO_PERSONAL_DICTIONARY, it) } 
                             }
                         )
+                    }
+                    if (personalDictEnabled) {
+                        val res = ctx.resources
+                        helium314.keyboard.settings.preferences.SliderPreference(
+                            name = stringResource(R.string.personal_dict_add_after),
+                            key = Settings.PREF_PERSONAL_DICT_ADD_AFTER,
+                            default = Defaults.PREF_PERSONAL_DICT_ADD_AFTER,
+                            range = 1f..10f,
+                            description = { res.getQuantityString(R.plurals.personal_dict_add_after_value, it, it) }
+                        )
+                        var reviewEnabled by remember {
+                            mutableStateOf(prefs.getBoolean(Settings.PREF_PERSONAL_DICT_REVIEW, Defaults.PREF_PERSONAL_DICT_REVIEW))
+                        }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    reviewEnabled = !reviewEnabled
+                                    ctx.prefs().edit { putBoolean(Settings.PREF_PERSONAL_DICT_REVIEW, reviewEnabled) }
+                                }
+                                .padding(horizontal = 16.dp, vertical = 12.dp)
+                        ) {
+                            Column(modifier = Modifier.weight(1f).padding(end = 16.dp)) {
+                                Text(
+                                    stringResource(R.string.personal_dict_review),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    stringResource(R.string.personal_dict_review_summary),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            androidx.compose.material3.Switch(
+                                checked = reviewEnabled,
+                                onCheckedChange = {
+                                    reviewEnabled = it
+                                    ctx.prefs().edit { putBoolean(Settings.PREF_PERSONAL_DICT_REVIEW, it) }
+                                }
+                            )
+                        }
                     }
                 }
 

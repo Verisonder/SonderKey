@@ -152,6 +152,14 @@ public interface DictionaryFacilitator {
 
     void clearUserHistoryDictionary(final Context context);
 
+    /** Every word the keyboard has learned from typing, across the active languages. */
+    default List<helium314.keyboard.latin.personalization.LearnedWord> getLearnedWords() {
+        return Collections.emptyList();
+    }
+
+    /** Removes a learned word for one language, without blocking it. Typing it again relearns it. */
+    default void forgetLearnedWord(final String word, final Locale locale) { }
+
     String dump(final Context context);
 
     void dumpDictionaryForDebug(final String dictName);

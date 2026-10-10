@@ -30,6 +30,8 @@ import helium314.keyboard.latin.dictionary.ExpandableBinaryDictionary
 import helium314.keyboard.latin.dictionary.UserBinaryDictionary
 import helium314.keyboard.latin.permissions.PermissionsUtil
 import helium314.keyboard.latin.personalization.SessionWordBoost
+import helium314.keyboard.latin.personalization.LearnedWord
+import helium314.keyboard.latin.personalization.PersonalDictCandidates
 import helium314.keyboard.latin.personalization.UserHistoryDictionary
 import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.latin.settings.SettingsValuesForSuggestion
@@ -463,18 +465,18 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
         if (word.length <= 1) return
         val dictionaryGroup = clearlyPreferredDictionaryGroup ?: return
         val userDict = dictionaryGroup.getSubDict(Dictionary.TYPE_USER) ?: return
-        val userHistoryDict = dictionaryGroup.getSubDict(Dictionary.TYPE_USER_HISTORY) ?: return
+        if (dictionaryGroup.getSubDict(Dictionary.TYPE_USER_HISTORY) == null) return
         if (isValidWord(word, DictionaryFacilitator.ALL_DICTIONARY_TYPES, dictionaryGroup))
             return // valid word, no reason to auto-add it to personal dict
         if (userDict.isInDictionary(word))
             return // should never happen, but better be safe
 
-        // User history always reports words as invalid, so we check the frequency instead.
-        // Testing shows that after 2 times adding, the frequency is 111, and then rises slowly with usage (values vary slightly).
-        // 120 is after 3 uses of the word, so we simply require more than that. todo: Could be made configurable.
-        // Words added to dictionaries (user and history) seem to be found only after some delay.
-        // This is not too bad, but it delays adding in case a user wants to fill a dictionary using this functionality
-        if (userHistoryDict.getFrequency(word) > 120) {
+        // Uses are counted per word rather than read off the history frequency, which climbs
+        // unevenly and decays, so "add after N uses" means what it says. With review on, a word
+        // reaching the count waits on the learned words screen instead of being added.
+        val sv = Settings.getValues()
+        if (PersonalDictCandidates.recordUse(userDict.mContext, word, dictionaryGroup.locale,
+                sv.mPersonalDictAddAfter, sv.mPersonalDictReview)) {
             scope.launch {
                 // adding can throw IllegalArgumentException: Unknown URL content://user_dictionary/words
                 // https://stackoverflow.com/q/41474623 https://github.com/AnySoftKeyboard/AnySoftKeyboard/issues/490
@@ -780,6 +782,20 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
     override fun reloadBlacklist() {
         for (dictionaryGroup in dictionaryGroups) {
             dictionaryGroup.reloadBlacklist()
+        }
+    }
+
+    override fun getLearnedWords(): List<LearnedWord> = dictionaryGroups.flatMap { group ->
+        val history = group.getSubDict(Dictionary.TYPE_USER_HISTORY) ?: return@flatMap emptyList<LearnedWord>()
+        val main = group.getDict(Dictionary.TYPE_MAIN)
+        history.getAllWordsWithFrequency().map { (word, frequency) ->
+            LearnedWord(word, frequency, group.locale, main?.isValidWord(word) == true)
+        }
+    }
+
+    override fun forgetLearnedWord(word: String, locale: Locale) {
+        dictionaryGroups.filter { it.locale == locale }.forEach {
+            it.getSubDict(Dictionary.TYPE_USER_HISTORY)?.removeUnigramEntryDynamically(word)
         }
     }
 
