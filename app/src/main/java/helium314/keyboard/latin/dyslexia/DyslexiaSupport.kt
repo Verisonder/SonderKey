@@ -38,7 +38,7 @@ object DyslexiaSupport {
             executor.execute {
                 try {
                     val pairs = ArrayList<Pair<String, Int>>()
-                    facilitator.forEachMainDictionaryWord { word, freq -> pairs.add(word to freq) }
+                    facilitator.forEachWordInMainDictionaryOnly { word: String, freq: Int -> pairs.add(word to freq) }
                     if (pairs.isNotEmpty()) {
                         index = SoundIndex.build(pairs.asSequence())
                         indexLocale = locale

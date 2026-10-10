@@ -160,8 +160,8 @@ public interface DictionaryFacilitator {
     /** Removes a learned word for one language, without blocking it. Typing it again relearns it. */
     default void forgetLearnedWord(final String word, final Locale locale) { }
 
-    /** Every word in the main dictionary of the main language, with its frequency (0..255). */
-    default void forEachMainDictionaryWord(final java.util.function.BiConsumer<String, Integer> consumer) { }
+    /** Every word in the main dictionary of the main language only, with its frequency (0..255). */
+    default void forEachWordInMainDictionaryOnly(final java.util.function.BiConsumer<String, Integer> consumer) { }
 
     String dump(final Context context);
 

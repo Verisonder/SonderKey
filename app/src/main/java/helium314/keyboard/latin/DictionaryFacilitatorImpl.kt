@@ -793,7 +793,9 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
         }
     }
 
-    override fun forEachMainDictionaryWord(consumer: java.util.function.BiConsumer<String, Int>) {
+    // main dictionary alone: learned and personal words can be misspellings, which must not
+    // become what a misspelling is corrected to
+    override fun forEachWordInMainDictionaryOnly(consumer: java.util.function.BiConsumer<String, Int>) {
         dictionaryGroups.firstOrNull()?.getDict(Dictionary.TYPE_MAIN)?.forEachWord(consumer)
     }
 
