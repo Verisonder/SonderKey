@@ -5,7 +5,11 @@ import android.content.ContentResolver
 import android.content.Context
 import android.database.Cursor
 import android.provider.UserDictionary
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.material3.Checkbox
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -55,12 +59,19 @@ fun PersonalDictionaryScreen(
     val words = remember(refreshTrigger, locale) { getAll(locale, ctx) }
     var selectedWord: Word? by remember { mutableStateOf(null) }
     var showClearAllDialog by remember { mutableStateOf(false) }
+    var sortByWeight by remember { mutableStateOf(false) }
+    // words ticked for bulk actions; while any are ticked, a tap ticks instead of editing
+    var ticked by remember(refreshTrigger, locale) { mutableStateOf(emptySet<Word>()) }
+    var showDeleteTickedDialog by remember { mutableStateOf(false) }
+    val selecting = ticked.isNotEmpty()
 
     Box(Modifier.fillMaxSize()) {
         SearchScreen(
             onClickBack = onClickBack,
             title = {
-                Column {
+                if (selecting) {
+                    Text(pluralStringResource(R.plurals.user_dict_selected, ticked.size, ticked.size))
+                } else Column {
                     Text(stringResource(R.string.edit_personal_dictionary))
                     Text(
                         locale.getLocaleDisplayNameForUserDictSettings(LocalContext.current),
@@ -69,45 +80,76 @@ fun PersonalDictionaryScreen(
                     )
                 }
             },
-            menu = listOf(
-                stringResource(R.string.clear_all) to { showClearAllDialog = true }
+            menu = if (selecting) listOf(
+                stringResource(R.string.user_dict_delete_selected) to { showDeleteTickedDialog = true },
+                stringResource(R.string.user_dict_select_all) to { ticked = words.toSet() },
+                stringResource(android.R.string.cancel) to { ticked = emptySet() },
+            ) else listOf(
+                stringResource(if (sortByWeight) R.string.sort_alphabetical else R.string.sort_by_weight) to {
+                    sortByWeight = !sortByWeight
+                },
+                stringResource(R.string.user_dict_select) to { ticked = words.toSet() },
+                stringResource(R.string.clear_all) to { showClearAllDialog = true },
             ),
             filteredItems = { term ->
-                // we could maybe to this using a query and getting items by position
-                // requires adjusting the SearchScreen, likely not worth the effort
-                words.filter { it.word.startsWith(term, true) || it.shortcut?.startsWith(term, true) == true }
+                val matching = words.filter { it.word.contains(term, true) || it.shortcut?.contains(term, true) == true }
+                if (sortByWeight) matching.sortedByDescending { it.weight ?: 0 } else matching
             },
-            itemContent = {
+            itemContent = { word ->
+                val isTicked = word in ticked
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { selectedWord = it }
+                        .combinedClickable(
+                            onClick = {
+                                if (selecting) ticked = if (isTicked) ticked - word else ticked + word
+                                else selectedWord = word
+                            },
+                            onLongClick = { ticked = if (isTicked) ticked - word else ticked + word }
+                        )
                         .padding(vertical = 6.dp, horizontal = 16.dp)
                 ) {
-                    Column {
-                        Text(it.word, style = MaterialTheme.typography.bodyLarge)
-                        val details = if (it.shortcut == null) it.weight.toString() else "${it.weight}  |  ${it.shortcut}"
+                    Column(Modifier.weight(1f)) {
+                        Text(word.word, style = MaterialTheme.typography.bodyLarge)
+                        val details = if (word.shortcut == null) word.weight.toString() else "${word.weight}  |  ${word.shortcut}"
                         Text(details, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    Icon(painterResource(R.drawable.ic_edit), stringResource(R.string.user_dict_settings_edit_dialog_title))
+                    if (selecting)
+                        Checkbox(checked = isTicked, onCheckedChange = { ticked = if (it) ticked + word else ticked - word })
+                    else
+                        Icon(painterResource(R.drawable.ic_edit), stringResource(R.string.user_dict_settings_edit_dialog_title))
                 }
             }
         )
-        ExtendedFloatingActionButton(
-            onClick = { selectedWord = Word("", null, null) },
-            text = { Text(stringResource(R.string.user_dict_add_word_button)) },
-            icon = { Icon(painter = painterResource(R.drawable.ic_edit), stringResource(R.string.user_dict_add_word_button)) },
-            modifier = Modifier.align(Alignment.BottomEnd).padding(all = 12.dp)
-                .then(Modifier.safeDrawingPadding())
-        )
+        if (!selecting)
+            ExtendedFloatingActionButton(
+                onClick = { selectedWord = Word("", null, null) },
+                text = { Text(stringResource(R.string.user_dict_add_word_button)) },
+                icon = { Icon(painter = painterResource(R.drawable.ic_edit), stringResource(R.string.user_dict_add_word_button)) },
+                modifier = Modifier.align(Alignment.BottomEnd).padding(all = 12.dp)
+                    .then(Modifier.safeDrawingPadding())
+            )
     }
+    // registered after the search screen's own handler, so it wins while words are ticked
+    BackHandler(enabled = selecting) { ticked = emptySet() }
     if (selectedWord != null) {
         EditWordDialog(selectedWord!!, locale) {
             selectedWord = null
             refreshTrigger++
         }
+    }
+    if (showDeleteTickedDialog) {
+        ConfirmationDialog(
+            onDismissRequest = { showDeleteTickedDialog = false },
+            onConfirmed = {
+                showDeleteTickedDialog = false
+                deleteByIds(ticked.flatMap { it.ids }, ctx.contentResolver)
+                refreshTrigger++
+            },
+            content = { Text(pluralStringResource(R.plurals.user_dict_delete_selected_confirmation, ticked.size, ticked.size)) }
+        )
     }
     if (showClearAllDialog) {
         ConfirmationDialog(
@@ -127,6 +169,17 @@ fun PersonalDictionaryScreen(
     }
 }
 
+/** Deletes rows by their database id, which identifies them exactly whatever their shortcut or weight. */
+private fun deleteByIds(ids: List<Long>, resolver: ContentResolver) {
+    // chunked to stay well under SQLite's limit on bound arguments
+    ids.chunked(500).forEach { chunk ->
+        val placeholders = chunk.joinToString(",") { "?" }
+        resolver.delete(
+            UserDictionary.Words.CONTENT_URI, "${UserDictionary.Words._ID} IN ($placeholders)",
+            chunk.map { it.toString() }.toTypedArray()
+        )
+    }
+}
 
 @Composable
 private fun EditWordDialog(word: Word, locale: Locale?, onDismissRequest: () -> Unit) {
@@ -231,6 +284,11 @@ private fun EditWordDialog(word: Word, locale: Locale?, onDismissRequest: () -> 
 }
 
 private fun deleteWord(wordDetails: Word, locale: Locale?, resolver: ContentResolver) {
+    if (wordDetails.ids.isNotEmpty()) {
+        // exact rows known: the selections below can also catch other words with the same weight
+        deleteByIds(wordDetails.ids, resolver)
+        return
+    }
     val (word, shortcut, weightInt) = wordDetails
     val weight = weightInt.toString()
     if (shortcut.isNullOrBlank()) {
@@ -303,23 +361,28 @@ fun Locale?.getLocaleDisplayNameForUserDictSettings(context: Context) =
     this?.localizedDisplayName(context.resources) ?: context.resources.getString(R.string.user_dict_settings_all_languages)
 
 // weight is frequency but different name towards user
-private data class Word(val word: String, val shortcut: String?, val weight: Int?)
+// ids are the database rows holding this entry (more than one if it was stored twice); not part of equality
+private data class Word(val word: String, val shortcut: String?, val weight: Int?) {
+    var ids: List<Long> = emptyList()
+}
 
 // getting all words instead of reading directly cursor, because filteredItems expects a list
 private fun getAll(locale: Locale?, context: Context): List<Word> {
     val cursor = createCursor(locale, context) ?: return emptyList()
 
     if (!cursor.moveToFirst()) return emptyList()
-    val result = mutableListOf<Word>()
+    val result = LinkedHashMap<Word, MutableList<Long>>()
+    val idIndex = cursor.getColumnIndexOrThrow(UserDictionary.Words._ID)
     val wordIndex = cursor.getColumnIndexOrThrow(UserDictionary.Words.WORD)
     val shortcutIndex = cursor.getColumnIndexOrThrow(UserDictionary.Words.SHORTCUT)
     val frequencyIndex = cursor.getColumnIndexOrThrow(UserDictionary.Words.FREQUENCY)
     while (!cursor.isAfterLast) {
-        result.add(Word(cursor.getString(wordIndex), cursor.getString(shortcutIndex), cursor.getInt(frequencyIndex)))
+        val word = Word(cursor.getString(wordIndex), cursor.getString(shortcutIndex), cursor.getInt(frequencyIndex))
+        result.getOrPut(word) { mutableListOf() }.add(cursor.getLong(idIndex))
         cursor.moveToNext()
     }
     cursor.close()
-    return result.distinct()
+    return result.map { (word, ids) -> word.also { it.ids = ids } }
 }
 
 private fun createCursor(locale: Locale?, context: Context): Cursor? {
