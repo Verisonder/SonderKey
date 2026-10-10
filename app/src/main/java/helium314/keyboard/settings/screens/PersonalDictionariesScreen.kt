@@ -18,6 +18,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import helium314.keyboard.latin.R
+import helium314.keyboard.latin.common.LocaleUtils.constructLocale
 import helium314.keyboard.latin.common.splitOnWhitespace
 import helium314.keyboard.latin.utils.SubtypeLocaleUtils
 import helium314.keyboard.latin.utils.SubtypeSettings.getEnabledSubtypes
@@ -66,9 +67,47 @@ fun PersonalDictionariesScreen(
     val ctx = LocalContext.current
     val locales: MutableList<Locale?> = getSortedDictionaryLocales().toMutableList()
     locales.add(0, null)
+    var showImporting by remember { mutableStateOf(false) }
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri ->
+        if (uri != null) scope.launch(Dispatchers.IO) {
+            val message = try {
+                val count = exportPersonalDictionary(ctx, uri)
+                ctx.resources.getQuantityString(R.plurals.user_dict_exported, count, count)
+            } catch (e: Exception) {
+                Log.e("ExportDict", "Failed to export", e)
+                ctx.getString(R.string.user_dict_export_failed, e.message ?: "")
+            }
+            withContext(Dispatchers.Main) { KeyboardSwitcher.getInstance().showToast(message, true) }
+        }
+    }
+    val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            showImporting = true
+            scope.launch(Dispatchers.IO) {
+                val message = try {
+                    val count = importGboardDictionary(ctx, uri)
+                    ctx.resources.getQuantityString(R.plurals.user_dict_imported, count, count)
+                } catch (e: Exception) {
+                    Log.e("ImportDict", "Failed to import", e)
+                    ctx.getString(R.string.user_dict_import_failed, e.message ?: "")
+                }
+                withContext(Dispatchers.Main) {
+                    KeyboardSwitcher.getInstance().showToast(message, true)
+                    showImporting = false
+                }
+            }
+        }
+    }
     SearchScreen(
         onClickBack = onClickBack,
         title = { Text(stringResource(R.string.edit_personal_dictionary)) },
+        menu = listOf(
+            stringResource(R.string.user_dict_export) to { exportLauncher.launch("personal_dictionary.txt") },
+            stringResource(R.string.user_dict_import) to {
+                importLauncher.launch(arrayOf("application/zip", "application/x-zip-compressed", "text/plain"))
+            },
+        ),
         filteredItems = { term ->
             locales.filter { locale ->
                 locale.getLocaleDisplayNameForUserDictSettings(ctx).replace("(", "")
@@ -93,35 +132,11 @@ fun PersonalDictionariesScreen(
         }
     )
     
-    var showImporting by remember { mutableStateOf(false) }
-    val scope = androidx.compose.runtime.rememberCoroutineScope()
-    
-    val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) {
-            showImporting = true
-            scope.launch(Dispatchers.IO) {
-                try {
-                    val count = importGboardDictionary(ctx, uri)
-                    withContext(Dispatchers.Main) {
-                        KeyboardSwitcher.getInstance().showToast("Imported $count words", true)
-                        showImporting = false
-                    }
-                } catch (e: Exception) {
-                    Log.e("ImportDict", "Failed to import", e)
-                    withContext(Dispatchers.Main) {
-                        KeyboardSwitcher.getInstance().showToast("Import failed: ${e.message}", true)
-                        showImporting = false
-                    }
-                }
-            }
-        }
-    }
-
     Box(Modifier.fillMaxSize()) {
         ExtendedFloatingActionButton(
             onClick = { importLauncher.launch(arrayOf("application/zip", "application/x-zip-compressed", "text/plain")) },
-            text = { Text("Import Gboard Dictionary") },
-            icon = { Icon(painterResource(R.drawable.ic_plus), "Import Gboard Dictionary") },
+            text = { Text(stringResource(R.string.user_dict_import)) },
+            icon = { Icon(painterResource(R.drawable.ic_plus), stringResource(R.string.user_dict_import)) },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp)
@@ -175,6 +190,9 @@ private fun parseAndInsert(context: android.content.Context, reader: BufferedRea
     var wordIndex = 0
     var shortcutIndex = 1
     var localeIndex = 2
+    var weightIndex = -1
+    // rows already in the dictionary, and rows seen earlier in this file, are skipped
+    val seen = existingEntryKeys(context)
     while (reader.readLine().also { line = it } != null) {
         val currentLine = line ?: continue
         if (currentLine.startsWith("#")) {
@@ -193,6 +211,7 @@ private fun parseAndInsert(context: android.content.Context, reader: BufferedRea
                     wordIndex = wIdx
                     shortcutIndex = sIdx
                     localeIndex = lIdx
+                    weightIndex = columns.indexOf("weight").let { if (it == -1) columns.indexOf("frequency") else it }
                 }
             }
             continue
@@ -208,9 +227,12 @@ private fun parseAndInsert(context: android.content.Context, reader: BufferedRea
                     try { Locale.forLanguageTag(localeStr) } catch(_: Exception) { null }
                 } else null
                 
+                val weight = (if (weightIndex != -1 && weightIndex in parts.indices) parts[weightIndex].trim().toIntOrNull() else null)
+                    ?.coerceIn(0, 255) ?: 250
+                if (!seen.add(entryKey(word, shortcut, locale?.toString()))) continue
                 val values = ContentValues(5).apply {
                     put(UserDictionary.Words.WORD, word)
-                    put(UserDictionary.Words.FREQUENCY, 250)
+                    put(UserDictionary.Words.FREQUENCY, weight)
                     put(UserDictionary.Words.LOCALE, locale?.toString())
                     put(UserDictionary.Words.APP_ID, 0)
                     put(UserDictionary.Words.SHORTCUT, shortcut)
@@ -237,6 +259,52 @@ private fun parseAndInsert(context: android.content.Context, reader: BufferedRea
         }
         successCount
     }
+}
+
+private fun entryKey(word: String, shortcut: String?, locale: String?) = "$word\u0000${shortcut ?: ""}\u0000${locale ?: ""}"
+
+private fun existingEntryKeys(context: android.content.Context): MutableSet<String> {
+    val keys = HashSet<String>()
+    context.contentResolver.query(
+        UserDictionary.Words.CONTENT_URI,
+        arrayOf(UserDictionary.Words.WORD, UserDictionary.Words.SHORTCUT, UserDictionary.Words.LOCALE),
+        null, null, null
+    )?.use { c ->
+        while (c.moveToNext()) keys.add(entryKey(c.getString(0) ?: continue, c.getString(1)?.ifBlank { null }, c.getString(2)))
+    }
+    return keys
+}
+
+/**
+ * Writes every word in the personal dictionary, all languages, in the Gboard text format the
+ * import understands, with a trailing weight column so weights survive the round trip.
+ */
+private fun exportPersonalDictionary(context: android.content.Context, uri: android.net.Uri): Int {
+    var count = 0
+    val out = context.contentResolver.openOutputStream(uri) ?: throw java.io.IOException("cannot open file")
+    out.bufferedWriter().use { w ->
+        w.write("# Gboard Dictionary version:1\n")
+        w.write("# Gboard Dictionary format:shortcut\tword\tlanguage_tag\tpos\tweight\n")
+        context.contentResolver.query(
+            UserDictionary.Words.CONTENT_URI,
+            arrayOf(UserDictionary.Words.WORD, UserDictionary.Words.SHORTCUT, UserDictionary.Words.LOCALE, UserDictionary.Words.FREQUENCY),
+            null, null, "UPPER(${UserDictionary.Words.WORD})"
+        )?.use { c ->
+            val written = HashSet<String>()
+            while (c.moveToNext()) {
+                val word = c.getString(0)?.takeIf { it.isNotBlank() } ?: continue
+                val shortcut = c.getString(1)?.ifBlank { null }
+                val localeString = c.getString(2)?.ifBlank { null }
+                if (!written.add(entryKey(word, shortcut, localeString))) continue
+                val tag = localeString?.constructLocale()?.toLanguageTag() ?: ""
+                // tabs or line breaks inside a word would break the format
+                fun clean(s: String) = s.replace('\t', ' ').replace('\n', ' ')
+                w.write("${clean(shortcut ?: "")}\t${clean(word)}\t$tag\t\t${c.getInt(3)}\n")
+                count++
+            }
+        }
+    }
+    return count
 }
 
 fun getSortedDictionaryLocales(): TreeSet<Locale> {
