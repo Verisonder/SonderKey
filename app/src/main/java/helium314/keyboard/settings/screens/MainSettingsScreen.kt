@@ -79,6 +79,7 @@ fun MainSettingsScreen(
         onClickBack = onClickBack,
         title = stringResource(R.string.ime_settings),
         settings = emptyList(),
+        searchBar = true,
     ) {
         val enabledSubtypes = remember { SubtypeSettings.getEnabledSubtypes(true) }
         val enabledSubtypesDescription = remember(enabledSubtypes) {
@@ -136,8 +137,8 @@ fun MainSettingsScreen(
                     .padding(innerPadding)
                     .padding(vertical = 8.dp)
             ) {
-                // Group 1: General (AI, Languages, Preferences, Appearance, Toolbar)
-                SectionLabel(stringResource(R.string.settings_group_general))
+                // Eight places, each named for what it holds, with a line saying what that is.
+                // Search above reaches every individual setting directly.
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -147,18 +148,6 @@ fun MainSettingsScreen(
                     )
                 ) {
                     Column {
-                        if (BuildConfig.FLAVOR != "offlinelite") {
-                            Preference(
-                                name = stringResource(R.string.settings_screen_ai_integration),
-                                onClick = onClickAIIntegration,
-                                icon = R.drawable.ic_proofread
-                            ) { NextScreenIcon() }
-                        }
-                        Preference(
-                            name = stringResource(R.string.libraries_hub_title),
-                            onClick = onClickLibraries,
-                            icon = R.drawable.ic_emoji_objects
-                        ) { NextScreenIcon() }
                         Preference(
                             name = stringResource(R.string.language_and_layouts_title),
                             description = enabledSubtypesDescription,
@@ -166,65 +155,51 @@ fun MainSettingsScreen(
                             icon = R.drawable.ic_settings_languages
                         ) { NextScreenIcon() }
                         Preference(
-                            name = stringResource(R.string.settings_screen_preferences),
-                            onClick = onClickPreferences,
-                            icon = R.drawable.ic_settings_preferences
-                        ) { NextScreenIcon() }
-                        Preference(
                             name = stringResource(R.string.settings_screen_appearance),
+                            description = stringResource(R.string.settings_summary_appearance),
                             onClick = onClickAppearance,
                             icon = R.drawable.ic_settings_appearance
                         ) { NextScreenIcon() }
                         Preference(
-                            name = stringResource(R.string.key_press_effect),
-                            onClick = onClickKeyPressEffect,
-                            icon = R.drawable.ic_settings_key_press_effect
+                            name = stringResource(R.string.settings_screen_keys),
+                            description = stringResource(R.string.settings_summary_keys),
+                            onClick = onClickPreferences,
+                            icon = R.drawable.ic_settings_preferences
                         ) { NextScreenIcon() }
                         Preference(
-                            name = stringResource(R.string.settings_screen_toolbar),
-                            onClick = onClickToolbar,
-                            icon = R.drawable.ic_settings_toolbar
-                        ) { NextScreenIcon() }
-                    }
-                }
-
-                // Group 2: Typing (Gesture, Correction, Dictionaries)
-                SectionLabel(stringResource(R.string.settings_group_typing))
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainer
-                    )
-                ) {
-                    Column {
-                        Preference(
-                            name = stringResource(R.string.settings_screen_gesture),
-                            onClick = onClickGestureTyping,
-                            icon = R.drawable.ic_settings_gesture
-                        ) { NextScreenIcon() }
-                        Preference(
-                            name = stringResource(R.string.settings_screen_correction),
+                            name = stringResource(R.string.settings_screen_typing),
+                            description = stringResource(R.string.settings_summary_typing),
                             onClick = onClickTextCorrection,
                             icon = R.drawable.ic_settings_correction
                         ) { NextScreenIcon() }
                         Preference(
-                            name = stringResource(R.string.settings_screen_voice_typing),
-                            description = stringResource(R.string.settings_screen_voice_typing_summary),
-                            onClick = { SettingsDestination.navigateTo(SettingsDestination.VoiceTyping) },
-                            icon = R.drawable.sym_keyboard_voice_rounded
+                            name = stringResource(R.string.settings_screen_toolbar_clipboard),
+                            description = stringResource(R.string.settings_summary_toolbar_clipboard),
+                            onClick = onClickToolbar,
+                            icon = R.drawable.ic_settings_toolbar
                         ) { NextScreenIcon() }
                         Preference(
-                            name = stringResource(R.string.settings_screen_text_expander),
-                            onClick = { helium314.keyboard.settings.SettingsDestination.navigateTo(helium314.keyboard.settings.SettingsDestination.TextExpander) },
-                            icon = R.drawable.ic_edit
+                            name = stringResource(R.string.settings_screen_words),
+                            description = stringResource(R.string.settings_summary_words),
+                            onClick = onClickLibraries,
+                            icon = R.drawable.ic_dictionary
+                        ) { NextScreenIcon() }
+                        if (BuildConfig.FLAVOR != "offlinelite") {
+                            Preference(
+                                name = stringResource(R.string.settings_screen_ai_integration),
+                                description = stringResource(R.string.settings_summary_ai),
+                                onClick = onClickAIIntegration,
+                                icon = R.drawable.ic_proofread
+                            ) { NextScreenIcon() }
+                        }
+                        Preference(
+                            name = stringResource(R.string.settings_screen_system),
+                            description = stringResource(R.string.settings_summary_system),
+                            onClick = onClickAdvanced,
+                            icon = R.drawable.ic_settings_advanced
                         ) { NextScreenIcon() }
                     }
                 }
-
-                // Group 3: Other (Advanced, updates, About)
-                SectionLabel(stringResource(R.string.settings_group_system))
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -233,19 +208,7 @@ fun MainSettingsScreen(
                         containerColor = MaterialTheme.colorScheme.surfaceContainer
                     )
                 ) {
-                    Column {
-                        Preference(
-                            name = stringResource(R.string.settings_screen_advanced),
-                            onClick = onClickAdvanced,
-                            icon = R.drawable.ic_settings_advanced
-                        ) { NextScreenIcon() }
-                        CheckForUpdatesPreference(stringResource(R.string.check_for_updates))
-                        Preference(
-                            name = stringResource(R.string.settings_screen_about),
-                            onClick = onClickAbout,
-                            icon = R.drawable.ic_settings_about
-                        ) { NextScreenIcon() }
-                    }
+                    CheckForUpdatesPreference(stringResource(R.string.check_for_updates))
                 }
             }
         }

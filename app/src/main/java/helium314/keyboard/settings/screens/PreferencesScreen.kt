@@ -43,56 +43,45 @@ fun PreferencesScreen(
     val b = (LocalContext.current.getActivity() as? SettingsActivity)?.prefChanged?.collectAsState()
     if ((b?.value ?: 0) < 0)
         Log.v("irrelevant", "stupid way to trigger recomposition on preference change")
-    val clipboardHistoryEnabled = prefs.getBoolean(Settings.PREF_ENABLE_CLIPBOARD_HISTORY, Defaults.PREF_ENABLE_CLIPBOARD_HISTORY)
+    val vibrateOn = prefs.getBoolean(Settings.PREF_VIBRATE_ON, Defaults.PREF_VIBRATE_ON)
+    // Keys & feedback: how pressing a key feels, sounds and pops up. Language switching, the
+    // number row and clipboard history moved to the screens they belong to.
     val items = listOf(
-        R.string.settings_category_input,
+        R.string.settings_category_feedback,
+        if (AudioAndHapticFeedbackManager.getInstance().hasVibrator())
+            Settings.PREF_VIBRATE_ON else null,
+        if (vibrateOn) Settings.PREF_VIBRATION_DURATION_SETTINGS else null,
+        if (vibrateOn && AudioAndHapticFeedbackManager.getInstance().hasAmplitudeControl())
+            Settings.PREF_VIBRATION_AMPLITUDE_SETTINGS else null,
+        if (vibrateOn) Settings.PREF_VIBRATE_IN_DND_MODE else null,
+        Settings.PREF_SOUND_ON,
+        if (prefs.getBoolean(Settings.PREF_SOUND_ON, Defaults.PREF_SOUND_ON))
+            Settings.PREF_KEYPRESS_SOUND_VOLUME else null,
+        R.string.settings_category_popups,
+        Settings.PREF_POPUP_ON,
         Settings.PREF_SHOW_HINTS,
         if (prefs.getBoolean(Settings.PREF_SHOW_HINTS, Defaults.PREF_SHOW_HINTS))
             Settings.PREF_POPUP_KEYS_LABELS_ORDER else null,
         Settings.PREF_POPUP_KEYS_ORDER,
         Settings.PREF_SHOW_POPUP_HINTS,
         Settings.PREF_SHOW_TLD_POPUP_KEYS,
-        Settings.PREF_POPUP_ON,
-        if (AudioAndHapticFeedbackManager.getInstance().hasVibrator())
-            Settings.PREF_VIBRATE_ON else null,
-        if (prefs.getBoolean(Settings.PREF_VIBRATE_ON, Defaults.PREF_VIBRATE_ON))
-            Settings.PREF_VIBRATION_DURATION_SETTINGS else null,
-        if (prefs.getBoolean(Settings.PREF_VIBRATE_ON, Defaults.PREF_VIBRATE_ON) && AudioAndHapticFeedbackManager.getInstance().hasAmplitudeControl())
-            Settings.PREF_VIBRATION_AMPLITUDE_SETTINGS else null,
-        if (prefs.getBoolean(Settings.PREF_VIBRATE_ON, Defaults.PREF_VIBRATE_ON))
-            Settings.PREF_VIBRATE_IN_DND_MODE else null,
-        Settings.PREF_SOUND_ON,
-        if (prefs.getBoolean(Settings.PREF_SOUND_ON, Defaults.PREF_SOUND_ON))
-            Settings.PREF_KEYPRESS_SOUND_VOLUME else null,
-        Settings.PREF_SAVE_SUBTYPE_PER_APP,
-        Settings.PREF_SHOW_EMOJI_DESCRIPTIONS,
-        R.string.settings_category_additional_keys,
-        Settings.PREF_SHOW_NUMBER_ROW,
-        if (SubtypeSettings.getEnabledSubtypes(true).any { it.locale().language in localesWithLocalizedNumberRow })
-            Settings.PREF_LOCALIZED_NUMBER_ROW else null,
-        if (prefs.getBoolean(Settings.PREF_SHOW_HINTS, Defaults.PREF_SHOW_HINTS)
-            && prefs.getBoolean(Settings.PREF_SHOW_NUMBER_ROW, Defaults.PREF_SHOW_NUMBER_ROW))
-            Settings.PREF_SHOW_NUMBER_ROW_HINTS else null,
-        if (!prefs.getBoolean(Settings.PREF_SHOW_NUMBER_ROW, Defaults.PREF_SHOW_NUMBER_ROW))
-            Settings.PREF_SHOW_NUMBER_ROW_IN_SYMBOLS else null,
-        if (!prefs.getBoolean(Settings.PREF_SHOW_NUMBER_ROW, Defaults.PREF_SHOW_NUMBER_ROW)
-            && prefs.getBoolean(Settings.PREF_SHOW_NUMBER_ROW_IN_SYMBOLS, Defaults.PREF_SHOW_NUMBER_ROW_IN_SYMBOLS))
-            Settings.PREF_COMPACT_NUMBER_ROW_IN_SYMBOLS else null,
-        Settings.PREF_SHOW_LANGUAGE_SWITCH_KEY,
-        Settings.PREF_LANGUAGE_SWITCH_KEY,
-        Settings.PREF_DIRECT_IME_SWITCH_TARGET,
-        Settings.PREF_SHOW_EMOJI_KEY,
         Settings.PREF_REMOVE_REDUNDANT_POPUPS,
-        R.string.settings_category_clipboard_history,
-        Settings.PREF_ENABLE_CLIPBOARD_HISTORY,
-        if (clipboardHistoryEnabled) Settings.PREF_CLIPBOARD_HISTORY_RETENTION_TIME else null,
-        if (clipboardHistoryEnabled) Settings.PREF_CLIPBOARD_HISTORY_PINNED_FIRST else null,
-        if (clipboardHistoryEnabled) Settings.PREF_CLIPBOARD_FOLD_PINNED else null,
-        if (clipboardHistoryEnabled) Settings.PREF_CLEAR_CLIPBOARD_ICON else null
+        Settings.PREF_SHOW_EMOJI_DESCRIPTIONS,
+        R.string.settings_category_keys,
+        Settings.PREF_SHOW_EMOJI_KEY,
+        Settings.PREF_KEY_LONGPRESS_TIMEOUT,
+        Settings.PREFS_LONG_PRESS_SYMBOLS_FOR_NUMPAD,
+        Settings.PREF_ABC_AFTER_SYMBOL_SPACE,
+        Settings.PREF_ABC_AFTER_NUMPAD_SPACE,
+        Settings.PREF_ABC_AFTER_EMOJI,
+        Settings.PREF_ABC_AFTER_CLIP,
+        R.string.settings_category_more,
+        Settings.PREF_TIMESTAMP_FORMAT,
+        Settings.PREF_ENABLE_EMOJI_ALT_PHYSICAL_KEY,
     )
     SearchSettingsScreen(
         onClickBack = onClickBack,
-        title = stringResource(R.string.settings_screen_preferences),
+        title = stringResource(R.string.settings_screen_keys),
         settings = items
     )
 }
@@ -272,7 +261,7 @@ fun createPreferencesSettings(context: Context) = listOf(
 )
 
 // todo (later): not good to have it hardcoded, but reading a bunch of files may be noticeably slow
-private val localesWithLocalizedNumberRow = listOf("ar", "bn", "fa", "gu", "hi", "kn", "mr", "ne", "ur")
+internal val localesWithLocalizedNumberRow = listOf("ar", "bn", "fa", "gu", "hi", "kn", "mr", "ne", "ur")
 
 @Preview
 @Composable

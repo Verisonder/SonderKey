@@ -44,6 +44,9 @@ import helium314.keyboard.latin.utils.locale
 import helium314.keyboard.latin.utils.prefs
 import helium314.keyboard.settings.SearchScreen
 import helium314.keyboard.settings.SettingsActivity
+import helium314.keyboard.settings.SettingsGroupCard
+import helium314.keyboard.settings.groupSettings
+import helium314.keyboard.keyboard.KeyboardActionListener
 import helium314.keyboard.settings.SettingsDestination
 import helium314.keyboard.settings.Theme
 import helium314.keyboard.settings.initPreview
@@ -74,6 +77,36 @@ fun LanguageScreen(
         SubtypeSettings.getEnabledSubtypes()
             .joinToString(", ") { it.displayName() }
     }
+
+    val prefs = LocalContext.current.prefs()
+    val b = (LocalContext.current.getActivity() as? SettingsActivity)?.prefChanged?.collectAsState()
+    if ((b?.value ?: 0) < 0)
+        Log.v("irrelevant", "stupid way to trigger recomposition on preference change")
+    val showHints = prefs.getBoolean(Settings.PREF_SHOW_HINTS, Defaults.PREF_SHOW_HINTS)
+    val numberRow = prefs.getBoolean(Settings.PREF_SHOW_NUMBER_ROW, Defaults.PREF_SHOW_NUMBER_ROW)
+    // everything about which languages are on the keyboard and how to move between them
+    val groups = groupSettings(listOf(
+        R.string.settings_category_switching_languages,
+        Settings.PREF_SHOW_LANGUAGE_SWITCH_KEY,
+        Settings.PREF_LANGUAGE_SWITCH_KEY,
+        Settings.PREF_DIRECT_IME_SWITCH_TARGET,
+        Settings.PREF_SPACE_TO_CHANGE_LANG,
+        if (Settings.readHorizontalSpaceSwipe(prefs) == KeyboardActionListener.SWIPE_SWITCH_LANGUAGE
+            || Settings.readVerticalSpaceSwipe(prefs) == KeyboardActionListener.SWIPE_SWITCH_LANGUAGE)
+            Settings.PREF_LANGUAGE_SWIPE_DISTANCE else null,
+        Settings.PREF_SAVE_SUBTYPE_PER_APP,
+        R.string.settings_category_number_row,
+        Settings.PREF_SHOW_NUMBER_ROW,
+        if (SubtypeSettings.getEnabledSubtypes(true).any { it.locale().language in localesWithLocalizedNumberRow })
+            Settings.PREF_LOCALIZED_NUMBER_ROW else null,
+        if (showHints && numberRow) Settings.PREF_SHOW_NUMBER_ROW_HINTS else null,
+        if (!numberRow) Settings.PREF_SHOW_NUMBER_ROW_IN_SYMBOLS else null,
+        if (!numberRow && prefs.getBoolean(Settings.PREF_SHOW_NUMBER_ROW_IN_SYMBOLS, Defaults.PREF_SHOW_NUMBER_ROW_IN_SYMBOLS))
+            Settings.PREF_COMPACT_NUMBER_ROW_IN_SYMBOLS else null,
+        R.string.settings_category_characters,
+        Settings.PREF_CUSTOM_CURRENCY_KEY,
+        Settings.PREF_MORE_POPUP_KEYS,
+    ))
 
     SearchSettingsScreen(
         onClickBack = onClickBack,
@@ -112,6 +145,7 @@ fun LanguageScreen(
                         SettingsActivity.settingsContainer[Settings.PREF_APP_LANGUAGE]?.Preference()
                     }
                 }
+                groups.forEach { (titleRes, keys) -> SettingsGroupCard(titleRes, keys) }
             }
         }
     }

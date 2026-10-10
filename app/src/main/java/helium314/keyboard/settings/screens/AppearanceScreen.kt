@@ -54,24 +54,26 @@ fun AppearanceScreen(
     if ((b?.value ?: 0) < 0)
         Log.v("irrelevant", "stupid way to trigger recomposition on preference change")
     val dayNightMode = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && prefs.getBoolean(Settings.PREF_THEME_DAY_NIGHT, Defaults.PREF_THEME_DAY_NIGHT)
+    // Appearance: theme first, then size, then type; floating and edit-mode persistence under More.
     val items = listOf(
-        "sonder_theme_entry",
         R.string.settings_screen_theme,
+        "sonder_theme_entry",
         Settings.PREF_THEME_STYLE,
-        Settings.PREF_ICON_STYLE,
-        Settings.PREF_CUSTOM_ICON_NAMES,
         Settings.PREF_THEME_COLORS,
-        Settings.PREF_THEME_KEY_BORDERS,
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
             Settings.PREF_THEME_DAY_NIGHT else null,
         if (dayNightMode) Settings.PREF_THEME_COLORS_NIGHT else null,
+        Settings.PREF_THEME_KEY_BORDERS,
+        Settings.PREF_ICON_STYLE,
+        Settings.PREF_CUSTOM_ICON_NAMES,
         Settings.PREF_NAVBAR_COLOR,
         SettingsWithoutKey.BACKGROUND_IMAGE,
         SettingsWithoutKey.BACKGROUND_IMAGE_LANDSCAPE,
-        R.string.settings_category_miscellaneous,
-        Settings.PREF_PERSIST_FLOATING_KEYBOARD,
-        // ponytail: persist text edit mode settings item
-        Settings.PREF_PERSIST_TEXT_EDIT_MODE,
+        SettingsWithoutKey.SCREEN_NAV_KEY_PRESS_EFFECT,
+        R.string.settings_category_size,
+        Settings.PREF_KEYBOARD_HEIGHT_SCALE_PREFIX,
+        Settings.PREF_BOTTOM_PADDING_SCALE_PREFIX,
+        Settings.PREF_SIDE_PADDING_SCALE_PREFIX,
         Settings.PREF_ENABLE_SPLIT_KEYBOARD,
         Settings.PREF_ENABLE_SPLIT_KEYBOARD_LANDSCAPE,
         if (prefs.getBoolean(Settings.PREF_ENABLE_SPLIT_KEYBOARD_LANDSCAPE, Defaults.PREF_ENABLE_SPLIT_KEYBOARD_LANDSCAPE)
@@ -80,12 +82,10 @@ fun AppearanceScreen(
         Settings.PREF_NARROW_KEY_GAPS,
         if (prefs.getBoolean(Settings.PREF_NARROW_KEY_GAPS, Defaults.PREF_NARROW_KEY_GAPS))
             Settings.PREF_NARROW_KEY_GAPS_LEVEL else null,
-        Settings.PREF_KEYBOARD_HEIGHT_SCALE_PREFIX,
-        Settings.PREF_BOTTOM_PADDING_SCALE_PREFIX,
-        Settings.PREF_SIDE_PADDING_SCALE_PREFIX,
-        Settings.PREF_SPACE_BAR_TEXT,
+        R.string.settings_category_fonts_emoji,
         SettingsWithoutKey.CUSTOM_FONT,
         Settings.PREF_FONT_SCALE,
+        Settings.PREF_SPACE_BAR_TEXT,
         SettingsWithoutKey.CUSTOM_EMOJI_FONT,
         Settings.PREF_EMOJI_FONT_SCALE,
         Settings.PREF_USE_BUNDLED_EMOJI_FONT,
@@ -94,6 +94,10 @@ fun AppearanceScreen(
             Settings.PREF_EMOJI_KEY_FIT else null,
         if (prefs.getInt(Settings.PREF_EMOJI_MAX_SDK, 0) >= 24)
             Settings.PREF_EMOJI_SKIN_TONE else null,
+        R.string.settings_category_more,
+        Settings.PREF_PERSIST_FLOATING_KEYBOARD,
+        // ponytail: persist text edit mode settings item
+        Settings.PREF_PERSIST_TEXT_EDIT_MODE,
     )
     SearchSettingsScreen(
         onClickBack = onClickBack,

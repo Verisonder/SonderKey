@@ -86,36 +86,25 @@ fun AdvancedSettingsScreen(
     val b = (LocalContext.current.getActivity() as? SettingsActivity)?.prefChanged?.collectAsState()
     if ((b?.value ?: 0) < 0)
         Log.v("irrelevant", "stupid way to trigger recomposition on preference change")
+    // Privacy & system. Key behaviour moved to Keys & feedback, language switching to Languages.
     val items = listOfNotNull(
+        R.string.settings_category_privacy,
         Settings.PREF_ALWAYS_INCOGNITO_MODE,
         Settings.PREF_DISABLE_NETWORK,
-        Settings.PREF_KEY_LONGPRESS_TIMEOUT,
-        if (Settings.readHorizontalSpaceSwipe(prefs) == KeyboardActionListener.SWIPE_SWITCH_LANGUAGE
-            || Settings.readVerticalSpaceSwipe(prefs) == KeyboardActionListener.SWIPE_SWITCH_LANGUAGE)
-            Settings.PREF_LANGUAGE_SWIPE_DISTANCE else null,
-        Settings.PREF_SPACE_TO_CHANGE_LANG,
-        Settings.PREFS_LONG_PRESS_SYMBOLS_FOR_NUMPAD,
-        Settings.PREF_ENABLE_EMOJI_ALT_PHYSICAL_KEY,
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) Settings.PREF_SHOW_SETUP_WIZARD_ICON else null,
-        Settings.PREF_ABC_AFTER_SYMBOL_SPACE,
-        Settings.PREF_ABC_AFTER_NUMPAD_SPACE,
-        Settings.PREF_ABC_AFTER_EMOJI,
-        Settings.PREF_ABC_AFTER_CLIP,
-        Settings.PREF_CUSTOM_CURRENCY_KEY,
-        Settings.PREF_MORE_POPUP_KEYS,
-        Settings.PREF_TIMESTAMP_FORMAT,
+        Settings.PREF_URL_DETECTION,
         SettingsWithoutKey.BACKGROUND_SERVICES,
+        R.string.settings_category_system,
         SettingsWithoutKey.BACKUP_RESTORE,
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) Settings.PREF_SHOW_SETUP_WIZARD_ICON else null,
+        SettingsWithoutKey.SCREEN_NAV_ABOUT,
         if (BuildConfig.DEBUG || prefs.getBoolean(DebugSettings.PREF_SHOW_DEBUG_SETTINGS, Defaults.PREF_SHOW_DEBUG_SETTINGS))
             SettingsWithoutKey.DEBUG_SETTINGS else null,
-        R.string.settings_category_experimental,
+        R.string.settings_category_more,
         Settings.PREF_EMOJI_MAX_SDK,
-        Settings.PREF_URL_DETECTION,
-
     )
     SearchSettingsScreen(
         onClickBack = onClickBack,
-        title = stringResource(R.string.settings_screen_advanced),
+        title = stringResource(R.string.settings_screen_system),
         settings = items
     )
 }

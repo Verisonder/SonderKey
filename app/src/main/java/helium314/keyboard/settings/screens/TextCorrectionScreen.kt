@@ -59,59 +59,67 @@ fun TextCorrectionScreen(
     val suggestionsVisible = Settings.readToolbarMode(prefs) in setOf(ToolbarMode.SUGGESTION_STRIP, ToolbarMode.EXPANDABLE)
     val suggestionsEnabled = suggestionsVisible && prefs.getBoolean(Settings.PREF_SHOW_SUGGESTIONS, Defaults.PREF_SHOW_SUGGESTIONS)
     val gestureEnabled = prefs.getBoolean(Settings.PREF_GESTURE_INPUT, Defaults.PREF_GESTURE_INPUT)
+    val bigrams = prefs.getBoolean(Settings.PREF_BIGRAM_PREDICTIONS, Defaults.PREF_BIGRAM_PREDICTIONS)
+    // Typing: the tools first, then the everyday switches; fine-tuning sits under More.
     val items = listOf(
+        R.string.settings_category_typing_tools,
+        SettingsWithoutKey.SCREEN_NAV_GESTURES,
+        SettingsWithoutKey.SCREEN_NAV_VOICE_TYPING,
         "autopilot_entry",
+        SettingsWithoutKey.SCREEN_NAV_TEXT_EXPANDER,
 
         R.string.settings_category_correction,
-        Settings.PREF_BLOCK_POTENTIALLY_OFFENSIVE,
         Settings.PREF_AUTO_CORRECTION,
         if (autocorrectEnabled) Settings.PREF_AUTO_CORRECT_TRIGGER else null,
-        if (autocorrectEnabled) Settings.PREF_MORE_AUTO_CORRECTION else null,
-        if (autocorrectEnabled) Settings.PREF_AUTOCORRECT_SHORTCUTS else null,
         if (autocorrectEnabled) Settings.PREF_AUTO_CORRECT_THRESHOLD else null,
         if (autocorrectEnabled) Settings.PREF_AUTO_CORRECT_MAX_CHANGES else null,
+        if (autocorrectEnabled) Settings.PREF_MORE_AUTO_CORRECTION else null,
+        if (autocorrectEnabled) Settings.PREF_AUTOCORRECT_SHORTCUTS else null,
         if (suggestionsEnabled || autocorrectEnabled) Settings.PREF_BACKSPACE_REVERTS_AUTOCORRECT else null,
+        Settings.PREF_BLOCK_POTENTIALLY_OFFENSIVE,
+
+        R.string.settings_category_capitals_spacing,
         Settings.PREF_AUTO_CAP,
         Settings.PREF_FORCE_AUTO_CAPS,
-        R.string.settings_category_space,
         Settings.PREF_KEY_USE_DOUBLE_SPACE_PERIOD,
         Settings.PREF_AUTOSPACE_AFTER_PUNCTUATION,
         Settings.PREF_AUTOSPACE_AFTER_EMOJI,
         Settings.PREF_AUTOSPACE_AFTER_SUGGESTION,
         Settings.PREF_SHIFT_REMOVES_AUTOSPACE,
         Settings.PREF_PRESERVE_SPACE_BEFORE_PUNCTUATION,
+
         R.string.settings_category_suggestions,
         if (suggestionsVisible) Settings.PREF_SHOW_SUGGESTIONS else null,
         if (suggestionsEnabled) Settings.PREF_ALWAYS_SHOW_SUGGESTIONS else null,
         if (suggestionsEnabled && prefs.getBoolean(Settings.PREF_ALWAYS_SHOW_SUGGESTIONS, Defaults.PREF_ALWAYS_SHOW_SUGGESTIONS))
             Settings.PREF_ALWAYS_SHOW_SUGGESTIONS_EXCEPT_WEB_TEXT else null,
-        if (suggestionsEnabled) Settings.PREF_CENTER_SUGGESTION_TEXT_TO_ENTER else null,
+        Settings.PREF_BIGRAM_PREDICTIONS,
+        if (bigrams) Settings.PREF_FIRST_WORD_PREDICTIONS else null,
         if (suggestionsEnabled || autocorrectEnabled) Settings.PREF_SUGGEST_EMOJIS else null,
         if (suggestionsEnabled || autocorrectEnabled) Settings.PREF_INLINE_EMOJI_SEARCH else null,
-        Settings.PREF_KEY_USE_PERSONALIZED_DICTS,
-        Settings.PREF_BIGRAM_PREDICTIONS,
-        if (prefs.getBoolean(Settings.PREF_BIGRAM_PREDICTIONS, Defaults.PREF_BIGRAM_PREDICTIONS))
-            Settings.PREF_PRIORITIZE_PERSONAL_SUGGESTIONS else null,
-        if (prefs.getBoolean(Settings.PREF_BIGRAM_PREDICTIONS, Defaults.PREF_BIGRAM_PREDICTIONS) &&
-            prefs.getBoolean(Settings.PREF_PRIORITIZE_PERSONAL_SUGGESTIONS, Defaults.PREF_PRIORITIZE_PERSONAL_SUGGESTIONS))
-            Settings.PREF_NEXT_WORD_BOOST_LEVEL else null,
-        if (prefs.getBoolean(Settings.PREF_BIGRAM_PREDICTIONS, Defaults.PREF_BIGRAM_PREDICTIONS))
-            Settings.PREF_NEXT_WORD_STRICT_NGRAM else null,
-        if (prefs.getBoolean(Settings.PREF_BIGRAM_PREDICTIONS, Defaults.PREF_BIGRAM_PREDICTIONS))
-            Settings.PREF_FIRST_WORD_PREDICTIONS else null,
-        if (suggestionsEnabled) Settings.PREF_DISABLE_MULTI_WORD_SUGGESTIONS else null,
         Settings.PREF_SUGGEST_PUNCTUATION,
         Settings.PREF_SUGGEST_CLIPBOARD_CONTENT,
         Settings.PREF_SUGGEST_SCREENSHOTS,
         if (prefs.getBoolean(Settings.PREF_SUGGEST_SCREENSHOTS, Defaults.PREF_SUGGEST_SCREENSHOTS))
             Settings.PREF_COMPRESS_SCREENSHOTS else null,
-        Settings.PREF_AUTO_READ_OTP,
+
+        R.string.settings_category_suggestion_sources,
+        Settings.PREF_KEY_USE_PERSONALIZED_DICTS,
         Settings.PREF_USE_CONTACTS,
-        Settings.PREF_USE_APPS
+        Settings.PREF_USE_APPS,
+        Settings.PREF_AUTO_READ_OTP,
+
+        R.string.settings_category_more,
+        if (suggestionsEnabled) Settings.PREF_CENTER_SUGGESTION_TEXT_TO_ENTER else null,
+        if (suggestionsEnabled) Settings.PREF_DISABLE_MULTI_WORD_SUGGESTIONS else null,
+        if (bigrams) Settings.PREF_PRIORITIZE_PERSONAL_SUGGESTIONS else null,
+        if (bigrams && prefs.getBoolean(Settings.PREF_PRIORITIZE_PERSONAL_SUGGESTIONS, Defaults.PREF_PRIORITIZE_PERSONAL_SUGGESTIONS))
+            Settings.PREF_NEXT_WORD_BOOST_LEVEL else null,
+        if (bigrams) Settings.PREF_NEXT_WORD_STRICT_NGRAM else null,
     )
     SearchSettingsScreen(
         onClickBack = onClickBack,
-        title = stringResource(R.string.settings_screen_correction),
+        title = stringResource(R.string.settings_screen_typing),
         settings = items
     )
 }

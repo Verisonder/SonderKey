@@ -5,6 +5,10 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.clickable
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -60,6 +64,7 @@ fun SearchSettingsScreen(
     onClickBack: () -> Unit,
     title: String,
     settings: List<Any?>,
+    searchBar: Boolean = false,
     content: @Composable (ColumnScope.() -> Unit)? = null // overrides settings if not null
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -82,25 +87,7 @@ fun SearchSettingsScreen(
                     containerColor = androidx.compose.ui.graphics.Color.Transparent
                 ) { innerPadding ->
                     // Calculate groups only when settings change
-                    val groups = remember(settings) {
-                        val result = mutableListOf<Pair<Int?, MutableList<String>>>()
-                        var currentGroup = mutableListOf<String>()
-                        var currentTitle: Int? = null
-                        
-                        // Initial group (if starts without category)
-                        result.add(null to currentGroup)
-
-                        settings.forEach { item ->
-                            if (item is Int) {
-                                currentTitle = item
-                                currentGroup = mutableListOf()
-                                result.add(currentTitle to currentGroup)
-                            } else if (item is String) {
-                                currentGroup.add(item)
-                            }
-                        }
-                        result.filter { it.second.isNotEmpty() }
-                    }
+                    val groups = remember(settings) { groupSettings(settings) }
 
                     LazyColumn(
                         modifier = Modifier
@@ -109,36 +96,7 @@ fun SearchSettingsScreen(
                         contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 8.dp)
                     ) {
                         items(groups, key = { (titleRes, _) -> titleRes ?: 0 }) { (titleRes, keys) ->
-                            // the group label sits above its card rather than inside it
-                            if (titleRes != null) {
-                                PreferenceCategory(stringResource(titleRes), icon = categoryIcon(titleRes))
-                            }
-                            androidx.compose.material3.Card(
-                                shape = MaterialTheme.shapes.large,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 12.dp, vertical = 6.dp),
-                                colors = androidx.compose.material3.CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceContainer
-                                 )
-                            ) {
-                                Column {
-                                    keys.forEachIndexed { index, key ->
-                                        androidx.compose.runtime.key(key) {
-                                            // hairline between rows inside a card, as in the
-                                            // grouped lists this UI is modelled on
-                                            if (index > 0) {
-                                                androidx.compose.material3.HorizontalDivider(
-                                                    modifier = Modifier.padding(start = 20.dp, end = 20.dp),
-                                                    thickness = 0.5.dp,
-                                                    color = MaterialTheme.colorScheme.outlineVariant
-                                                )
-                                            }
-                                            SettingsActivity.settingsContainer[key]?.Preference()
-                                        }
-                                    }
-                                }
-                            }
+                            SettingsGroupCard(titleRes, keys)
                         }
                     }
                 }
@@ -170,8 +128,90 @@ fun SearchSettingsScreen(
                 }
             } 
         },
-        itemContent = { it.Preference() }
+        itemContent = { it.Preference() },
+        searchBar = searchBar,
     )
+}
+
+/**
+ * One titled group of settings in a rounded card. A group titled [R.string.settings_category_more]
+ * starts collapsed behind a "More" row, which is where a page keeps what is rarely changed.
+ */
+@Composable
+fun SettingsGroupCard(titleRes: Int?, keys: List<String>) {
+    val isMore = titleRes == helium314.keyboard.latin.R.string.settings_category_more
+    var expanded by rememberSaveable(titleRes) { mutableStateOf(!isMore) }
+    if (titleRes != null && !isMore) {
+        PreferenceCategory(stringResource(titleRes), icon = categoryIcon(titleRes))
+    }
+    androidx.compose.material3.Card(
+        shape = MaterialTheme.shapes.large,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        colors = androidx.compose.material3.CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
+        )
+    ) {
+        Column {
+            if (isMore) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { expanded = !expanded }
+                        .padding(horizontal = 20.dp, vertical = 16.dp)
+                ) {
+                    Text(
+                        stringResource(titleRes!!),
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        if (expanded) "" else keys.size.toString(),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Icon(
+                        painterResource(helium314.keyboard.latin.R.drawable.ic_arrow_left),
+                        null,
+                        Modifier.rotate(if (expanded) 90f else -90f)
+                    )
+                }
+            }
+            if (expanded) keys.forEachIndexed { index, key ->
+                androidx.compose.runtime.key(key) {
+                    // hairline between rows inside a card, as in the
+                    // grouped lists this UI is modelled on
+                    if (index > 0 || isMore) {
+                        androidx.compose.material3.HorizontalDivider(
+                            modifier = Modifier.padding(start = 20.dp, end = 20.dp),
+                            thickness = 0.5.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant
+                        )
+                    }
+                    SettingsActivity.settingsContainer[key]?.Preference()
+                }
+            }
+        }
+    }
+}
+
+/** Groups a flat settings list: an Int starts a new titled group, a String is a setting key. */
+fun groupSettings(settings: List<Any?>): List<Pair<Int?, List<String>>> {
+    val result = mutableListOf<Pair<Int?, MutableList<String>>>()
+    var currentGroup = mutableListOf<String>()
+    result.add(null to currentGroup)
+    settings.forEach { item ->
+        if (item is Int) {
+            currentGroup = mutableListOf()
+            result.add(item to currentGroup)
+        } else if (item is String) {
+            currentGroup.add(item)
+        }
+    }
+    return result.filter { it.second.isNotEmpty() }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -185,6 +225,7 @@ fun <T: Any?> SearchScreen(
     menu: List<Pair<String, () -> Unit>>? = null,
     headerContent: (@Composable () -> Unit)? = null,
     content: @Composable (ColumnScope.() -> Unit)? = null,
+    searchBar: Boolean = false,
 ) {
     // searchText and showSearch should have the same remember or rememberSaveable
     // saveable survives orientation changes and switching between screens, but shows the
@@ -241,6 +282,31 @@ fun <T: Any?> SearchScreen(
                                 }
                         },
                     )
+                    if (searchBar && !showSearch) {
+                        // an always-visible entry point, so search is the first thing on the page
+                        Surface(
+                            shape = androidx.compose.foundation.shape.CircleShape,
+                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                                .clip(androidx.compose.foundation.shape.CircleShape)
+                                .clickable { setShowSearch(true) }
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)
+                            ) {
+                                SearchIcon()
+                                Text(
+                                    stringResource(helium314.keyboard.latin.R.string.settings_search_hint),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(start = 12.dp)
+                                )
+                            }
+                        }
+                    }
                     ExpandableSearchField(
                         expanded = showSearch,
                         onDismiss = { setShowSearch(false) },

@@ -21,6 +21,7 @@ import helium314.keyboard.settings.screens.createLayoutSettings
 import helium314.keyboard.settings.screens.createPreferencesSettings
 import helium314.keyboard.settings.screens.createTextExpanderSettings
 import helium314.keyboard.settings.screens.createToolbarSettings
+import helium314.keyboard.settings.screens.createWordsSettings
 
 class SettingsContainer(context: Context) {
     private val list = createSettings(context)
@@ -123,17 +124,22 @@ private val modules = listOf(
     SettingsModule(SettingsWithoutKey.SCREEN_NAV_SECONDARY_LAYOUTS, SettingsDestination.Layouts, R.string.settings_screen_secondary_layouts, iconRes = R.drawable.ic_ime_switcher, provider = ::createLayoutSettings),
     SettingsModule(SettingsWithoutKey.SCREEN_NAV_LANGUAGES_AND_LAYOUTS, SettingsDestination.Languages, R.string.language_and_layouts_title, iconRes = R.drawable.ic_settings_languages, provider = ::createLanguageSettings),
     SettingsModule(SettingsWithoutKey.SCREEN_NAV_LANGUAGES, SettingsDestination.LanguagesList, R.string.languages_title, iconRes = R.drawable.ic_settings_languages),
-    SettingsModule(SettingsWithoutKey.SCREEN_NAV_PREFERENCES, SettingsDestination.Preferences, R.string.settings_screen_preferences, iconRes = R.drawable.ic_settings_preferences, provider = ::createPreferencesSettings),
+    SettingsModule(SettingsWithoutKey.SCREEN_NAV_PREFERENCES, SettingsDestination.Preferences, R.string.settings_screen_keys, iconRes = R.drawable.ic_settings_preferences, provider = ::createPreferencesSettings),
     SettingsModule(SettingsWithoutKey.SCREEN_NAV_APPEARANCE, SettingsDestination.Appearance, R.string.settings_screen_appearance, iconRes = R.drawable.ic_settings_appearance, provider = ::createAppearanceSettings),
     SettingsModule(SettingsWithoutKey.SCREEN_NAV_KEY_PRESS_EFFECT, SettingsDestination.KeyPressEffect, R.string.key_press_effect, iconRes = R.drawable.ic_settings_key_press_effect, provider = ::createKeyPressEffectSettings),
-    SettingsModule(SettingsWithoutKey.SCREEN_NAV_TOOLBAR, SettingsDestination.Toolbar, R.string.settings_screen_toolbar, iconRes = R.drawable.ic_settings_toolbar, provider = ::createToolbarSettings),
+    SettingsModule(SettingsWithoutKey.SCREEN_NAV_TOOLBAR, SettingsDestination.Toolbar, R.string.settings_screen_toolbar_clipboard, iconRes = R.drawable.ic_settings_toolbar, provider = ::createToolbarSettings),
     SettingsModule(SettingsWithoutKey.SCREEN_NAV_GESTURES, SettingsDestination.GestureTyping, R.string.settings_screen_gesture, iconRes = R.drawable.ic_settings_gesture, provider = ::createGestureTypingSettings),
-    SettingsModule(SettingsWithoutKey.SCREEN_NAV_TEXT_CORRECTION, SettingsDestination.TextCorrection, R.string.settings_screen_correction, iconRes = R.drawable.ic_settings_correction, provider = ::createCorrectionSettings),
+    SettingsModule(SettingsWithoutKey.SCREEN_NAV_TEXT_CORRECTION, SettingsDestination.TextCorrection, R.string.settings_screen_typing, iconRes = R.drawable.ic_settings_correction, provider = ::createCorrectionSettings),
     SettingsModule(SettingsWithoutKey.SCREEN_NAV_AI_INTEGRATION, SettingsDestination.AIIntegration, R.string.settings_screen_ai_integration, iconRes = R.drawable.ic_proofread),
     SettingsModule(SettingsWithoutKey.SCREEN_NAV_TEXT_EXPANDER, SettingsDestination.TextExpander, titleString = "Text Expander", iconRes = R.drawable.ic_edit, provider = ::createTextExpanderSettings),
-    SettingsModule(SettingsWithoutKey.SCREEN_NAV_ADVANCED, SettingsDestination.Advanced, R.string.settings_screen_advanced, iconRes = R.drawable.ic_settings_advanced, provider = ::createAdvancedSettings),
+    SettingsModule(SettingsWithoutKey.SCREEN_NAV_ADVANCED, SettingsDestination.Advanced, R.string.settings_screen_system, iconRes = R.drawable.ic_settings_advanced, provider = ::createAdvancedSettings),
     SettingsModule(SettingsWithoutKey.SCREEN_NAV_ABOUT, SettingsDestination.About, R.string.settings_screen_about, iconRes = R.drawable.ic_settings_about, provider = ::createAboutSettings),
-    SettingsModule(SettingsWithoutKey.SCREEN_NAV_LIBRARIES, SettingsDestination.Libraries, R.string.libraries_hub_title, iconRes = R.drawable.ic_emoji_objects),
+    SettingsModule(SettingsWithoutKey.SCREEN_NAV_LIBRARIES, SettingsDestination.Libraries, R.string.settings_screen_words, iconRes = R.drawable.ic_dictionary, provider = ::createWordsSettings),
+    SettingsModule(SettingsWithoutKey.SCREEN_NAV_DICTIONARIES, SettingsDestination.Dictionaries, R.string.libraries_hub_dictionary_title, iconRes = R.drawable.ic_dictionary),
+    SettingsModule(SettingsWithoutKey.SCREEN_NAV_PERSONAL_DICTIONARIES, SettingsDestination.PersonalDictionaries, R.string.edit_personal_dictionary, iconRes = R.drawable.ic_edit),
+    SettingsModule(SettingsWithoutKey.SCREEN_NAV_LEARNED_WORDS, SettingsDestination.LearnedWords, R.string.learned_words, iconRes = R.drawable.ic_autocorrect_rounded),
+    SettingsModule(SettingsWithoutKey.SCREEN_NAV_BLOCKED_WORDS, SettingsDestination.BlockedWords, R.string.edit_blocked_words, iconRes = R.drawable.ic_bin),
+    SettingsModule(SettingsWithoutKey.SCREEN_NAV_VOICE_TYPING, SettingsDestination.VoiceTyping, R.string.settings_screen_voice_typing, iconRes = R.drawable.sym_keyboard_voice_rounded),
     SettingsModule(SettingsWithoutKey.SCREEN_NAV_BACKGROUND_SERVICES, SettingsDestination.BackgroundServices, titleString = "Background Services", provider = ::createBackgroundServicesSettings)
 )
 
@@ -199,5 +205,11 @@ object SettingsWithoutKey {
     const val SCREEN_NAV_ABOUT = "screen_nav_about"
     const val SCREEN_NAV_LIBRARIES = "screen_nav_libraries"
     const val SCREEN_NAV_DICTIONARIES = "screen_nav_dictionaries"
+    const val SCREEN_NAV_PERSONAL_DICTIONARIES = "screen_nav_personal_dictionaries"
+    const val SCREEN_NAV_LEARNED_WORDS = "screen_nav_learned_words"
+    const val SCREEN_NAV_BLOCKED_WORDS = "screen_nav_blocked_words"
+    const val SCREEN_NAV_VOICE_TYPING = "screen_nav_voice_typing"
+    const val HANDWRITING_PLUGIN = "handwriting_plugin"
+    const val TRANSLATION_PLUGIN = "translation_plugin"
     const val SCREEN_NAV_BACKGROUND_SERVICES = "screen_nav_background_services"
 }

@@ -1,115 +1,71 @@
 // SPDX-License-Identifier: GPL-3.0-only
 package helium314.keyboard.settings.screens
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import android.content.Context
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
-import helium314.keyboard.latin.R
-import helium314.keyboard.latin.utils.DictionaryInfoUtils
-import helium314.keyboard.latin.utils.JniUtils
-import helium314.keyboard.settings.NextScreenIcon
-import helium314.keyboard.settings.SearchSettingsScreen
-import helium314.keyboard.settings.preferences.LoadGestureLibPreference
-import helium314.keyboard.settings.preferences.LoadHandwritingPluginPreference
-import helium314.keyboard.settings.preferences.LoadTranslationPluginPreference
-import helium314.keyboard.latin.handwriting.HandwritingLoader
-import helium314.keyboard.latin.BuildConfig
-import helium314.keyboard.latin.common.Links
-import helium314.keyboard.settings.preferences.Preference
-import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import helium314.keyboard.latin.BuildConfig
+import helium314.keyboard.latin.R
+import helium314.keyboard.latin.handwriting.HandwritingLoader
+import helium314.keyboard.latin.translation.TranslationLoader
+import helium314.keyboard.settings.SearchSettingsScreen
+import helium314.keyboard.settings.Setting
+import helium314.keyboard.settings.SettingsWithoutKey
+import helium314.keyboard.settings.preferences.LoadHandwritingPluginPreference
+import helium314.keyboard.settings.preferences.LoadTranslationPluginPreference
 
+/**
+ * Words & dictionaries: every place that decides which words the keyboard knows, in one list.
+ * The destination is still called Libraries so links from elsewhere keep working.
+ */
 @Composable
 fun LibrariesHubScreen(
     onClickBack: () -> Unit,
-    onClickDictionaries: () -> Unit,
+    @Suppress("UNUSED_PARAMETER") onClickDictionaries: () -> Unit,
 ) {
-    val context = LocalContext.current
-    val gestureInstalled = JniUtils.sHaveNativeGestureLib
-    
-    SearchSettingsScreen(
-        onClickBack = onClickBack,
-        title = stringResource(R.string.libraries_hub_title),
-        settings = emptyList(), // Not used because content is provided
-    ) {
-        Scaffold(
-            contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
-        ) { innerPadding ->
-            Column(
-                Modifier
-                    .verticalScroll(rememberScrollState())
-                    .padding(innerPadding)
-                    .padding(vertical = 8.dp)
-            ) {
-                ElevatedCard(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    colors = CardDefaults.elevatedCardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainer
-                    )
-                ) {
-                    Column {
-                        // Dictionaries
-                        Preference(
-                            name = stringResource(R.string.libraries_hub_dictionary_title),
-                            description = "", // No description
-                            onClick = onClickDictionaries,
-                            icon = R.drawable.ic_dictionary
-                        ) { NextScreenIcon() }
-
-                        // Handwriting Input Plugin (ML Kit based, standardfull only)
-                        if (BuildConfig.FLAVOR == "standardfull") {
-                            var handwritingInstalled by remember { mutableStateOf(HandwritingLoader.hasPlugin(context)) }
-                            LoadHandwritingPluginPreference(
-                                title = stringResource(R.string.libraries_hub_handwriting_title),
-                                summary = if (handwritingInstalled) stringResource(R.string.libraries_status_active) else stringResource(R.string.libraries_status_not_installed),
-                                icon = R.drawable.ic_edit,
-                                onSuccess = { handwritingInstalled = HandwritingLoader.hasPlugin(context) }
-                            )
-                        }
-
-                        // Translation Plugin (available on standard and standardfull)
-                        if (BuildConfig.FLAVOR == "standard" || BuildConfig.FLAVOR == "standardfull") {
-                            var translationInstalled by remember { mutableStateOf(helium314.keyboard.latin.translation.TranslationLoader.hasPlugin(context)) }
-                            LoadTranslationPluginPreference(
-                                title = "Translation Plugin",
-                                summary = if (translationInstalled) stringResource(R.string.libraries_status_active) else stringResource(R.string.libraries_status_not_installed),
-                                icon = R.drawable.ic_translate,
-                                onSuccess = { translationInstalled = helium314.keyboard.latin.translation.TranslationLoader.hasPlugin(context) }
-                            )
-                        }
-
-                        // Documentation & Features
-                        val uriHandler = LocalUriHandler.current
-                        Preference(
-                            name = "Features Guide",
-                            description = "View the detailed features.md guide on GitHub",
-                            onClick = { uriHandler.openUri("https://github.com/LeanBitLab/HeliboardL/blob/main/docs/FEATURES.md") },
-                            icon = R.drawable.ic_settings_about_wiki
-                        ) { NextScreenIcon() }
-                    }
-                }
-            }
+    val items = buildList {
+        add(R.string.settings_category_dictionaries)
+        add(SettingsWithoutKey.SCREEN_NAV_DICTIONARIES)
+        add(SettingsWithoutKey.SCREEN_NAV_PERSONAL_DICTIONARIES)
+        add(SettingsWithoutKey.SCREEN_NAV_LEARNED_WORDS)
+        add(SettingsWithoutKey.SCREEN_NAV_BLOCKED_WORDS)
+        if (BuildConfig.FLAVOR == "standardfull" || BuildConfig.FLAVOR == "standard") {
+            add(R.string.settings_category_plugins)
+            if (BuildConfig.FLAVOR == "standardfull") add(SettingsWithoutKey.HANDWRITING_PLUGIN)
+            add(SettingsWithoutKey.TRANSLATION_PLUGIN)
         }
     }
+    SearchSettingsScreen(
+        onClickBack = onClickBack,
+        title = stringResource(R.string.settings_screen_words),
+        settings = items
+    )
 }
+
+fun createWordsSettings(context: Context) = listOf(
+    Setting(context, SettingsWithoutKey.HANDWRITING_PLUGIN, R.string.libraries_hub_handwriting_title) {
+        val ctx = LocalContext.current
+        var installed by remember { mutableStateOf(HandwritingLoader.hasPlugin(ctx)) }
+        LoadHandwritingPluginPreference(
+            title = it.title,
+            summary = stringResource(if (installed) R.string.libraries_status_active else R.string.libraries_status_not_installed),
+            icon = R.drawable.ic_edit,
+            onSuccess = { installed = HandwritingLoader.hasPlugin(ctx) }
+        )
+    },
+    Setting(context, SettingsWithoutKey.TRANSLATION_PLUGIN, R.string.libraries_hub_translation_title) {
+        val ctx = LocalContext.current
+        var installed by remember { mutableStateOf(TranslationLoader.hasPlugin(ctx)) }
+        LoadTranslationPluginPreference(
+            title = it.title,
+            summary = stringResource(if (installed) R.string.libraries_status_active else R.string.libraries_status_not_installed),
+            icon = R.drawable.ic_translate,
+            onSuccess = { installed = TranslationLoader.hasPlugin(ctx) }
+        )
+    },
+)

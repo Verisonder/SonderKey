@@ -1095,6 +1095,39 @@ New dictionary:
     <string name="style_name_Rounded" tools:keep="@string/style_name_Rounded">Rounded</string>
     <string name="style_name_Sonder" tools:keep="@string/style_name_Sonder">Sonder</string>
     <string name="settings_group_general">General</string>
+    <!-- Reorganised settings: screen titles -->
+    <string name="settings_screen_keys">Keys &amp; feedback</string>
+    <string name="settings_screen_typing">Typing</string>
+    <string name="settings_screen_toolbar_clipboard">Toolbar &amp; clipboard</string>
+    <string name="settings_screen_words">Words &amp; dictionaries</string>
+    <string name="settings_screen_system">Privacy &amp; system</string>
+    <!-- One-line summaries on the main settings page -->
+    <string name="settings_summary_appearance">Theme, colours, size, fonts, effects</string>
+    <string name="settings_summary_keys">Vibration, sound, popups, long press</string>
+    <string name="settings_summary_typing">Corrections, suggestions, gestures, voice</string>
+    <string name="settings_summary_toolbar_clipboard">Toolbar keys and behaviour, clipboard history</string>
+    <string name="settings_summary_words">Dictionaries, learned and blocked words, plugins</string>
+    <string name="settings_summary_ai">Proofreading and translation providers</string>
+    <string name="settings_summary_system">Incognito, network, backup, updates, about</string>
+    <string name="settings_search_hint">Search settings</string>
+    <!-- Group headers -->
+    <string name="settings_category_more">More</string>
+    <string name="settings_category_switching_languages">Switching languages</string>
+    <string name="settings_category_number_row">Number row</string>
+    <string name="settings_category_characters">Characters</string>
+    <string name="settings_category_size">Size &amp; layout</string>
+    <string name="settings_category_fonts_emoji">Fonts &amp; emoji</string>
+    <string name="settings_category_feedback">Vibration &amp; sound</string>
+    <string name="settings_category_popups">Popups &amp; hints</string>
+    <string name="settings_category_keys">Keys</string>
+    <string name="settings_category_typing_tools">Typing tools</string>
+    <string name="settings_category_capitals_spacing">Capitals &amp; spacing</string>
+    <string name="settings_category_suggestion_sources">Suggestion sources</string>
+    <string name="settings_category_toolbar">Toolbar</string>
+    <string name="settings_category_dictionaries">Dictionaries</string>
+    <string name="settings_category_plugins">Plugins</string>
+    <string name="settings_category_privacy">Privacy</string>
+    <string name="settings_category_system">System</string>
     <string name="settings_group_typing">Typing</string>
     <string name="settings_group_system">System</string>
     <string name="settings_screen_text_expander">Text Expander</string>
@@ -1368,6 +1401,7 @@ New dictionary:
     <string name="libraries_hub_dictionary_title">Main Dictionaries</string>
     <string name="libraries_hub_emoji_title">Emoji Libraries</string>
     <string name="libraries_hub_handwriting_title">Handwriting Input Plugin</string>
+    <string name="libraries_hub_translation_title">Translation plugin</string>
     <string name="libraries_hub_dict_guide_title">Dictionary Loading Guide</string>
     <string name="libraries_hub_dict_guide_text">To add a new dictionary:\n1. Obtain a .dict file for your language.\n2. Tap \"Manage Dictionaries\".\n3. Use the plus (+) button to import the file.</string>
     <string name="libraries_status_active">Active</string>

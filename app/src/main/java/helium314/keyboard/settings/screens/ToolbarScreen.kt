@@ -69,7 +69,9 @@ fun ToolbarScreen(
     val clipboardToolbarVisible = toolbarMode != ToolbarMode.HIDDEN
         || !prefs.getBoolean(Settings.PREF_TOOLBAR_HIDING_GLOBAL, Defaults.PREF_TOOLBAR_HIDING_GLOBAL)
     val isSplitToolbar = prefs.getBoolean(Settings.PREF_SPLIT_TOOLBAR, Defaults.PREF_SPLIT_TOOLBAR)
+    val clipboardHistoryEnabled = prefs.getBoolean(Settings.PREF_ENABLE_CLIPBOARD_HISTORY, Defaults.PREF_ENABLE_CLIPBOARD_HISTORY)
     val items = listOf(
+        R.string.settings_category_toolbar,
         if (!isSplitToolbar) Settings.PREF_TOOLBAR_MODE else null,
         Settings.PREF_SPLIT_TOOLBAR,
         Settings.PREF_AUTO_SPAN_TOOLBAR_KEYS,
@@ -89,10 +91,16 @@ fun ToolbarScreen(
         if (toolbarMode != ToolbarMode.HIDDEN) Settings.PREF_SHOW_ONLY_TOOLBAR_WITH_HARDWARE_KEYBOARD else null,
         if (toolbarMode != ToolbarMode.HIDDEN) Settings.PREF_VARIABLE_TOOLBAR_DIRECTION else null,
         Settings.PREF_TOOLBAR_SWIPE_DOWN_DISMISS,
+        R.string.settings_category_clipboard_history,
+        Settings.PREF_ENABLE_CLIPBOARD_HISTORY,
+        if (clipboardHistoryEnabled) Settings.PREF_CLIPBOARD_HISTORY_RETENTION_TIME else null,
+        if (clipboardHistoryEnabled) Settings.PREF_CLIPBOARD_HISTORY_PINNED_FIRST else null,
+        if (clipboardHistoryEnabled) Settings.PREF_CLIPBOARD_FOLD_PINNED else null,
+        if (clipboardHistoryEnabled) Settings.PREF_CLEAR_CLIPBOARD_ICON else null,
     )
     SearchSettingsScreen(
         onClickBack = onClickBack,
-        title = stringResource(R.string.settings_screen_toolbar),
+        title = stringResource(R.string.settings_screen_toolbar_clipboard),
         settings = items
     )
 }
