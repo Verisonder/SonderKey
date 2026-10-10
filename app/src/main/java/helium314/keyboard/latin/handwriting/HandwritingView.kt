@@ -430,7 +430,9 @@ class HandwritingView @JvmOverloads constructor(
 
         recognitionExecutor.execute {
             try {
-                val urlStr = "https://github.com/LeanBitLab/Leantype-Handwriting-Plugin/releases/latest/download/handwriting_plugin.apk"
+                // releases ship one APK per ABI since v1.0.6
+                val abi = android.os.Build.SUPPORTED_ABIS.firstOrNull() ?: "arm64-v8a"
+                val urlStr = "https://github.com/LeanBitLab/Leantype-Handwriting-Plugin/releases/latest/download/handwriting_plugin-$abi.apk"
                 var url = java.net.URL(urlStr)
                 var conn = url.openConnection() as java.net.HttpURLConnection
                 conn.instanceFollowRedirects = true

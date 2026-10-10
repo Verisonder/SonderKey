@@ -63,6 +63,8 @@ fun LoadHandwritingPluginPreference(
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
 
+    // asset names in the latest release; the plugin moved from one APK to one per ABI in v1.0.6
+    var remoteAssets by remember { mutableStateOf(emptyList<String>()) }
     val hasPlugin = HandwritingLoader.hasPlugin(ctx)
     val localVersion = remember(hasPlugin) { HandwritingLoader.getPluginVersion(ctx) }
 
@@ -81,6 +83,8 @@ fun LoadHandwritingPluginPreference(
                     if (match != null) {
                         val tag = match.groupValues[1]
                         remoteVersion = tag
+                        remoteAssets = "\"name\"\\s*:\\s*\"(handwriting_plugin[^\"]*\\.apk)\"".toRegex()
+                            .findAll(response).map { it.groupValues[1] }.toList()
                         if (hasPlugin && localVersion != null) {
                             updateAvailable = isUpdateAvailable(localVersion, tag)
                         }
@@ -110,10 +114,13 @@ fun LoadHandwritingPluginPreference(
         scope.launch(Dispatchers.IO) {
             try {
                 val tag = remoteVersion ?: "latest"
+                // the build matching this phone's ABI, else the single APK older releases shipped
+                val candidates = android.os.Build.SUPPORTED_ABIS.map { "handwriting_plugin-$it.apk" } + "handwriting_plugin.apk"
+                val asset = candidates.firstOrNull { it in remoteAssets } ?: candidates.first()
                 val urlStr = if (tag == "latest") {
-                    "https://github.com/LeanBitLab/Leantype-Handwriting-Plugin/releases/latest/download/handwriting_plugin.apk"
+                    "https://github.com/LeanBitLab/Leantype-Handwriting-Plugin/releases/latest/download/$asset"
                 } else {
-                    "https://github.com/LeanBitLab/Leantype-Handwriting-Plugin/releases/download/$tag/handwriting_plugin.apk"
+                    "https://github.com/LeanBitLab/Leantype-Handwriting-Plugin/releases/download/$tag/$asset"
                 }
                 var url = URL(urlStr)
                 var conn = url.openConnection() as HttpURLConnection

@@ -59,6 +59,8 @@ fun LoadTranslationPluginPreference(
     var remoteVersion by remember { mutableStateOf<String?>(null) }
     var updateAvailable by remember { mutableStateOf(false) }
     var isCheckingUpdate by remember { mutableStateOf(false) }
+    // asset names in the latest release; the plugin moved from one APK to one per ABI in v1.0.6
+    var remoteAssets by remember { mutableStateOf(emptyList<String>()) }
 
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -81,6 +83,8 @@ fun LoadTranslationPluginPreference(
                     if (match != null) {
                         val tag = match.groupValues[1]
                         remoteVersion = tag
+                        remoteAssets = "\"name\"\\s*:\\s*\"(translation_plugin[^\"]*\\.apk)\"".toRegex()
+                            .findAll(response).map { it.groupValues[1] }.toList()
                         if (hasPlugin && localVersion != null) {
                             updateAvailable = isUpdateAvailable(localVersion, tag)
                         }
@@ -110,10 +114,13 @@ fun LoadTranslationPluginPreference(
         scope.launch(Dispatchers.IO) {
             try {
                 val tag = remoteVersion ?: "latest"
+                // the build matching this phone's ABI, else the single APK older releases shipped
+                val candidates = android.os.Build.SUPPORTED_ABIS.map { "translation_plugin-$it.apk" } + "translation_plugin.apk"
+                val asset = candidates.firstOrNull { it in remoteAssets } ?: candidates.first()
                 val urlStr = if (tag == "latest") {
-                    "https://github.com/LeanBitLab/LeanType-Translation-Plugin/releases/latest/download/translation_plugin.apk"
+                    "https://github.com/LeanBitLab/LeanType-Translation-Plugin/releases/latest/download/$asset"
                 } else {
-                    "https://github.com/LeanBitLab/LeanType-Translation-Plugin/releases/download/$tag/translation_plugin.apk"
+                    "https://github.com/LeanBitLab/LeanType-Translation-Plugin/releases/download/$tag/$asset"
                 }
                 val url = URL(urlStr)
                 val conn = url.openConnection() as HttpURLConnection
