@@ -52,6 +52,30 @@
 -keep class com.google.android.gms.tasks.** { *; }
 -keep class com.google.firebase.components.** { *; }
 
+# The translation plugin is loaded at runtime and implements these interfaces by name.
+# Without these rules a release build renames or strips the methods it calls, and the plugin
+# fails to load while a debug build works.
+-keep interface helium314.keyboard.latin.translation.ITranslationProvider {
+    <methods>;
+}
+-keep interface helium314.keyboard.latin.translation.TranslationModelDownloadListener {
+    <methods>;
+}
+-keep class helium314.keyboard.latin.translation.** { *; }
+-keep interface helium314.keyboard.latin.translation.** { *; }
+-keep class helium314.keyboard.latin.handwriting.** { *; }
+-keep interface helium314.keyboard.latin.handwriting.** { *; }
+
+# WorkManager jobs started by plugins are created through the plugin worker factory
+-keep class helium314.keyboard.latin.work.** { *; }
+-keep interface helium314.keyboard.latin.work.** { *; }
+-keep class androidx.work.** { *; }
+-keep interface androidx.work.** { *; }
+-keep class * extends androidx.work.ListenableWorker {
+    public <init>(android.content.Context, androidx.work.WorkerParameters);
+}
+-dontwarn androidx.work.**
+
 # Keep Kotlin standard library for dynamically loaded plugins
 # ponytail: keep kotlin stdlib classes to prevent NoSuchMethodError in plugin loading
 -keep class kotlin.** { *; }

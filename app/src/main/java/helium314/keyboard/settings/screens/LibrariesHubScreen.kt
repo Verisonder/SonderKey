@@ -27,6 +27,10 @@ import helium314.keyboard.latin.utils.Log
 import helium314.keyboard.latin.utils.getActivity
 import helium314.keyboard.latin.utils.prefs
 import androidx.compose.runtime.collectAsState
+import helium314.keyboard.settings.NextScreenIcon
+import helium314.keyboard.settings.FeedbackManager
+import helium314.keyboard.settings.preferences.Preference
+import helium314.keyboard.settings.dialogs.TranslationModelDownloadDialog
 
 /**
  * Words & dictionaries: every place that decides which words the keyboard knows, in one list.
@@ -57,6 +61,7 @@ fun LibrariesHubScreen(
             add(R.string.settings_category_plugins)
             if (BuildConfig.FLAVOR == "standardfull") add(SettingsWithoutKey.HANDWRITING_PLUGIN)
             add(SettingsWithoutKey.TRANSLATION_PLUGIN)
+            if (TranslationLoader.hasPlugin(ctx)) add(SettingsWithoutKey.TRANSLATION_LANGUAGE_PACKS)
         }
     }
     SearchSettingsScreen(
@@ -67,6 +72,17 @@ fun LibrariesHubScreen(
 }
 
 fun createWordsSettings(context: Context) = listOf(
+    Setting(context, SettingsWithoutKey.TRANSLATION_LANGUAGE_PACKS,
+        R.string.offline_translation_models_title, R.string.offline_translation_models_summary) { def ->
+        val ctx = LocalContext.current
+        var provider by remember { mutableStateOf<helium314.keyboard.latin.translation.ITranslationProvider?>(null) }
+        Preference(name = def.title, description = def.description, onClick = {
+            // loads the plugin on first use; if it cannot be loaded, say so rather than open nothing
+            provider = TranslationLoader.getProvider(ctx)
+            if (provider == null) FeedbackManager.message(ctx, R.string.load_translation_plugin_failed)
+        }) { NextScreenIcon() }
+        provider?.let { TranslationModelDownloadDialog(provider = it, onDismissRequest = { provider = null }) }
+    },
     Setting(context, Settings.PREF_ADD_TO_PERSONAL_DICTIONARY,
         R.string.add_to_personal_dictionary, R.string.add_to_personal_dictionary_summary) {
         SwitchPreference(it, Defaults.PREF_ADD_TO_PERSONAL_DICTIONARY)

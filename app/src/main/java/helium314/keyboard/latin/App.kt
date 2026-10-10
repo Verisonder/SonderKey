@@ -15,11 +15,17 @@ import helium314.keyboard.latin.utils.SubtypeSettings
 
 class App : Application(), Configuration.Provider {
 
-    // WorkManager Configuration.Provider — required for ML Kit Digital Ink plugin.
-    // The plugin is loaded via DexClassLoader and calls WorkManager.getInstance(context)
-    // internally. This ensures WorkManager can self-initialize via the Application.
+    // WorkManager Configuration.Provider — required for the ML Kit plugins (handwriting and
+    // translation). They are loaded via DexClassLoader and run WorkManager jobs whose worker
+    // classes live in the plugin, which the default factory cannot see; the plugin factory can.
     override val workManagerConfiguration: Configuration
-        get() = Configuration.Builder().build()
+        get() {
+            val delegating = androidx.work.DelegatingWorkerFactory()
+            delegating.addFactory(pluginWorkerFactory)
+            return Configuration.Builder()
+                .setWorkerFactory(delegating)
+                .build()
+        }
 
     override fun onCreate() {
         super.onCreate()
@@ -52,6 +58,8 @@ class App : Application(), Configuration.Provider {
     }
 
     companion object {
+        val pluginWorkerFactory = helium314.keyboard.latin.work.PluginWorkerFactory()
+
         // used so JniUtils can access application once
         private var app: App? = null
         fun getApp(): App? {

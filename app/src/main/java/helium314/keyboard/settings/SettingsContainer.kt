@@ -211,5 +211,6 @@ object SettingsWithoutKey {
     const val SCREEN_NAV_VOICE_TYPING = "screen_nav_voice_typing"
     const val HANDWRITING_PLUGIN = "handwriting_plugin"
     const val TRANSLATION_PLUGIN = "translation_plugin"
+    const val TRANSLATION_LANGUAGE_PACKS = "translation_language_packs"
     const val SCREEN_NAV_BACKGROUND_SERVICES = "screen_nav_background_services"
 }

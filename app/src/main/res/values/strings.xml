@@ -1420,6 +1420,25 @@ New dictionary:
     <string name="libraries_hub_emoji_title">Emoji Libraries</string>
     <string name="libraries_hub_handwriting_title">Handwriting Input Plugin</string>
     <string name="libraries_hub_translation_title">Translation plugin</string>
+    <!-- Offline translation language packs (translation plugin) -->
+    <string name="offline_translation_models_title">Offline language packs</string>
+    <string name="offline_translation_models_summary">Download and manage on-device translation languages (~30 MB each)</string>
+    <string name="button_delete">Delete</string>
+    <string name="button_download">Download</string>
+    <string name="handwriting_status_not_downloaded">Not downloaded</string>
+    <string name="search_languages_placeholder">Search languages…</string>
+    <string name="translation_import_failed">Failed to import translation model</string>
+    <string name="translation_import_model_title">Import translation model</string>
+    <string name="translation_import_zip_button">Import .zip</string>
+    <string name="translation_imported_model">Imported translation model for %s</string>
+    <string name="translation_model_app_note">Download in app or import .zip</string>
+    <string name="translation_model_browser_note">Download model in browser, then import .zip</string>
+    <string name="translation_model_builtin">Built-in</string>
+    <string name="translation_model_downloaded_offline_ready">Downloaded (offline ready)</string>
+    <string name="translation_model_downloading_in_browser">Downloading in browser… import the .zip once finished</string>
+    <string name="translation_model_remove_failed">Failed to remove model</string>
+    <string name="translation_model_removed">%s model removed</string>
+    <string name="translation_model_url_not_available">Download URL not available</string>
     <string name="libraries_hub_dict_guide_title">Dictionary Loading Guide</string>
     <string name="libraries_hub_dict_guide_text">To add a new dictionary:\n1. Obtain a .dict file for your language.\n2. Tap \"Manage Dictionaries\".\n3. Use the plus (+) button to import the file.</string>
     <string name="libraries_status_active">Active</string>
