@@ -17,6 +17,22 @@ import helium314.keyboard.settings.SearchSettingsScreen
 import helium314.keyboard.settings.SettingsActivity
 import helium314.keyboard.settings.preferences.SliderPreference
 import helium314.keyboard.settings.preferences.SwitchPreference
+import helium314.keyboard.settings.preferences.ListPreference
+import helium314.keyboard.settings.preferences.Preference
+import helium314.keyboard.settings.dialogs.ColorPickerDialog
+import helium314.keyboard.keyboard.internal.AutopilotDebugDrawingPreview
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import androidx.core.content.edit
 
 @Composable
 fun AutopilotScreen(
@@ -34,6 +50,10 @@ fun AutopilotScreen(
             add(Settings.PREF_AUTOPILOT_STRENGTH)
             add(Settings.PREF_AUTOPILOT_VISUAL)
             add(Settings.PREF_AUTOPILOT_DEBUG)
+            if (prefs.getBoolean(Settings.PREF_AUTOPILOT_DEBUG, Defaults.PREF_AUTOPILOT_DEBUG)) {
+                add(Settings.PREF_AUTOPILOT_DEBUG_SHAPE)
+                add(Settings.PREF_AUTOPILOT_DEBUG_COLOR)
+            }
         }
     }
     SearchSettingsScreen(
@@ -68,5 +88,37 @@ fun createAutopilotSettings(context: Context) = listOf(
     Setting(context, Settings.PREF_AUTOPILOT_DEBUG,
         R.string.autopilot_debug, R.string.autopilot_debug_summary) {
         SwitchPreference(it, Defaults.PREF_AUTOPILOT_DEBUG)
+    },
+    Setting(context, Settings.PREF_AUTOPILOT_DEBUG_SHAPE, R.string.autopilot_debug_shape) { def ->
+        val ctx = LocalContext.current
+        ListPreference(
+            def,
+            listOf(
+                ctx.getString(R.string.autopilot_debug_shape_rect) to AutopilotDebugDrawingPreview.SHAPE_RECT,
+                ctx.getString(R.string.autopilot_debug_shape_dashed) to AutopilotDebugDrawingPreview.SHAPE_DASHED,
+                ctx.getString(R.string.autopilot_debug_shape_rounded) to AutopilotDebugDrawingPreview.SHAPE_ROUNDED,
+                ctx.getString(R.string.autopilot_debug_shape_oval) to AutopilotDebugDrawingPreview.SHAPE_OVAL,
+                ctx.getString(R.string.autopilot_debug_shape_filled) to AutopilotDebugDrawingPreview.SHAPE_FILLED,
+            ),
+            Defaults.PREF_AUTOPILOT_DEBUG_SHAPE
+        )
+    },
+    Setting(context, Settings.PREF_AUTOPILOT_DEBUG_COLOR, R.string.autopilot_debug_color) { def ->
+        val prefs = LocalContext.current.prefs()
+        var showPicker by rememberSaveable { mutableStateOf(false) }
+        val current = prefs.getInt(def.key, Defaults.PREF_AUTOPILOT_DEBUG_COLOR)
+        Preference(name = def.title, onClick = { showPicker = true }) {
+            Box(Modifier.size(40.dp).background(Color(current), CircleShape))
+        }
+        if (showPicker) {
+            ColorPickerDialog(
+                onDismissRequest = { showPicker = false },
+                initialColor = current,
+                title = def.title,
+                showDefault = true,
+                onDefault = { prefs.edit { putInt(def.key, Defaults.PREF_AUTOPILOT_DEBUG_COLOR) } },
+                onConfirmed = { prefs.edit { putInt(def.key, it) } }
+            )
+        }
     },
 )

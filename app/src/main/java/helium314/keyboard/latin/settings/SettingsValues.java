@@ -86,6 +86,8 @@ public class SettingsValues {
         public final int mAutopilotStrength;
         public final boolean mAutopilotVisual;
         public final boolean mAutopilotDebug;
+        public final int mAutopilotDebugColor;
+        public final String mAutopilotDebugShape;
         public final boolean mKeyPressEffect;
         public final String mKeyPressEffectShape;
         public final int mKeyPressEffectCount;
@@ -295,6 +297,10 @@ public class SettingsValues {
                                 Defaults.PREF_AUTOPILOT_VISUAL);
                 mAutopilotDebug = prefs.getBoolean(Settings.PREF_AUTOPILOT_DEBUG,
                                 Defaults.PREF_AUTOPILOT_DEBUG);
+                mAutopilotDebugColor = prefs.getInt(Settings.PREF_AUTOPILOT_DEBUG_COLOR,
+                                Defaults.PREF_AUTOPILOT_DEBUG_COLOR);
+                mAutopilotDebugShape = prefs.getString(Settings.PREF_AUTOPILOT_DEBUG_SHAPE,
+                                Defaults.PREF_AUTOPILOT_DEBUG_SHAPE);
                 mKeyPressEffect = prefs.getBoolean(Settings.PREF_KEY_PRESS_EFFECT,
                                 Defaults.PREF_KEY_PRESS_EFFECT);
                 mKeyPressEffectShape = prefs.getString(Settings.PREF_KEY_PRESS_EFFECT_SHAPE,

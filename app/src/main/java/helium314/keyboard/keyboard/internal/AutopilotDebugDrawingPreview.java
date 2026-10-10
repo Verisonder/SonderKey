@@ -3,7 +3,9 @@ package helium314.keyboard.keyboard.internal;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.DashPathEffect;
 import android.graphics.Paint;
+import android.graphics.RectF;
 
 import androidx.annotation.NonNull;
 
@@ -22,17 +24,39 @@ import helium314.keyboard.keyboard.PointerTracker;
  * Diagnostic, not decoration, so it is drawn plainly and only when explicitly switched on.
  */
 public final class AutopilotDebugDrawingPreview extends AbstractDrawingPreview {
-    private static final int OUTLINE_COLOR = 0xFF4CD964;
+    public static final String SHAPE_RECT = "rect";
+    public static final String SHAPE_ROUNDED = "rounded";
+    public static final String SHAPE_OVAL = "oval";
+    public static final String SHAPE_DASHED = "dashed";
+    public static final String SHAPE_FILLED = "filled";
+
     private static final float STROKE_WIDTH = 2f;
+    // a fill covers the letter beneath it, so it is drawn much fainter than a line
+    private static final float FILL_ALPHA_FACTOR = 0.35f;
 
     private final Paint mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final RectF mRect = new RectF();
     private Keyboard mKeyboard;
     private float mShiftRatio;
+    private int mColor = 0xFF4CD964;
+    private String mShape = SHAPE_RECT;
 
     public AutopilotDebugDrawingPreview() {
         mPaint.setStyle(Paint.Style.STROKE);
         mPaint.setStrokeWidth(STROKE_WIDTH);
-        mPaint.setColor(OUTLINE_COLOR);
+        mPaint.setColor(mColor);
+    }
+
+    /**
+     * Colour and shape of the outline. Only rectangle and dashed show the boundary exactly; the
+     * touch area is always a rectangle, so rounded and oval are a look, not a different reach.
+     */
+    public void setStyle(final int color, final String shape) {
+        mColor = color;
+        mShape = shape == null ? SHAPE_RECT : shape;
+        mPaint.setStyle(SHAPE_FILLED.equals(mShape) ? Paint.Style.FILL : Paint.Style.STROKE);
+        mPaint.setPathEffect(SHAPE_DASHED.equals(mShape)
+                ? new DashPathEffect(new float[] { 10f, 6f }, 0f) : null);
     }
 
     public void setKeyboard(final Keyboard keyboard) {
@@ -86,16 +110,25 @@ public final class AutopilotDebugDrawingPreview extends AbstractDrawingPreview {
             // The same figure KeyDetector allows this key to reach beyond its own edge, so what
             // is drawn is the boundary actually in force rather than an approximation of it.
             final float grown = key.getWidth() * mShiftRatio * weight;
-            // Opacity tracks confidence, so the strongest candidate is obvious at a glance.
-            mPaint.setColor(Color.argb(
-                    (int) (90 + 165 * weight),
-                    Color.red(OUTLINE_COLOR), Color.green(OUTLINE_COLOR), Color.blue(OUTLINE_COLOR)));
-            canvas.drawRect(
+            // Opacity tracks confidence, so the strongest candidate is obvious at a glance; it is
+            // scaled by the chosen colour's own alpha so a translucent pick stays translucent.
+            float alpha = (90 + 165 * weight) * (Color.alpha(mColor) / 255f);
+            if (SHAPE_FILLED.equals(mShape)) alpha *= FILL_ALPHA_FACTOR;
+            mPaint.setColor(Color.argb((int) alpha,
+                    Color.red(mColor), Color.green(mColor), Color.blue(mColor)));
+            mRect.set(
                     key.getX() - grown,
                     key.getY() - grown,
                     key.getX() + key.getWidth() + grown,
-                    key.getY() + key.getHeight() + grown,
-                    mPaint);
+                    key.getY() + key.getHeight() + grown);
+            if (SHAPE_OVAL.equals(mShape)) {
+                canvas.drawOval(mRect, mPaint);
+            } else if (SHAPE_ROUNDED.equals(mShape)) {
+                final float radius = Math.min(mRect.width(), mRect.height()) * 0.25f;
+                canvas.drawRoundRect(mRect, radius, radius, mPaint);
+            } else {
+                canvas.drawRect(mRect, mPaint);
+            }
         }
     }
 }

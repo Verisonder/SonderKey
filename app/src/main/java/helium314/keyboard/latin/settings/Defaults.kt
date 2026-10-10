@@ -72,6 +72,10 @@ object Defaults {
     const val PREF_AUTOPILOT_STRENGTH = 8
     const val PREF_AUTOPILOT_VISUAL = false
     const val PREF_AUTOPILOT_DEBUG = false
+    const val PREF_AUTOPILOT_DEBUG_SHAPE = "rect"
+    // not const (needs .toInt()), so @JvmField for SettingsValues to read it as a field
+    @JvmField
+    val PREF_AUTOPILOT_DEBUG_COLOR = 0xFF4CD964.toInt()
     const val PREF_KEY_PRESS_EFFECT = false
     const val PREF_KEY_PRESS_EFFECT_SHAPE = "square"
     const val PREF_KEY_PRESS_EFFECT_COUNT = 10

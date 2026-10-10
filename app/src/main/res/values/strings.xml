@@ -1259,6 +1259,13 @@ New dictionary:
     <string name="autopilot_visual_summary">Draw a favoured letter at the size its touch area has grown to, so you can see what Strength is doing</string>
     <string name="autopilot_debug">Outline the touch areas</string>
     <!-- Description for "autopilot_debug" setting -->
+    <string name="autopilot_debug_shape">Outline shape</string>
+    <string name="autopilot_debug_shape_rect">Rectangle (exact boundary)</string>
+    <string name="autopilot_debug_shape_dashed">Dashed rectangle</string>
+    <string name="autopilot_debug_shape_rounded">Rounded</string>
+    <string name="autopilot_debug_shape_oval">Oval</string>
+    <string name="autopilot_debug_shape_filled">Filled</string>
+    <string name="autopilot_debug_color">Outline colour</string>
     <string name="autopilot_debug_summary">Draw the exact boundary each expected letter has claimed, for tuning</string>
     <!-- Option to scatter particles from a key as it is pressed -->
     <string name="key_press_effect">Key press effect</string>
