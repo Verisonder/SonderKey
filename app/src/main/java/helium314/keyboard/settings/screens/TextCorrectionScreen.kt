@@ -40,6 +40,7 @@ import helium314.keyboard.settings.Theme
 import helium314.keyboard.settings.dialogs.ConfirmationDialog
 import helium314.keyboard.settings.initPreview
 import helium314.keyboard.settings.preferences.ListPreference
+import helium314.keyboard.settings.preferences.SliderPreference
 import helium314.keyboard.settings.preferences.Preference
 import helium314.keyboard.settings.preferences.SwitchPreference
 import helium314.keyboard.settings.preferences.SwitchPreferenceWithEmojiDictWarning
@@ -68,6 +69,7 @@ fun TextCorrectionScreen(
         if (autocorrectEnabled) Settings.PREF_MORE_AUTO_CORRECTION else null,
         if (autocorrectEnabled) Settings.PREF_AUTOCORRECT_SHORTCUTS else null,
         if (autocorrectEnabled) Settings.PREF_AUTO_CORRECT_THRESHOLD else null,
+        if (autocorrectEnabled) Settings.PREF_AUTO_CORRECT_MAX_CHANGES else null,
         if (suggestionsEnabled || autocorrectEnabled) Settings.PREF_BACKSPACE_REVERTS_AUTOCORRECT else null,
         Settings.PREF_AUTO_CAP,
         Settings.PREF_FORCE_AUTO_CAPS,
@@ -162,6 +164,21 @@ fun createCorrectionSettings(context: Context) = createAutopilotSettings(context
         )
         // todo: consider making it a slider, and maybe somehow adjust range so we can show %
         ListPreference(it, items, Defaults.PREF_AUTO_CORRECT_THRESHOLD)
+    },
+    Setting(context, Settings.PREF_AUTO_CORRECT_MAX_CHANGES,
+        R.string.auto_correct_max_changes, R.string.auto_correct_max_changes_summary) { def ->
+        val noLimit = stringResource(R.string.auto_correct_max_changes_no_limit)
+        val res = LocalContext.current.resources
+        SliderPreference(
+            name = def.title,
+            key = def.key,
+            default = Defaults.PREF_AUTO_CORRECT_MAX_CHANGES,
+            range = 0f..5f,
+            description = {
+                if (it == 0) noLimit
+                else res.getQuantityString(R.plurals.auto_correct_max_changes_value, it, it)
+            }
+        )
     },
     Setting(context, Settings.PREF_BACKSPACE_REVERTS_AUTOCORRECT, R.string.backspace_reverts_autocorrect) {
         SwitchPreference(it, Defaults.PREF_BACKSPACE_REVERTS_AUTOCORRECT)

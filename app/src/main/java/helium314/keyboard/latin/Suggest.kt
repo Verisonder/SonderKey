@@ -252,6 +252,11 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
             hasAutoCorrection = false
         } else {
             val firstSuggestion = firstSuggestionInContainer ?: suggestionResults.first()
+            // User limit on how many letters a correction may change. Every path below that
+            // allows a correction corrects to firstSuggestion, so checking here covers them all.
+            val maxChanges = Settings.getValues().mAutoCorrectMaxChanges
+            if (maxChanges > 0 && correctionDistance(consideredWord, firstSuggestion.mWord) > maxChanges)
+                return true to false
             if (suggestionResults.mFirstSuggestionExceedsConfidenceThreshold && firstOccurrenceOfTypedWordInSuggestions != 0) {
                 // mFirstSuggestionExceedsConfidenceThreshold is always set to false, so currently this branch is useless
                 return true to true
@@ -566,6 +571,35 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
          * @param info the suggestion info
          * @return whether it's fine to auto-correct to this.
          */
+        /**
+         * How many letters a correction changes: insertions, deletions and substitutions count one
+         * each, and two neighbouring letters swapped ("teh" -> "the") also count one. Case is
+         * ignored, so capitalising a word costs nothing. Trailing quotes appended for the user's
+         * own quoting are not counted. Public for testing.
+         */
+        fun correctionDistance(typed: String, suggestion: String): Int {
+            val a = typed.lowercase().codePoints().toArray()
+            val b = suggestion.trimEnd('\'').lowercase().codePoints().toArray()
+            if (a.isEmpty()) return b.size
+            if (b.isEmpty()) return a.size
+            // optimal string alignment distance, three rolling rows
+            var prev2 = IntArray(b.size + 1)
+            var prev = IntArray(b.size + 1) { it }
+            var cur = IntArray(b.size + 1)
+            for (i in 1..a.size) {
+                cur[0] = i
+                for (j in 1..b.size) {
+                    val cost = if (a[i - 1] == b[j - 1]) 0 else 1
+                    var d = minOf(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost)
+                    if (i > 1 && j > 1 && a[i - 1] == b[j - 2] && a[i - 2] == b[j - 1])
+                        d = minOf(d, prev2[j - 2] + 1)
+                    cur[j] = d
+                }
+                val t = prev2; prev2 = prev; prev = cur; cur = t
+            }
+            return prev[b.size]
+        }
+
         private fun isAllowedByAutoCorrectionWithSpaceFilter(info: SuggestedWordInfo): Boolean {
             val locale = info.mSourceDict.mLocale ?: return true
             val maximumLengthForThisLanguage = sLanguageToMaximumAutoCorrectionWithSpaceLength[locale.language]

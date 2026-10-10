@@ -161,6 +161,17 @@
     <string name="auto_correct_shortcuts">Auto-correct shortcuts</string>
     <!-- Description for auto_correct_shortcuts -->
     <string name="auto_correct_shortcuts_summary">When enabled shortcuts might be expanded by autocorrect</string>
+    <!-- Option to limit how many letters auto-correction may change in a word -->
+    <string name="auto_correct_max_changes">Maximum letters changed</string>
+    <!-- Description for auto_correct_max_changes -->
+    <string name="auto_correct_max_changes_summary">Only auto-correct when the fix changes this many letters or fewer. A swapped pair counts as one.</string>
+    <!-- Value of auto_correct_max_changes when set to 0 -->
+    <string name="auto_correct_max_changes_no_limit">No limit</string>
+    <!-- Value of auto_correct_max_changes, e.g. "Up to 2 letters" -->
+    <plurals name="auto_correct_max_changes_value">
+        <item quantity="one">Up to %d letter</item>
+        <item quantity="other">Up to %d letters</item>
+    </plurals>
     <!-- Option to undo auto correction with backspace -->
     <string name="backspace_reverts_autocorrect">Backspace reverts autocorrect</string>
     <!-- Option to disable auto correction. -->

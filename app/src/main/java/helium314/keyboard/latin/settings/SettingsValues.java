@@ -198,6 +198,7 @@ public class SettingsValues {
         public final boolean mAutoCorrectEnabled;
         public final float mAutoCorrectionThreshold;
         public final boolean mAutoCorrectShortcuts;
+        public final int mAutoCorrectMaxChanges;
         public final boolean mPersistFloatingKeyboard;
         // ponytail: persist text edit mode field
         public final boolean mPersistTextEditMode;
@@ -353,6 +354,8 @@ public class SettingsValues {
                                 : (mAutoCorrectionThreshold < 0.07 ? 800000 : 950000); // aggressive or modest
                 mAutoCorrectShortcuts = prefs.getBoolean(Settings.PREF_AUTOCORRECT_SHORTCUTS,
                                 Defaults.PREF_AUTOCORRECT_SHORTCUTS);
+                mAutoCorrectMaxChanges = prefs.getInt(Settings.PREF_AUTO_CORRECT_MAX_CHANGES,
+                                Defaults.PREF_AUTO_CORRECT_MAX_CHANGES);
                 mPersistFloatingKeyboard = prefs.getBoolean(Settings.PREF_PERSIST_FLOATING_KEYBOARD,
                                 Defaults.PREF_PERSIST_FLOATING_KEYBOARD);
                 // ponytail: load persist text edit mode value
