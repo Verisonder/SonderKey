@@ -39,6 +39,22 @@ jobs:
       # An auto-opened issue lands on the owner's public profile timeline as activity, which is a
       # misleading thing to advertise: a failed test build is a normal step in developing a branch,
       # not a defect anyone needs to see. The log is just as reachable in a file.
+      # The raw log is not reachable from everywhere that needs to read it; annotations are.
+      # Repeats the compiler's and Gradle's own error lines as annotations on the run.
+      - name: Annotate build errors
+        if: failure()
+        run: |
+          grep -E "^e: |^ERROR|[Ee]rror:|What went wrong|Execution failed|^> " gradle-build.log 2>/dev/null \
+            | grep -v "^> Task" | head -n 60 > annot.txt || true
+          n=0
+          while IFS= read -r line; do
+            n=$((n+1)); [ $n -gt 9 ] && break
+            echo "::error title=build ${n}::${line//'%'/'%25'}"
+          done < annot.txt
+          if [ "$(wc -l < annot.txt)" -gt 9 ]; then
+            rest="$(tail -n +10 annot.txt | sed 's/%/%25/g' | awk 'BEGIN{ORS="%0A"}{print}')"
+            echo "::error title=build more::${rest}"
+          fi
       - name: Record build failure
         if: failure()
         env:
