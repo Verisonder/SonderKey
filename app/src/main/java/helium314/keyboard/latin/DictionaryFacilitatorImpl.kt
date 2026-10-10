@@ -793,6 +793,10 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
         }
     }
 
+    override fun forEachMainDictionaryWord(consumer: java.util.function.BiConsumer<String, Int>) {
+        dictionaryGroups.firstOrNull()?.getDict(Dictionary.TYPE_MAIN)?.forEachWord(consumer)
+    }
+
     override fun forgetLearnedWord(word: String, locale: Locale) {
         dictionaryGroups.filter { it.locale == locale }.forEach {
             it.getSubDict(Dictionary.TYPE_USER_HISTORY)?.removeUnigramEntryDynamically(word)

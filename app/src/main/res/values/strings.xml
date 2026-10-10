@@ -221,6 +221,11 @@
     <string name="auto_correct_shortcuts">Auto-correct shortcuts</string>
     <!-- Description for auto_correct_shortcuts -->
     <string name="auto_correct_shortcuts_summary">When enabled shortcuts might be expanded by autocorrect</string>
+    <!-- Correction for words spelled the way they sound -->
+    <string name="dyslexia_mode">Dyslexia mode</string>
+    <string name="dyslexia_mode_off">Off</string>
+    <string name="dyslexia_mode_suggest">Suggest the right spelling</string>
+    <string name="dyslexia_mode_autocorrect">Correct automatically</string>
     <!-- Option to limit how many letters auto-correction may change in a word -->
     <string name="auto_correct_max_changes">Maximum letters changed</string>
     <!-- Description for auto_correct_max_changes -->

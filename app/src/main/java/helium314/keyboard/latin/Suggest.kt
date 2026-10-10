@@ -22,6 +22,7 @@ import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.latin.settings.SettingsValuesForSuggestion
 import helium314.keyboard.latin.suggestions.SuggestionStripView
 import helium314.keyboard.latin.utils.AutoCorrectionUtils
+import helium314.keyboard.latin.dyslexia.DyslexiaSupport
 import helium314.keyboard.latin.utils.Log
 import helium314.keyboard.latin.utils.JniUtils
 import helium314.keyboard.latin.utils.SuggestionResults
@@ -116,7 +117,7 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
         val firstOccurrenceOfTypedWordInSuggestions = SuggestedWordInfo.removeDupsAndTypedWord(capitalizedTypedWord, suggestionsContainer)
         makeFirstTwoSuggestionsNonEmoji(suggestionsContainer)
 
-        val (allowsToBeAutoCorrected, hasAutoCorrection) = shouldBeAutoCorrected(
+        val (allowsToBeAutoCorrected, regularAutoCorrection) = shouldBeAutoCorrected(
             trailingSingleQuotesCount,
             capitalizedTypedWord,
             suggestionsContainer.firstOrNull(),
@@ -133,6 +134,12 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
             firstOccurrenceOfTypedWordInSuggestions,
             typedWordFirstOccurrenceWordInfo
         )
+        val dyslexiaAutoCorrection = if (resultsArePredictions) null else applySoundSpelling(
+            wordComposer, typedWordString, capitalizedTypedWord, keyboard, ngramContext,
+            inputStyleIfNotPrediction, settingsValuesForSuggestion, suggestionsContainer
+        )
+        // a sound-spelling suggestion, when there is one, decides on its own whether to correct
+        val hasAutoCorrection = dyslexiaAutoCorrection ?: regularAutoCorrection
          val typedWordInfo = SuggestedWordInfo(capitalizedTypedWord, "", SuggestedWordInfo.MAX_SCORE,
             SuggestedWordInfo.KIND_TYPED, typedWordFirstOccurrenceWordInfo?.mSourceDict ?: Dictionary.DICTIONARY_USER_TYPED,
             SuggestedWordInfo.NOT_AN_INDEX , SuggestedWordInfo.NOT_A_CONFIDENCE)
@@ -169,6 +176,66 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
         val isTypedWordValid = firstOccurrenceOfTypedWordInSuggestions > -1 || (!resultsArePredictions && !allowsToBeAutoCorrected)
         return SuggestedWords(suggestionsList, suggestionResults.mRawSuggestions,
             typedWordInfo, isTypedWordValid, hasAutoCorrection, false, inputStyle, sequenceNumber)
+    }
+
+    /**
+     * Dyslexia mode: puts words that sound like what was typed at the front of the suggestions.
+     * Returns null when it found nothing, so the ordinary auto-correction decision stands, or
+     * whether to auto-correct to the first of them when it did.
+     *
+     * A typed word in no dictionary gets its closest-sounding words. A typed word that is real
+     * but sounds like another ("wright" / "write") is only questioned when the words before it
+     * expect the other one and not it, since otherwise a correct word would keep being changed.
+     */
+    private fun applySoundSpelling(
+        wordComposer: WordComposer, typedWord: String, capitalizedTypedWord: String, keyboard: Keyboard,
+        ngramContext: NgramContext, inputStyle: Int, settingsValuesForSuggestion: SettingsValuesForSuggestion,
+        suggestionsContainer: ArrayList<SuggestedWordInfo>
+    ): Boolean? {
+        val mode = Settings.getValues().mDyslexiaMode
+        if (mode != DyslexiaSupport.MODE_SUGGEST && mode != DyslexiaSupport.MODE_AUTOCORRECT) return null
+        if (typedWord.length < 2 || wordComposer.hasDigits() || wordComposer.isResumed) return null
+        val index = DyslexiaSupport.indexFor(mDictionaryFacilitator) ?: return null
+        val candidates = index.lookup(typedWord)
+        if (candidates.isEmpty()) return null
+
+        val locale = mDictionaryFacilitator.mainLocale
+        val expected = getNextWordSuggestions(ngramContext, keyboard, inputStyle, settingsValuesForSuggestion)
+            .mapTo(HashSet()) { it.mWord.lowercase(locale) }
+        val typedIsWord = mDictionaryFacilitator.isValidSuggestionWord(typedWord)
+            || mDictionaryFacilitator.isValidSuggestionWord(typedWord.lowercase(locale))
+
+        val picked = if (!typedIsWord) {
+            // words the sentence so far expects move up, so "I want to rite" prefers "write"
+            candidates.sortedByDescending { it.score + if (it.word in expected) 1f else 0f }.take(3)
+        } else {
+            if (typedWord.lowercase(locale) in expected) return null
+            candidates.filter { it.exact && it.word in expected }.take(1)
+        }
+        if (picked.isEmpty()) return null
+
+        val allUpper = wordComposer.isAllUpperCase && !wordComposer.isResumed
+            || keyboard.mId.keyboardCapsMode == WordComposer.CAPS_MODE_MANUAL_SHIFT_LOCKED
+        val firstUpper = wordComposer.isOrWillBeOnlyFirstCharCapitalized
+            || keyboard.mId.keyboardCapsMode == WordComposer.CAPS_MODE_MANUAL_SHIFTED
+        val infos = picked.map {
+            SuggestedWordInfo(capitalize(it.word, allUpper, firstUpper, locale), "", SuggestedWordInfo.MAX_SCORE,
+                SuggestedWordInfo.KIND_CORRECTION, Dictionary.DICTIONARY_USER_TYPED,
+                SuggestedWordInfo.NOT_AN_INDEX, SuggestedWordInfo.NOT_A_CONFIDENCE)
+        }.filter { it.mWord != capitalizedTypedWord }
+        if (infos.isEmpty()) return null
+        val words = infos.mapTo(HashSet()) { it.mWord }
+        suggestionsContainer.removeAll { it.mWord in words }
+        suggestionsContainer.addAll(0, infos)
+
+        if (mode != DyslexiaSupport.MODE_AUTOCORRECT) return false
+        // fields without suggestions (passwords and the like), links and email addresses get no correction
+        val attrs = Settings.getValues().mInputAttributes
+        if (!attrs.mShouldShowSuggestions || helium314.keyboard.latin.utils.InputTypeUtils.isUriOrEmailType(attrs.mInputType))
+            return false
+        // a non-word is replaced by a good match; a real word only when the context is clear,
+        // which the filter above has already required
+        return if (typedIsWord) true else picked.first().score >= MIN_SOUND_CORRECTION_SCORE
     }
 
     // returns [allowsToBeAutoCorrected, hasAutoCorrection]
@@ -495,6 +562,8 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
         private const val SUPPRESS_SUGGEST_THRESHOLD = -2000000000
 
         private const val MAXIMUM_AUTO_CORRECT_LENGTH_FOR_GERMAN = 12
+        // below this a sound match is a guess: offered, never applied by itself
+        private const val MIN_SOUND_CORRECTION_SCORE = 1f
         // TODO: should we add Finnish here?
         private val sLanguageToMaximumAutoCorrectionWithSpaceLength = hashMapOf(Locale.GERMAN.language to MAXIMUM_AUTO_CORRECT_LENGTH_FOR_GERMAN)
 

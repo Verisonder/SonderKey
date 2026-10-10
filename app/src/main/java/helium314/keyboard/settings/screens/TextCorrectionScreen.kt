@@ -40,6 +40,7 @@ import helium314.keyboard.settings.Theme
 import helium314.keyboard.settings.dialogs.ConfirmationDialog
 import helium314.keyboard.settings.initPreview
 import helium314.keyboard.settings.preferences.ListPreference
+import helium314.keyboard.latin.dyslexia.DyslexiaSupport
 import helium314.keyboard.settings.preferences.SliderPreference
 import helium314.keyboard.settings.preferences.Preference
 import helium314.keyboard.settings.preferences.SwitchPreference
@@ -69,6 +70,7 @@ fun TextCorrectionScreen(
         SettingsWithoutKey.SCREEN_NAV_TEXT_EXPANDER,
 
         R.string.settings_category_correction,
+        Settings.PREF_DYSLEXIA_MODE,
         Settings.PREF_AUTO_CORRECTION,
         if (autocorrectEnabled) Settings.PREF_AUTO_CORRECT_TRIGGER else null,
         if (autocorrectEnabled) Settings.PREF_AUTO_CORRECT_THRESHOLD else null,
@@ -172,6 +174,18 @@ fun createCorrectionSettings(context: Context) = createAutopilotSettings(context
         )
         // todo: consider making it a slider, and maybe somehow adjust range so we can show %
         ListPreference(it, items, Defaults.PREF_AUTO_CORRECT_THRESHOLD)
+    },
+    Setting(context, Settings.PREF_DYSLEXIA_MODE, R.string.dyslexia_mode) { def ->
+        val ctx = LocalContext.current
+        ListPreference(
+            def,
+            listOf(
+                ctx.getString(R.string.dyslexia_mode_off) to DyslexiaSupport.MODE_OFF,
+                ctx.getString(R.string.dyslexia_mode_suggest) to DyslexiaSupport.MODE_SUGGEST,
+                ctx.getString(R.string.dyslexia_mode_autocorrect) to DyslexiaSupport.MODE_AUTOCORRECT,
+            ),
+            Defaults.PREF_DYSLEXIA_MODE
+        )
     },
     Setting(context, Settings.PREF_AUTO_CORRECT_MAX_CHANGES,
         R.string.auto_correct_max_changes, R.string.auto_correct_max_changes_summary) { def ->
