@@ -2411,11 +2411,6 @@ public class LatinIME extends InputMethodService implements
         mInputLogic.getSuggest().clearNextWordSuggestionsCache();
     }
 
-    /** The live dictionaries, for settings screens that list or edit what the keyboard learned. */
-    public DictionaryFacilitator getDictionaryFacilitator() {
-        return mDictionaryFacilitator;
-    }
-
     /** Clears cached next-word suggestions after a settings screen changes the dictionaries. */
     public void onDictionaryEdited() {
         mInputLogic.getSuggest().clearNextWordSuggestionsCache();

@@ -224,8 +224,9 @@ fun <T: Any?> SearchScreen(
     icon: @Composable (() -> Unit)? = null,
     menu: List<Pair<String, () -> Unit>>? = null,
     headerContent: (@Composable () -> Unit)? = null,
-    content: @Composable (ColumnScope.() -> Unit)? = null,
+    // before content, which callers pass as a trailing lambda
     searchBar: Boolean = false,
+    content: @Composable (ColumnScope.() -> Unit)? = null,
 ) {
     // searchText and showSearch should have the same remember or rememberSaveable
     // saveable survives orientation changes and switching between screens, but shows the
