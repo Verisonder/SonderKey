@@ -63,12 +63,14 @@ fun MultiSliderPreference(
     if (defaults.size != 1.shl(dimensions.size))
         throw ArithmeticException("defaults size does not match with dimensions, expected ${1.shl(dimensions.size)}, got ${defaults.size}")
     var showDialog by remember { mutableStateOf(false) }
-    //val (_, keys) = remember { createVariantsAndKeys(dimensions, baseKey) }
-    //val prefs = LocalContext.current.prefs()
+    val (_, keys) = remember(baseKey) { createVariantsAndKeys(dimensions, baseKey) }
+    val prefs = LocalContext.current.prefs()
+    // every variant listed would be too long; the base value (no landscape, split, …) is the one
+    // most people set, and the row re-reads it whenever the dialog closes
     Preference(
         name = name,
         onClick = { showDialog = true },
-        //description = keys.mapIndexed { i, it -> description(prefs.getFloat(it, defaults[i])) }.joinToString(" $SPLIT ")
+        description = description(prefs.getFloat(keys.first(), defaults.first())),
     )
     if (showDialog)
         MultiSliderDialog(

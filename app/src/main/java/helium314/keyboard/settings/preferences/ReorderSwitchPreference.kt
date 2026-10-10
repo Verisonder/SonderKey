@@ -17,6 +17,7 @@ import androidx.compose.ui.res.stringResource
 import helium314.keyboard.keyboard.KeyboardSwitcher
 import helium314.keyboard.keyboard.internal.KeyboardIconsSet
 import helium314.keyboard.latin.R
+import androidx.compose.ui.res.pluralStringResource
 import helium314.keyboard.latin.common.Constants.Separators
 import helium314.keyboard.latin.utils.getStringResourceOrName
 import helium314.keyboard.latin.utils.prefs
@@ -29,9 +30,16 @@ import androidx.core.content.edit
 @Composable
 fun ReorderSwitchPreference(setting: Setting, default: String, filter: (String) -> Boolean = { true }) {
     var showDialog by rememberSaveable { mutableStateOf(false) }
+    val enabledCount = LocalContext.current.prefs().getString(setting.key, default)!!
+        .split(Separators.ENTRY).count {
+            val both = it.split(Separators.KV)
+            filter(both.first()) && both.last().toBoolean()
+        }
+    // how many are switched on is the value of this row; shown first, before any explanation
+    val enabledText = pluralStringResource(R.plurals.reorder_enabled_count, enabledCount, enabledCount)
     Preference(
         name = setting.title,
-        description = setting.description,
+        description = listOfNotNull(enabledText, setting.description).joinToString(" · "),
         onClick = { showDialog = true },
     )
     if (showDialog) {

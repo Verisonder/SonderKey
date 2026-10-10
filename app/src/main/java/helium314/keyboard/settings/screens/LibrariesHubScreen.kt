@@ -18,6 +18,15 @@ import helium314.keyboard.settings.Setting
 import helium314.keyboard.settings.SettingsWithoutKey
 import helium314.keyboard.settings.preferences.LoadHandwritingPluginPreference
 import helium314.keyboard.settings.preferences.LoadTranslationPluginPreference
+import helium314.keyboard.settings.preferences.SliderPreference
+import helium314.keyboard.settings.preferences.SwitchPreference
+import helium314.keyboard.settings.SettingsActivity
+import helium314.keyboard.latin.settings.Defaults
+import helium314.keyboard.latin.settings.Settings
+import helium314.keyboard.latin.utils.Log
+import helium314.keyboard.latin.utils.getActivity
+import helium314.keyboard.latin.utils.prefs
+import androidx.compose.runtime.collectAsState
 
 /**
  * Words & dictionaries: every place that decides which words the keyboard knows, in one list.
@@ -28,12 +37,22 @@ fun LibrariesHubScreen(
     onClickBack: () -> Unit,
     @Suppress("UNUSED_PARAMETER") onClickDictionaries: () -> Unit,
 ) {
+    val ctx = LocalContext.current
+    val prefs = ctx.prefs()
+    val b = (ctx.getActivity() as? SettingsActivity)?.prefChanged?.collectAsState()
+    if ((b?.value ?: 0) < 0)
+        Log.v("irrelevant", "stupid way to trigger recomposition on preference change")
+    val autoAdd = prefs.getBoolean(Settings.PREF_ADD_TO_PERSONAL_DICTIONARY, Defaults.PREF_ADD_TO_PERSONAL_DICTIONARY)
     val items = buildList {
         add(R.string.settings_category_dictionaries)
         add(SettingsWithoutKey.SCREEN_NAV_DICTIONARIES)
         add(SettingsWithoutKey.SCREEN_NAV_PERSONAL_DICTIONARIES)
         add(SettingsWithoutKey.SCREEN_NAV_LEARNED_WORDS)
         add(SettingsWithoutKey.SCREEN_NAV_BLOCKED_WORDS)
+        add(R.string.settings_category_new_words)
+        add(Settings.PREF_ADD_TO_PERSONAL_DICTIONARY)
+        if (autoAdd) add(Settings.PREF_PERSONAL_DICT_ADD_AFTER)
+        if (autoAdd) add(Settings.PREF_PERSONAL_DICT_REVIEW)
         if (BuildConfig.FLAVOR == "standardfull" || BuildConfig.FLAVOR == "standard") {
             add(R.string.settings_category_plugins)
             if (BuildConfig.FLAVOR == "standardfull") add(SettingsWithoutKey.HANDWRITING_PLUGIN)
@@ -48,6 +67,24 @@ fun LibrariesHubScreen(
 }
 
 fun createWordsSettings(context: Context) = listOf(
+    Setting(context, Settings.PREF_ADD_TO_PERSONAL_DICTIONARY,
+        R.string.add_to_personal_dictionary, R.string.add_to_personal_dictionary_summary) {
+        SwitchPreference(it, Defaults.PREF_ADD_TO_PERSONAL_DICTIONARY)
+    },
+    Setting(context, Settings.PREF_PERSONAL_DICT_ADD_AFTER, R.string.personal_dict_add_after) { def ->
+        val res = LocalContext.current.resources
+        SliderPreference(
+            name = def.title,
+            key = def.key,
+            default = Defaults.PREF_PERSONAL_DICT_ADD_AFTER,
+            range = 1f..10f,
+            description = { res.getQuantityString(R.plurals.personal_dict_add_after_value, it, it) }
+        )
+    },
+    Setting(context, Settings.PREF_PERSONAL_DICT_REVIEW,
+        R.string.personal_dict_review, R.string.personal_dict_review_summary) {
+        SwitchPreference(it, Defaults.PREF_PERSONAL_DICT_REVIEW)
+    },
     Setting(context, SettingsWithoutKey.HANDWRITING_PLUGIN, R.string.libraries_hub_handwriting_title) {
         val ctx = LocalContext.current
         var installed by remember { mutableStateOf(HandwritingLoader.hasPlugin(ctx)) }

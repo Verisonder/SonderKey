@@ -1110,6 +1110,12 @@ New dictionary:
     <string name="settings_summary_ai">Proofreading and translation providers</string>
     <string name="settings_summary_system">Incognito, network, backup, updates, about</string>
     <string name="settings_search_hint">Search settings</string>
+    <!-- Value shown under a list of keys that can be switched on and off -->
+    <plurals name="reorder_enabled_count">
+        <item quantity="one">%d on</item>
+        <item quantity="other">%d on</item>
+    </plurals>
+    <string name="settings_category_new_words">Adding new words</string>
     <!-- Group headers -->
     <string name="settings_category_more">More</string>
     <string name="settings_category_switching_languages">Switching languages</string>
