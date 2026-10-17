@@ -59,6 +59,17 @@ object ProofreadHelper {
         }
     }
     
+    /** The private-mode switch (the incognito toggle). */
+    private fun isPrivateMode(context: Context): Boolean = context.prefs().getBoolean(
+        helium314.keyboard.latin.settings.Settings.PREF_ALWAYS_INCOGNITO_MODE,
+        helium314.keyboard.latin.settings.Defaults.PREF_ALWAYS_INCOGNITO_MODE,
+    )
+
+    /** The online fallback for translation, refused while private mode is on. */
+    private suspend fun onlineTranslate(context: Context, service: ProofreadService, text: String): Result<String> =
+        if (isPrivateMode(context)) Result.failure(Exception(context.getString(R.string.private_mode_ai_off)))
+        else service.translate(text)
+
     private fun performAsyncOperation(
         context: Context,
         text: String,
@@ -70,6 +81,15 @@ object ProofreadHelper {
         allowEmptyInput: Boolean = false,
         skipApiKeyCheck: Boolean = false
     ) {
+        // Private mode: nothing typed is sent to an online service. Only an on-device route
+        // (the offline translation plugin) is allowed through, and it may not fall back online.
+        if (!skipApiKeyCheck && isPrivateMode(context)) {
+            mainHandler.post {
+                KeyboardSwitcher.getInstance().showToast(context.getString(R.string.private_mode_ai_off), true)
+            }
+            return
+        }
+
         val service = ProofreadService(context)
 
         // Check if API key/token is configured based on provider (unless plugin handles operation)
@@ -251,11 +271,11 @@ object ProofreadHelper {
                             Result.success(result)
                         } else {
                             Log.w("ProofreadHelper", "Plugin returned blank, falling back to AI")
-                            service.translate(text)
+                            onlineTranslate(context, service, text)
                         }
                     } catch (e: Throwable) {
                         Log.e("ProofreadHelper", "Plugin translation failed, falling back to built-in AI", e)
-                        service.translate(text)
+                        onlineTranslate(context, service, text)
                     }
                 } else {
                     Log.i("ProofreadHelper", "Translating via built-in AI service")

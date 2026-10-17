@@ -37,7 +37,9 @@ No tracking. No analytics. No accounts. No data collection of any kind.
 off the phone's clipboard and held only inside the keyboard — other apps and websites can't
 read it. You paste it from the keyboard. It is deleted after 5 minutes, or the moment you
 leave private mode, and it is never saved to storage or backups. Passwords copied from a
-password manager are never kept in clipboard history at all.
+password manager are never kept in clipboard history at all. Online AI (proofreading,
+translation, custom AI keys) is paused too, so nothing you type leaves the phone; the
+offline translation plugin still works.
 
 ## ✨ Features
 
