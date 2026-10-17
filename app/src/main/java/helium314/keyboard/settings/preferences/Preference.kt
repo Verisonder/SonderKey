@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.Hyphens
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import helium314.keyboard.latin.R
 import helium314.keyboard.settings.IconOrImage
 import helium314.keyboard.settings.Theme
@@ -44,26 +45,28 @@ fun PreferenceCategory(
     modifier: Modifier = Modifier,
     @DrawableRes icon: Int? = null,
 ) {
-    Column {
-        // Divider removed as cards provide separation
-        Row(
-            modifier = modifier.padding(top = 20.dp, start = 24.dp, end = 24.dp, bottom = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            if (icon != null) {
-                CompositionLocalProvider(
-                    LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant
-                ) {
-                    IconOrImage(icon, title, 18)
-                }
+    // "▲ TITLE" in the accent, the section label used across the Verisonder apps. The icon is
+    // kept as a parameter for callers, but the label stands on its own.
+    Row(
+        modifier = modifier.padding(top = 22.dp, start = 24.dp, end = 24.dp, bottom = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        val accent = MaterialTheme.colorScheme.primary
+        androidx.compose.foundation.Canvas(Modifier.size(10.dp, 9.dp)) {
+            val p = androidx.compose.ui.graphics.Path().apply {
+                moveTo(size.width / 2, 0f); lineTo(size.width, size.height); lineTo(0f, size.height); close()
             }
-            Text(
-                text = title,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.titleSmall
-            )
+            drawPath(p, accent)
         }
+        Text(
+            text = title.uppercase(),
+            color = accent,
+            fontFamily = helium314.keyboard.settings.BodyFont,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+            fontSize = 12.sp,
+            letterSpacing = 2.sp,
+            modifier = Modifier.padding(start = 8.dp)
+        )
     }
 }
 
@@ -83,20 +86,31 @@ fun Preference(
             .clickable(enabled = enabled) { onClick() }
             .heightIn(min = 56.dp)
             .padding(vertical = 14.dp, horizontal = 20.dp),
-        horizontalArrangement = Arrangement.spacedBy(20.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (icon != null) {
-            // plain outline icon rather than a filled badge
-            CompositionLocalProvider(
-                LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant
+            // The icon in the accent on a round chip, as in the other Verisonder apps.
+            Box(
+                Modifier.size(40.dp).clip(androidx.compose.foundation.shape.CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+                contentAlignment = Alignment.Center
             ) {
-                IconOrImage(icon, name, 24)
+                CompositionLocalProvider(
+                    LocalContentColor provides MaterialTheme.colorScheme.primary.copy(alpha = if (enabled) 1f else 0.38f)
+                ) {
+                    IconOrImage(icon, name, 20)
+                }
             }
         }
         Column(modifier = Modifier.weight(1f)) {
             val alpha = if (enabled) 1f else 0.38f
-            Text(text = name, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha))
+            Text(
+                text = name,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha)
+            )
             if (description != null) {
                 CompositionLocalProvider(
                     LocalTextStyle provides MaterialTheme.typography.bodyMedium,

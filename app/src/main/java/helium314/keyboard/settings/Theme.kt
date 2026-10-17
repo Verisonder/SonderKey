@@ -9,148 +9,106 @@ import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import helium314.keyboard.latin.common.SonderPalette
-import helium314.keyboard.latin.settings.Defaults
-import helium314.keyboard.latin.settings.Settings
-import helium314.keyboard.latin.utils.prefs
+import helium314.keyboard.latin.R
 
 /**
- * Shape scale.
- *
- * M3 Expressive leans on shape to signal hierarchy, so these run noticeably rounder than the
- * Material 3 defaults: containers read as distinct objects rather than panels butted together.
+ * The settings app wears the Verisonder look shared with SonderShield: a black page, panels a
+ * step lighter, one electric-blue accent, Unbounded for headings and DM Sans for text. The
+ * keyboard itself is unaffected — its colours still come from the Sonder theme settings.
  */
 private val SonderShapes = Shapes(
-    extraSmall = RoundedCornerShape(8.dp),
-    small = RoundedCornerShape(14.dp),
-    medium = RoundedCornerShape(20.dp),
-    large = RoundedCornerShape(28.dp),
-    extraLarge = RoundedCornerShape(36.dp)
+    extraSmall = RoundedCornerShape(10.dp),
+    small = RoundedCornerShape(12.dp),
+    medium = RoundedCornerShape(14.dp),
+    large = RoundedCornerShape(18.dp),
+    extraLarge = RoundedCornerShape(26.dp)
 )
 
-private fun c(v: Int) = Color(v)
+/** Electric blue, as in SonderShield. */
+val SonderAccent = Color(0xFF3B82FF)
 
-private fun darkSchemeFor(seed: Int, surface: Int) = with(SonderPalette) {
-    val accent = accentFor(seed, true)
-    darkColorScheme(
-        primary = c(tone(accent, 74)),
-        onPrimary = c(tone(accent, 18)),
-        primaryContainer = c(tone(accent, 34)),
-        onPrimaryContainer = c(tone(accent, 92)),
-        inversePrimary = c(tone(accent, 42)),
-        secondary = c(tone(accent, 68)),
-        onSecondary = c(tone(accent, 16)),
-        secondaryContainer = c(neutral(surface, 24)),
-        onSecondaryContainer = c(neutral(surface, 92)),
-        tertiary = c(tone(accent, 84)),
-        onTertiary = c(tone(accent, 20)),
-        background = c(neutral(surface, 7)),
-        onBackground = c(neutral(surface, 93)),
-        surface = c(neutral(surface, 7)),
-        onSurface = c(neutral(surface, 93)),
-        surfaceVariant = c(neutral(surface, 15)),
-        onSurfaceVariant = c(neutral(surface, 78)),
-        surfaceContainerLowest = c(neutral(surface, 5)),
-        surfaceContainerLow = c(neutral(surface, 10)),
-        surfaceContainer = c(neutral(surface, 12)),
-        surfaceContainerHigh = c(neutral(surface, 16)),
-        surfaceContainerHighest = c(neutral(surface, 21)),
-        outline = c(neutral(surface, 62)),
-        outlineVariant = c(neutral(surface, 26)),
-        error = c(0xFFFFB4AB.toInt()),
-        onError = c(0xFF690005.toInt())
-    )
-}
+/** Unbounded: headings and numbers. */
+val DisplayFont = FontFamily(
+    Font(R.font.unbounded_bold, FontWeight.Bold),
+    Font(R.font.unbounded_extrabold, FontWeight.ExtraBold),
+)
 
-private fun lightSchemeFor(seed: Int, surface: Int) = with(SonderPalette) {
-    val accent = accentFor(seed, false)
-    lightColorScheme(
-        primary = c(tone(accent, 40)),
-        onPrimary = Color.White,
-        primaryContainer = c(tone(accent, 90)),
-        onPrimaryContainer = c(tone(accent, 14)),
-        inversePrimary = c(tone(accent, 76)),
-        secondary = c(tone(accent, 44)),
-        onSecondary = Color.White,
-        secondaryContainer = c(neutral(surface, 88)),
-        onSecondaryContainer = c(neutral(surface, 14)),
-        tertiary = c(tone(accent, 32)),
-        onTertiary = Color.White,
-        background = c(neutral(surface, 96)),
-        onBackground = c(neutral(surface, 12)),
-        surface = c(neutral(surface, 96)),
-        onSurface = c(neutral(surface, 12)),
-        surfaceVariant = c(neutral(surface, 89)),
-        onSurfaceVariant = c(neutral(surface, 32)),
-        surfaceContainerLowest = Color.White,
-        surfaceContainerLow = c(neutral(surface, 97)),
-        surfaceContainer = c(neutral(surface, 94)),
-        surfaceContainerHigh = c(neutral(surface, 91)),
-        surfaceContainerHighest = c(neutral(surface, 88)),
-        outline = c(neutral(surface, 48)),
-        outlineVariant = c(neutral(surface, 80)),
-        error = c(0xFFBA1A1A.toInt()),
-        onError = Color.White
-    )
-}
+/** DM Sans: everything else. */
+val BodyFont = FontFamily(
+    Font(R.font.dmsans_regular, FontWeight.Normal),
+    Font(R.font.dmsans_medium, FontWeight.Medium),
+    Font(R.font.dmsans_bold, FontWeight.Bold),
+)
+
+private val DarkScheme = darkColorScheme(
+    primary = SonderAccent, onPrimary = Color(0xFF0D0D0D),
+    primaryContainer = Color(0xFF14284D), onPrimaryContainer = Color(0xFFD6E4FF),
+    inversePrimary = Color(0xFF1D5BD8),
+    secondary = SonderAccent, onSecondary = Color(0xFF0D0D0D),
+    secondaryContainer = Color(0xFF1E1E1E), onSecondaryContainer = Color.White,
+    tertiary = SonderAccent, onTertiary = Color(0xFF0D0D0D),
+    background = Color.Black, onBackground = Color.White,
+    surface = Color.Black, onSurface = Color.White,
+    surfaceVariant = Color(0xFF111111), onSurfaceVariant = Color(0xFFBDBDBD),
+    surfaceContainerLowest = Color.Black, surfaceContainerLow = Color(0xFF0B0B0B),
+    surfaceContainer = Color(0xFF111111), surfaceContainerHigh = Color(0xFF1A1A1A),
+    surfaceContainerHighest = Color(0xFF1E1E1E),
+    inverseSurface = Color.White, inverseOnSurface = Color.Black,
+    outline = Color(0xFF8A8A8A), outlineVariant = Color(0xFF262626),
+    error = Color(0xFFFF6B5E), onError = Color.Black,
+    scrim = Color.Black,
+)
+
+private val LightScheme = lightColorScheme(
+    primary = Color(0xFF1D5BD8), onPrimary = Color.White,
+    primaryContainer = Color(0xFFD6E4FF), onPrimaryContainer = Color(0xFF0B1F45),
+    inversePrimary = SonderAccent,
+    secondary = Color(0xFF1D5BD8), onSecondary = Color.White,
+    secondaryContainer = Color(0xFFF0F0EE), onSecondaryContainer = Color(0xFF0D0D0D),
+    tertiary = Color(0xFF1D5BD8), onTertiary = Color.White,
+    background = Color(0xFFF5F5F4), onBackground = Color(0xFF0D0D0D),
+    surface = Color(0xFFF5F5F4), onSurface = Color(0xFF0D0D0D),
+    surfaceVariant = Color.White, onSurfaceVariant = Color(0xFF3A3A3A),
+    surfaceContainerLowest = Color.White, surfaceContainerLow = Color(0xFFFAFAF9),
+    surfaceContainer = Color.White, surfaceContainerHigh = Color(0xFFF0F0EE),
+    surfaceContainerHighest = Color(0xFFE8E8E6),
+    inverseSurface = Color(0xFF0D0D0D), inverseOnSurface = Color.White,
+    outline = Color(0xFF6B6B6B), outlineVariant = Color(0xFFE2E2E0),
+    error = Color(0xFFD12C1F), onError = Color.White,
+)
 
 @Composable
 fun Theme(dark: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
-    val ctx = LocalContext.current
-    val prefs = remember(ctx) { runCatching { ctx.prefs() }.getOrNull() }
-
-    // Reading the seed once meant the settings UI kept the colour it started with until the app
-    // was restarted, so picking a swatch appeared to only affect the keyboard. Watch the pref
-    // instead and recolour immediately.
-    var seed by remember {
-        mutableIntStateOf(
-            prefs?.getInt(Settings.PREF_SONDER_SEED_COLOR, Defaults.PREF_SONDER_SEED_COLOR)
-                ?: Defaults.PREF_SONDER_SEED_COLOR
-        )
-    }
-    var surface by remember {
-        mutableIntStateOf(
-            prefs?.getInt(Settings.PREF_SONDER_SURFACE_COLOR, Defaults.PREF_SONDER_SURFACE_COLOR)
-                ?: Defaults.PREF_SONDER_SURFACE_COLOR
-        )
-    }
-    DisposableEffect(prefs) {
-        val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { p, key ->
-            when (key) {
-                Settings.PREF_SONDER_SEED_COLOR ->
-                    seed = p.getInt(key, Defaults.PREF_SONDER_SEED_COLOR)
-                Settings.PREF_SONDER_SURFACE_COLOR ->
-                    surface = p.getInt(key, Defaults.PREF_SONDER_SURFACE_COLOR)
-            }
-        }
-        prefs?.registerOnSharedPreferenceChangeListener(listener)
-        onDispose { prefs?.unregisterOnSharedPreferenceChangeListener(listener) }
-    }
-
-    val colorScheme = remember(seed, surface, dark) {
-        if (dark) darkSchemeFor(seed, surface) else lightSchemeFor(seed, surface)
-    }
     val base = Typography()
-
+    fun TextStyle.body() = copy(fontFamily = BodyFont)
+    fun TextStyle.display(weight: FontWeight = FontWeight.ExtraBold) =
+        copy(fontFamily = DisplayFont, fontWeight = weight, letterSpacing = (-0.02f * fontSize.value).sp)
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = if (dark) DarkScheme else LightScheme,
         shapes = SonderShapes,
         typography = Typography(
-            titleLarge = base.titleLarge.copy(fontWeight = FontWeight.Bold, letterSpacing = (-0.4).sp),
-            titleMedium = base.titleMedium.copy(fontWeight = FontWeight.SemiBold, letterSpacing = (-0.2).sp),
-            titleSmall = base.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-            labelLarge = base.labelLarge.copy(fontWeight = FontWeight.SemiBold, letterSpacing = 0.6.sp),
-            bodyMedium = base.bodyMedium.copy(lineHeight = 20.sp)
+            displayLarge = base.displayLarge.display(),
+            displayMedium = base.displayMedium.display(),
+            displaySmall = base.displaySmall.display(),
+            headlineLarge = base.headlineLarge.display(),
+            headlineMedium = base.headlineMedium.display(),
+            headlineSmall = base.headlineSmall.display(FontWeight.Bold),
+            titleLarge = base.titleLarge.display(),
+            titleMedium = base.titleMedium.copy(fontFamily = BodyFont, fontWeight = FontWeight.Bold),
+            titleSmall = base.titleSmall.copy(fontFamily = BodyFont, fontWeight = FontWeight.Bold),
+            bodyLarge = base.bodyLarge.body(),
+            bodyMedium = base.bodyMedium.copy(fontFamily = BodyFont, lineHeight = 20.sp),
+            bodySmall = base.bodySmall.body(),
+            labelLarge = base.labelLarge.copy(fontFamily = BodyFont, fontWeight = FontWeight.Bold),
+            labelMedium = base.labelMedium.body(),
+            labelSmall = base.labelSmall.body(),
         ),
         content = content
     )

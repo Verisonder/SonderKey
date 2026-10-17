@@ -33,6 +33,12 @@ Your keyboard sees everything — passwords, messages, searches. Most keyboards 
 
 No tracking. No analytics. No accounts. No data collection of any kind.
 
+**Private mode keeps your clipboard private too.** While it is on, anything you copy is taken
+off the phone's clipboard and held only inside the keyboard — other apps and websites can't
+read it. You paste it from the keyboard. It is deleted after 5 minutes, or the moment you
+leave private mode, and it is never saved to storage or backups. Passwords copied from a
+password manager are never kept in clipboard history at all.
+
 ## ✨ Features
 
 - 🎙️ **On-device voice typing** — speech to text that runs entirely on your phone. Audio is never written to storage and never sent anywhere. Dictate as you finish, at every pause, or continuously; type alongside it; turn the spacing and capitalisation off for code. Optional download, English.
@@ -97,6 +103,9 @@ Built on the shoulders of:
 - [OpenBoard](https://github.com/openboard-team/openboard) and the AOSP LatinIME project
 
 All original copyright notices are preserved.
+
+Fonts in the settings app: Unbounded and DM Sans, under the SIL Open Font License
+(`LICENSE-OFL-Unbounded.txt`, `LICENSE-OFL-DMSans.txt`).
 
 <div align="center">
 <sub>Made with care by <a href="https://github.com/Verisonder">Verisonder</a></sub>

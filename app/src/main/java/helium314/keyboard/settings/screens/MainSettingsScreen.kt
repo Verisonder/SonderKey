@@ -3,6 +3,8 @@ package helium314.keyboard.settings.screens
 
 import android.content.Intent
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -15,6 +17,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,6 +50,41 @@ import helium314.keyboard.settings.initPreview
 import helium314.keyboard.settings.preferences.CheckForUpdatesPreference
 import helium314.keyboard.settings.preferences.Preference
 import helium314.keyboard.settings.previewDark
+
+/** The wordmark, the line SonderKey stands on, and the swoosh, as on SonderShield's home. */
+@Composable
+private fun SettingsHero() {
+    val accent = MaterialTheme.colorScheme.primary
+    Column(Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 4.dp)) {
+        Row {
+            Text("Sonder", style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.onBackground)
+            Text("Key", style = MaterialTheme.typography.headlineLarge, color = accent)
+        }
+        Text(
+            stringResource(R.string.settings_hero_line),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 6.dp)
+        )
+    }
+    // The blade: a thin accent curve, sweeping in from the right once when the page opens.
+    val progress = remember { androidx.compose.animation.core.Animatable(0f) }
+    LaunchedEffect(Unit) { progress.animateTo(1f, androidx.compose.animation.core.tween(700)) }
+    androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().height(34.dp)) {
+        val w = size.width
+        val h = size.height
+        val sx = w / 360f
+        val sy = h / 46f
+        val blade = androidx.compose.ui.graphics.Path().apply {
+            moveTo(0f, 46f * sy)
+            quadraticTo(130f * sx, 4f * sy, 360f * sx, 12f * sy)
+            lineTo(360f * sx, 20f * sy)
+            quadraticTo(155f * sx, 16f * sy, 0f, 46f * sy)
+            close()
+        }
+        clipRect(left = w * (1f - progress.value)) { drawPath(blade, accent) }
+    }
+}
 
 @Composable
 private fun SectionLabel(text: String) {
@@ -137,6 +175,7 @@ fun MainSettingsScreen(
                     .padding(innerPadding)
                     .padding(vertical = 8.dp)
             ) {
+                SettingsHero()
                 // Eight places, each named for what it holds, with a line saying what that is.
                 // Search above reaches every individual setting directly.
                 Card(
