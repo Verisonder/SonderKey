@@ -22,14 +22,14 @@ import helium314.keyboard.latin.utils.Log
 
 /** Class providing cached access to the clipboard table */
 // currently we should not need to worry about synchronizing access (though maybe we could addClip in a coroutine, then it might be relevant)
-class ClipboardDao private constructor(private val db: Database) {
+class ClipboardDao private constructor(private val db: Database) : ClipStore {
     interface Listener {
         fun onClipInserted(position: Int)
         fun onClipsRemoved(position: Int, count: Int)
         fun onClipMoved(oldPosition: Int, newPosition: Int)
     }
 
-    var listener: Listener? = null
+    override var listener: Listener? = null
 
     var isClosed = false
         private set
@@ -58,7 +58,7 @@ class ClipboardDao private constructor(private val db: Database) {
     }
 
     @Synchronized
-    fun addClip(timestamp: Long, pinned: Boolean, text: String, imageUri: String? = null) {
+    override fun addClip(timestamp: Long, pinned: Boolean, text: String, imageUri: String?) {
         clearOldClips()
         val existingIndex = cache.indexOfFirst { it.text == text && it.imageUri == imageUri }
         if (existingIndex >= 0 && cache[existingIndex].timeStamp == timestamp)
@@ -97,26 +97,27 @@ class ClipboardDao private constructor(private val db: Database) {
     }
 
     @Synchronized
-    fun isPinned(index: Int) = cache[index].isPinned
+    override fun isPinned(index: Int) = cache.getOrNull(index)?.isPinned == true
 
     @Synchronized
-    fun getAt(index: Int) = cache[index]
+    override fun getAt(index: Int) = cache.getOrNull(index)
 
     @Synchronized
-    fun getClips(): List<ClipboardHistoryEntry> = cache.toList()
+    override fun getClips(): List<ClipboardHistoryEntry> = cache.toList()
 
     @Synchronized
-    fun get(id: Long) = cache.first { it.id == id }
+    override fun get(id: Long) = cache.firstOrNull { it.id == id }
 
     @Synchronized
-    fun count() = cache.size
+    override fun count() = cache.size
 
     @Synchronized
-    fun sort() = cache.sort()
+    override fun sort() = cache.sort()
 
     @Synchronized
-    fun togglePinned(id: Long) {
-        val entry = cache.first { it.id == id }
+    override fun togglePinned(id: Long) {
+        // The entry may have expired or been cleared between showing and tapping.
+        val entry = cache.firstOrNull { it.id == id } ?: return
         entry.isPinned = !entry.isPinned
         if (listener != null) {
             val oldPos = cache.indexOf(entry)
@@ -133,7 +134,7 @@ class ClipboardDao private constructor(private val db: Database) {
 
     // RecyclerView initiates this, so we don't call listener (or we'll get an IndexOutOfRangeException from RecyclerView)
     @Synchronized
-    fun deleteClipAt(index: Int): ClipboardHistoryEntry? {
+    override fun deleteClipAt(index: Int): ClipboardHistoryEntry? {
         if (index < 0 || index >= cache.size) return null
         val entry = cache[index]
         cache.remove(entry)
@@ -143,7 +144,7 @@ class ClipboardDao private constructor(private val db: Database) {
 
     /** Re-insert a previously deleted entry (for undo). */
     @Synchronized
-    fun restoreClip(entry: ClipboardHistoryEntry) {
+    override fun restoreClip(entry: ClipboardHistoryEntry) {
         val cv = ContentValues(5)
         cv.put(COLUMN_ID, entry.id)
         cv.put(COLUMN_TIMESTAMP, entry.timeStamp)
@@ -157,7 +158,7 @@ class ClipboardDao private constructor(private val db: Database) {
     }
 
     @Synchronized
-    fun clearOldClips(now: Boolean = false) {
+    override fun clearOldClips(now: Boolean) {
         if (listener != null)
             return // never clear when clipboard is visible
         if (!now && lastClearOldClips > SystemClock.elapsedRealtime() - 5 * 1000)
@@ -174,7 +175,7 @@ class ClipboardDao private constructor(private val db: Database) {
     }
 
     @Synchronized
-    fun clearNonPinned() {
+    override fun clearNonPinned() {
         if (listener != null) {
             val indicesToRemove = mutableListOf<Int>()
             cache.forEachIndexed { idx, clip ->
@@ -192,10 +193,12 @@ class ClipboardDao private constructor(private val db: Database) {
     }
 
     @Synchronized
-    fun clear() {
-        if (count() == 0) return
+    override fun clear() {
+        val count = count()
+        if (count == 0) return
         cache.clear()
-        listener?.onClipsRemoved(0, count())
+        // The count is taken before clearing; reading it after always reported zero.
+        listener?.onClipsRemoved(0, count)
         db.writableDatabase.delete(TABLE, null, null)
     }
 

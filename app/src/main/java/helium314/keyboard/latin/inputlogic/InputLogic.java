@@ -799,7 +799,10 @@ public final class InputLogic {
         if (clipboardContent.isEmpty()) {
             return;
         }
-        if (clipboardContent.length() > 1000) {
+        // In private mode the text lives only inside the keyboard, so it is typed in rather
+        // than pasted from the system clipboard, which is kept empty.
+        if (clipboardContent.length() > 1000
+                && !mLatinIME.getClipboardHistoryManager().isPrivateMode()) {
             mConnection.performContextMenuAction(android.R.id.paste);
         } else {
             mLatinIME.onTextInput(clipboardContent);

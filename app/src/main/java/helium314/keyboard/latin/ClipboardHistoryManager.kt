@@ -17,7 +17,12 @@ import helium314.keyboard.event.HapticEvent
 import helium314.keyboard.keyboard.internal.keyboard_parser.floris.KeyCode
 import helium314.keyboard.latin.common.ColorType
 import helium314.keyboard.latin.common.isValidNumber
+import helium314.keyboard.latin.database.ClipStore
 import helium314.keyboard.latin.database.ClipboardDao
+import helium314.keyboard.latin.database.PrivateClipboard
+import helium314.keyboard.latin.settings.Defaults
+import helium314.keyboard.latin.settings.Settings
+import android.content.SharedPreferences
 import helium314.keyboard.latin.databinding.ClipboardSuggestionBinding
 import helium314.keyboard.latin.utils.InputTypeUtils
 import helium314.keyboard.latin.utils.ToolbarKey
@@ -51,6 +56,72 @@ class ClipboardHistoryManager(
         set(value) {
             _clipboardDao = value
         }
+    // ---------------------------------------------------------------- private mode
+    //
+    // While private mode is on, anything copied is taken off the system clipboard and kept
+    // only here, in memory, so no other app or website can read it. It is pasted through the
+    // keyboard. Entries go after five minutes, and everything goes when private mode ends.
+    // The saved history is not touched or shown meanwhile.
+    private val privateClips = PrivateClipboard()
+    private var historyListener: ClipboardDao.Listener? = null
+
+    /** The user's private-mode switch (the incognito toggle), not per-field no-learning. */
+    fun isPrivateMode(): Boolean =
+        latinIME.prefs().getBoolean(Settings.PREF_ALWAYS_INCOGNITO_MODE, Defaults.PREF_ALWAYS_INCOGNITO_MODE)
+
+    /** Whichever store the clipboard panel should show right now. */
+    private val store: ClipStore?
+        get() = if (isPrivateMode()) privateClips else clipboardDao
+
+    // Held strongly: SharedPreferences only keeps weak references to listeners.
+    private val privateModeListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key != Settings.PREF_ALWAYS_INCOGNITO_MODE) return@OnSharedPreferenceChangeListener
+        val isPrivate = isPrivateMode()
+        if (!isPrivate) {
+            // Leaving private mode: the private clipboard is gone, all of it, immediately.
+            privateClips.clear()
+        }
+        // The open panel follows the mode it is now showing.
+        clipboardDao?.listener = if (isPrivate) null else historyListener
+        privateClips.listener = if (isPrivate) historyListener else null
+        updateClipboardListening()
+    }
+
+    /** The system clipboard is watched whenever history is on or private mode needs it. */
+    private fun updateClipboardListening() {
+        if (!::clipboardManager.isInitialized) return
+        clipboardManager.removePrimaryClipChangedListener(this)
+        val wanted = isPrivateMode() || latinIME.prefs().getBoolean(
+            Settings.PREF_ENABLE_CLIPBOARD_LISTENER, Defaults.PREF_ENABLE_CLIPBOARD_LISTENER,
+        )
+        if (wanted) clipboardManager.addPrimaryClipChangedListener(this)
+    }
+
+    /**
+     * Private mode: move whatever was just copied into the private clipboard and clear the
+     * system clipboard, so the app it came from is the only one that ever saw it.
+     */
+    private fun takePrivateClip() {
+        val clipData = try { clipboardManager.primaryClip } catch (e: Exception) { null } ?: return
+        if (clipData.itemCount == 0) return
+        val item = clipData.getItemAt(0) ?: return
+        val uri = item.uri
+        val isImage = uri != null && (clipData.description?.hasMimeType("image/*") == true ||
+            runCatching { latinIME.contentResolver.getType(uri)?.startsWith("image/") == true }.getOrDefault(false))
+        if (isImage) {
+            // Only the link is kept, in memory. Nothing is copied to the keyboard's storage.
+            privateClips.addClip(System.currentTimeMillis(), false, "[Image]", uri.toString())
+        } else {
+            val text = item.coerceToText(latinIME)?.toString().orEmpty()
+            if (text.isEmpty()) return
+            privateClips.addClip(System.currentTimeMillis(), false, text, null)
+        }
+        lastPrimaryClipText = null
+        lastPrimaryClipUri = null
+        ClipboardManagerCompat.clearPrimaryClip(clipboardManager)
+        dontShowCurrentSuggestion = false
+    }
+
     private var dontShowCurrentSuggestion: Boolean = false
     // ponytail: track last clip state to avoid resetting dismiss state on duplicate events
     private var lastPrimaryClipText: String? = null
@@ -191,7 +262,7 @@ class ClipboardHistoryManager(
                                 }
                                 cachedScreenshotInfo = ScreenshotInfo(contentUri, fileName, fullPath, dateAdded)
                                 
-                                if (latinIME.mSettings.current.mClipboardHistoryEnabled) {
+                                if (latinIME.mSettings.current.mClipboardHistoryEnabled && !isPrivateMode()) {
                                     val cachedPath = cacheImage(contentUri)
                                     if (cachedPath != null && !deletedSet.contains(cachedPath) && !deletedSet.contains(contentUri.toString())) {
                                         clipboardDao?.addClip(System.currentTimeMillis(), false, "[Screenshot]", cachedPath)
@@ -231,9 +302,8 @@ class ClipboardHistoryManager(
 
     fun onCreate() {
         clipboardManager = latinIME.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        if (latinIME.prefs().getBoolean(helium314.keyboard.latin.settings.Settings.PREF_ENABLE_CLIPBOARD_LISTENER, helium314.keyboard.latin.settings.Defaults.PREF_ENABLE_CLIPBOARD_LISTENER)) {
-            clipboardManager.addPrimaryClipChangedListener(this)
-        }
+        updateClipboardListening()
+        latinIME.prefs().registerOnSharedPreferenceChangeListener(privateModeListener)
         clipboardDao = ClipboardDao.getInstance(latinIME)
         // ponytail: initialize last clip state
         try {
@@ -290,10 +360,17 @@ class ClipboardHistoryManager(
     fun onDestroy() {
         unregisterScreenshotObserver()
         clipboardManager.removePrimaryClipChangedListener(this)
+        latinIME.prefs().unregisterOnSharedPreferenceChangeListener(privateModeListener)
         mainHandler.removeCallbacksAndMessages(null)
+        // The keyboard is going away; nothing private outlives it.
+        privateClips.clear()
     }
 
     override fun onPrimaryClipChanged() {
+        if (isPrivateMode()) {
+            takePrivateClip()
+            return
+        }
         // Make sure we read clipboard content only if history settings is set
         if (latinIME.mSettings.current.mClipboardHistoryEnabled) {
             // ponytail: ignore duplicate events where clipboard contents didn't actually change
@@ -343,6 +420,11 @@ class ClipboardHistoryManager(
         }
         
         if (clipData == null || clipData.itemCount == 0) return
+        // Never write anything to the saved history while private mode is on.
+        if (isPrivateMode()) return
+        // A password manager marks what it copies as sensitive. That is a request not to keep
+        // it, and the saved history is a database on disk, so it is left out.
+        if (ClipboardManagerCompat.getClipSensitivity(clipData.description) == true) return
         
         var hasText = clipData.description?.hasMimeType("text/*") == true || clipData.description?.hasMimeType("text/plain") == true || clipData.description?.hasMimeType("text/html") == true
         var hasImage = clipData.description?.hasMimeType("image/*") == true
@@ -443,19 +525,25 @@ class ClipboardHistoryManager(
     }
 
     fun toggleClipPinned(id: Long) {
-        clipboardDao?.togglePinned(id)
+        store?.togglePinned(id)
     }
 
     fun clearHistory() {
+        if (isPrivateMode()) {
+            privateClips.clear()
+            removeClipboardSuggestion()
+            return
+        }
         clipboardDao?.clearNonPinned()
         ClipboardManagerCompat.clearPrimaryClip(clipboardManager)
         removeClipboardSuggestion()
     }
 
-    fun canRemove(index: Int) = clipboardDao?.isPinned(index) == false
+    fun canRemove(index: Int) = isPrivateMode() || clipboardDao?.isPinned(index) == false
 
     fun removeEntry(index: Int): ClipboardHistoryEntry? {
         if (!canRemove(index)) return null
+        if (isPrivateMode()) return privateClips.deleteClipAt(index)
         val entry = clipboardDao?.deleteClipAt(index)
         if (entry != null) {
             if (entry.imageUri != null) {
@@ -480,30 +568,36 @@ class ClipboardHistoryManager(
     }
 
     fun restoreEntry(entry: ClipboardHistoryEntry) {
-        clipboardDao?.restoreClip(entry)
+        // An entry restored by undo goes back where it came from.
+        if (entry.id < 0) privateClips.restoreClip(entry) else clipboardDao?.restoreClip(entry)
     }
 
     fun sortHistoryEntries() {
-        clipboardDao?.sort()
+        store?.sort()
     }
 
     // We do not want to update history while user is visualizing it, so we check retention only
     // when history is about to be shown
-    fun prepareClipboardHistory() = clipboardDao?.clearOldClips(true)
+    fun prepareClipboardHistory() = store?.clearOldClips(true)
 
-    fun getHistorySize() = clipboardDao?.count() ?: 0
+    fun getHistorySize() = store?.count() ?: 0
 
-    fun getClips() = clipboardDao?.getClips() ?: emptyList()
+    fun getClips() = store?.getClips() ?: emptyList()
 
-    fun getHistoryEntry(position: Int) = clipboardDao?.getAt(position)
+    fun getHistoryEntry(position: Int) = store?.getAt(position)
 
-    fun getHistoryEntryContent(id: Long) = clipboardDao?.get(id)
+    fun getHistoryEntryContent(id: Long) = (if (id < 0) privateClips else clipboardDao)?.get(id)
 
     fun setHistoryChangeListener(listener: ClipboardDao.Listener?) {
-        clipboardDao?.listener = listener
+        historyListener = listener
+        val isPrivate = isPrivateMode()
+        clipboardDao?.listener = if (isPrivate) null else listener
+        privateClips.listener = if (isPrivate) listener else null
     }
 
     fun retrieveClipboardContent(): CharSequence {
+        // Private mode: the paste key pastes the newest private clip.
+        if (isPrivateMode()) return privateClips.latest()?.takeIf { it.imageUri == null }?.text ?: ""
         val clipData = clipboardManager.primaryClip ?: return ""
         if (clipData.itemCount == 0) return ""
         return clipData.getItemAt(0)?.coerceToText(latinIME) ?: ""
@@ -530,12 +624,21 @@ class ClipboardHistoryManager(
         if (!latinIME.mSettings.current.mSuggestClipboardContent) return null
         if (dontShowCurrentSuggestion) return null
         if (parent == null) return null
-        val clipData = clipboardManager.primaryClip ?: return null
-        if (clipData.itemCount == 0 || clipData.description?.hasMimeType("text/*") == false) return null
-        val clipItem = clipData.getItemAt(0) ?: return null
-        val timeStamp = ClipboardManagerCompat.getClipTimestamp(clipData)
-        if (System.currentTimeMillis() - timeStamp > RECENT_TIME_MILLIS) return null
-        val content = clipItem.coerceToText(latinIME)
+        val content: CharSequence
+        if (isPrivateMode()) {
+            // The newest private clip, offered the same way; never the system clipboard.
+            val latest = privateClips.latest() ?: return null
+            if (latest.imageUri != null) return null
+            if (System.currentTimeMillis() - latest.timeStamp > RECENT_TIME_MILLIS) return null
+            content = latest.text
+        } else {
+            val clipData = clipboardManager.primaryClip ?: return null
+            if (clipData.itemCount == 0 || clipData.description?.hasMimeType("text/*") == false) return null
+            val clipItem = clipData.getItemAt(0) ?: return null
+            val timeStamp = ClipboardManagerCompat.getClipTimestamp(clipData)
+            if (System.currentTimeMillis() - timeStamp > RECENT_TIME_MILLIS) return null
+            content = clipItem.coerceToText(latinIME) ?: return null
+        }
         if (TextUtils.isEmpty(content)) return null
         val prefs = latinIME.prefs()
         val lastDismissedText = prefs.getString("last_dismissed_clipboard_text", "")
@@ -609,7 +712,7 @@ class ClipboardHistoryManager(
         val isAlreadySuggested = contentUri.toString() == lastSuggestedScreenshotUri
 
         if (!isAlreadySuggested) {
-            if (latinIME.mSettings.current.mClipboardHistoryEnabled) {
+            if (latinIME.mSettings.current.mClipboardHistoryEnabled && !isPrivateMode()) {
                 ExecutorUtils.getBackgroundExecutor(ExecutorUtils.KEYBOARD).execute {
                     val cachedPath = cacheImage(contentUri)
                     if (cachedPath != null) {
@@ -686,6 +789,11 @@ class ClipboardHistoryManager(
     }
 
     fun pasteLargeText(text: String) {
+        // In private mode the text must never touch the system clipboard, even for a moment.
+        if (isPrivateMode()) {
+            latinIME.onTextInput(text)
+            return
+        }
         val primaryClip = try { clipboardManager.primaryClip } catch (e: Exception) { null }
         
         // Remove listener temporarily to avoid re-triggering history capture
@@ -710,7 +818,7 @@ class ClipboardHistoryManager(
             } catch (e: Exception) {
                 // Ignore restore failures
             } finally {
-                clipboardManager.addPrimaryClipChangedListener(this)
+                updateClipboardListening()
             }
         }, 200)
     }

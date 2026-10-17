@@ -313,7 +313,13 @@ class ClipboardHistoryView @JvmOverloads constructor(
         val isEmpty = clipboardAdapter.itemCount == 0 // Since we removed header, 0 is truly empty
         emptyViewContainer.visibility = if (isEmpty) View.VISIBLE else View.GONE
         if (isEmpty) {
-            emptyViewText.setText(if (isSearch) R.string.clipboard_no_search_results else R.string.clipboard_empty_text)
+            val inPrivate = ::clipboardHistoryManager.isInitialized && clipboardHistoryManager.isPrivateMode()
+            emptyViewText.setText(when {
+                isSearch -> R.string.clipboard_no_search_results
+                // Says what private mode does with copied text, so the empty panel is not a surprise.
+                inPrivate -> R.string.clipboard_private_empty_text
+                else -> R.string.clipboard_empty_text
+            })
         }
     }
 
