@@ -9,6 +9,16 @@ import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import helium314.keyboard.latin.common.SonderPalette
+import helium314.keyboard.latin.settings.Defaults
+import helium314.keyboard.latin.settings.Settings
+import helium314.keyboard.latin.utils.prefs
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -31,9 +41,6 @@ private val SonderShapes = Shapes(
     extraLarge = RoundedCornerShape(26.dp)
 )
 
-/** Electric blue, as in SonderShield. */
-val SonderAccent = Color(0xFF3B82FF)
-
 /** Unbounded: headings and numbers. */
 val DisplayFont = FontFamily(
     Font(R.font.unbounded_bold, FontWeight.Bold),
@@ -47,13 +54,13 @@ val BodyFont = FontFamily(
     Font(R.font.dmsans_bold, FontWeight.Bold),
 )
 
-private val DarkScheme = darkColorScheme(
-    primary = SonderAccent, onPrimary = Color(0xFF0D0D0D),
-    primaryContainer = Color(0xFF14284D), onPrimaryContainer = Color(0xFFD6E4FF),
-    inversePrimary = Color(0xFF1D5BD8),
-    secondary = SonderAccent, onSecondary = Color(0xFF0D0D0D),
+private fun darkScheme(accent: Color, onAccent: Color, container: Color, onContainer: Color) = darkColorScheme(
+    primary = accent, onPrimary = onAccent,
+    primaryContainer = container, onPrimaryContainer = onContainer,
+    inversePrimary = accent,
+    secondary = accent, onSecondary = onAccent,
     secondaryContainer = Color(0xFF1E1E1E), onSecondaryContainer = Color.White,
-    tertiary = SonderAccent, onTertiary = Color(0xFF0D0D0D),
+    tertiary = accent, onTertiary = onAccent,
     background = Color.Black, onBackground = Color.White,
     surface = Color.Black, onSurface = Color.White,
     surfaceVariant = Color(0xFF111111), onSurfaceVariant = Color(0xFFBDBDBD),
@@ -66,13 +73,13 @@ private val DarkScheme = darkColorScheme(
     scrim = Color.Black,
 )
 
-private val LightScheme = lightColorScheme(
-    primary = Color(0xFF1D5BD8), onPrimary = Color.White,
-    primaryContainer = Color(0xFFD6E4FF), onPrimaryContainer = Color(0xFF0B1F45),
-    inversePrimary = SonderAccent,
-    secondary = Color(0xFF1D5BD8), onSecondary = Color.White,
+private fun lightScheme(accent: Color, onAccent: Color, container: Color, onContainer: Color) = lightColorScheme(
+    primary = accent, onPrimary = onAccent,
+    primaryContainer = container, onPrimaryContainer = onContainer,
+    inversePrimary = accent,
+    secondary = accent, onSecondary = onAccent,
     secondaryContainer = Color(0xFFF0F0EE), onSecondaryContainer = Color(0xFF0D0D0D),
-    tertiary = Color(0xFF1D5BD8), onTertiary = Color.White,
+    tertiary = accent, onTertiary = onAccent,
     background = Color(0xFFF5F5F4), onBackground = Color(0xFF0D0D0D),
     surface = Color(0xFFF5F5F4), onSurface = Color(0xFF0D0D0D),
     surfaceVariant = Color.White, onSurfaceVariant = Color(0xFF3A3A3A),
@@ -84,14 +91,44 @@ private val LightScheme = lightColorScheme(
     error = Color(0xFFD12C1F), onError = Color.White,
 )
 
+/**
+ * The settings accent follows the keyboard's own accent (Appearance → Sonder theme), so the
+ * one colour picker recolours both. It is tuned for the page the same way the keyboard tunes
+ * it, so it stays readable on black and on light.
+ */
+private fun schemeFor(seed: Int, dark: Boolean) = with(SonderPalette) {
+    val a = accentFor(seed, dark)
+    val accent = Color(a)
+    val onAccent = if (lightness(a) > 60) Color(0xFF0D0D0D) else Color.White
+    if (dark) darkScheme(accent, onAccent, Color(tone(a, 28)), Color(tone(a, 92)))
+    else lightScheme(accent, onAccent, Color(tone(a, 90)), Color(tone(a, 16)))
+}
+
 @Composable
 fun Theme(dark: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
+    val ctx = LocalContext.current
+    val prefs = remember(ctx) { runCatching { ctx.prefs() }.getOrNull() }
+    // Watched, not read once, so picking a colour recolours the open settings straight away.
+    var seed by remember {
+        mutableIntStateOf(
+            prefs?.getInt(Settings.PREF_SONDER_SEED_COLOR, Defaults.PREF_SONDER_SEED_COLOR)
+                ?: Defaults.PREF_SONDER_SEED_COLOR
+        )
+    }
+    DisposableEffect(prefs) {
+        val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { p, key ->
+            if (key == Settings.PREF_SONDER_SEED_COLOR) seed = p.getInt(key, Defaults.PREF_SONDER_SEED_COLOR)
+        }
+        prefs?.registerOnSharedPreferenceChangeListener(listener)
+        onDispose { prefs?.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
+    val colorScheme = remember(seed, dark) { schemeFor(seed, dark) }
     val base = Typography()
     fun TextStyle.body() = copy(fontFamily = BodyFont)
     fun TextStyle.display(weight: FontWeight = FontWeight.ExtraBold) =
         copy(fontFamily = DisplayFont, fontWeight = weight, letterSpacing = (-0.02f * fontSize.value).sp)
     MaterialTheme(
-        colorScheme = if (dark) DarkScheme else LightScheme,
+        colorScheme = colorScheme,
         shapes = SonderShapes,
         typography = Typography(
             displayLarge = base.displayLarge.display(),
