@@ -70,9 +70,22 @@ jobs:
           GH_TOKEN: ${{ secrets.RELEASE_PAT }}
         run: |
           if [ -z "$GH_TOKEN" ]; then echo "::error title=publish::RELEASE_PAT is not set"; exit 1; fi
-          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --prerelease --target "$GITHUB_SHA" \
-            --title "Language model: SmolLM2-135M (English)" --notes-file out/notes.md \
-            out/smollm2-135m-int8.onnx out/smollm2-135m-tokenizer.txt
+          ls -la out | sed 's/^/::notice title=files::/'
+          publish() {
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --prerelease --target "$GITHUB_SHA" \
+              --title "Language model: SmolLM2-135M (English)" --notes-file out/notes.md \
+              out/smollm2-135m-int8.onnx out/smollm2-135m-tokenizer.txt > publish.log 2>&1
+          }
+          if ! publish; then
+            sed 's/^/::warning title=publish attempt 1::/' publish.log
+            # A half-made release would block the retry; remove it first.
+            gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag >/dev/null 2>&1 || true
+            sleep 20
+            if ! publish; then
+              sed 's/^/::error title=publish::/' publish.log
+              exit 1
+            fi
+          fi
 
       - name: Annotate failure
         if: failure()
