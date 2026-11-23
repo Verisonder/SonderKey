@@ -1274,7 +1274,7 @@ New dictionary:
     <string name="autopilot_debug_shape_oval">Dotted line</string>
     <string name="autopilot_debug_shape_filled">Filled areas</string>
     <string name="autopilot_debug_color">Outline colour</string>
-    <string name="autopilot_debug_summary">Draw where each letter's touch area really ends right now, including what the keyboard has learned about your typing</string>
+    <string name="autopilot_debug_summary">Draw where each letter\'s touch area really ends right now, including what the keyboard has learned about your typing</string>
     <string name="learn_touch">Learn how you type</string>
     <string name="learn_touch_summary">Moves where each letter starts and ends to where you actually tap it. Only tap positions are kept, never words, and only on this device.</string>
     <string name="learn_touch_reset">Reset what was learned</string>
