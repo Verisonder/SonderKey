@@ -23,6 +23,7 @@ import helium314.keyboard.latin.settings.SettingsValuesForSuggestion
 import helium314.keyboard.latin.suggestions.SuggestionStripView
 import helium314.keyboard.latin.utils.AutoCorrectionUtils
 import helium314.keyboard.latin.dyslexia.DyslexiaSupport
+import helium314.keyboard.latin.personalization.RefusedCorrections
 import helium314.keyboard.latin.utils.Log
 import helium314.keyboard.latin.utils.JniUtils
 import helium314.keyboard.latin.utils.SuggestionResults
@@ -139,7 +140,10 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
             inputStyleIfNotPrediction, settingsValuesForSuggestion, suggestionsContainer
         )
         // a sound-spelling suggestion, when there is one, decides on its own whether to correct
-        val hasAutoCorrection = dyslexiaAutoCorrection ?: regularAutoCorrection
+        // A correction the user has undone before, for this same typed word, is not made again;
+        // it stays in the strip to be picked by hand.
+        val hasAutoCorrection = (dyslexiaAutoCorrection ?: regularAutoCorrection)
+            && !RefusedCorrections.isRefused(typedWordString, suggestionsContainer.firstOrNull()?.mWord)
          val typedWordInfo = SuggestedWordInfo(capitalizedTypedWord, "", SuggestedWordInfo.MAX_SCORE,
             SuggestedWordInfo.KIND_TYPED, typedWordFirstOccurrenceWordInfo?.mSourceDict ?: Dictionary.DICTIONARY_USER_TYPED,
             SuggestedWordInfo.NOT_AN_INDEX , SuggestedWordInfo.NOT_A_CONFIDENCE)

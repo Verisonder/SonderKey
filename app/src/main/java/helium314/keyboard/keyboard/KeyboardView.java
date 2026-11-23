@@ -261,11 +261,10 @@ public class KeyboardView extends View {
     /**
      * How far a key's touch area currently reaches beyond each of its own edges, in pixels.
      *
-     * This is the same figure {@link helium314.keyboard.keyboard.KeyDetector} allows the key to
-     * claim - {@code width * shiftRatio * weight} - so what is drawn is the boundary actually in
-     * force rather than a picture with a scale of its own. A drawing with its own scale would
-     * sooner or later disagree with the thing it claims to describe, which is worse than not
-     * drawing it at all.
+     * Derived from the same score {@link helium314.keyboard.keyboard.KeyDetector} decides with
+     * (TouchScoring.reach): how far this letter's catchment pushes into a neighbour nobody expects.
+     * A drawing with a scale of its own would sooner or later disagree with the thing it claims to
+     * describe, which is worse than not drawing it at all.
      *
      * The touch target moves whether or not this is switched on; the switch only decides whether
      * the movement is shown. Seeing it is not decoration - a target that grows invisibly is
@@ -280,11 +279,12 @@ public class KeyboardView extends View {
         if (code <= 0 || !Character.isLetter(code)) return 0f;
         final AutopilotHints hints = AutopilotHints.getInstance();
         if (!hints.isEnabled() || hints.isEmpty()) return 0f;
-        return key.getWidth() * ratio * hints.weightOf(code);
+        return key.getWidth() * helium314.keyboard.keyboard.internal.TouchScoring.INSTANCE.reach(
+                ratio, hints.weightOf(code), hints.getFloor());
     }
 
     /**
-     * The boundary shift ratio the key detector is working to. Zero stops the effect being drawn.
+     * The Autopilot weight the key detector is working to. Zero stops the effect being drawn.
      *
      * Deliberately the detector's own figure and not a separate one: the whole value of drawing
      * this is that it says where the boundary really is.

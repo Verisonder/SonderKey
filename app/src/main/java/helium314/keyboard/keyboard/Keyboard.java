@@ -111,6 +111,11 @@ public class Keyboard {
         mAltCodeKeysWhileTyping = Collections.unmodifiableList(params.mAltCodeKeysWhileTyping);
         mIconsSet = params.mIconsSet;
 
+        final helium314.keyboard.latin.settings.SettingsValues learnValues =
+                helium314.keyboard.latin.settings.Settings.getValues();
+        params.mTouchPositionCorrection.setLearnedOffsets(
+                helium314.keyboard.keyboard.internal.TouchModel.offsetsSnapshot(
+                        params.mId, learnValues != null && learnValues.mLearnTouch));
         mProximityInfo = new ProximityInfo(params.GRID_WIDTH, params.GRID_HEIGHT,
                 mOccupiedWidth, mOccupiedHeight, mMostCommonKeyWidth, mMostCommonKeyHeight,
                 mSortedKeys, params.mTouchPositionCorrection);

@@ -73,10 +73,9 @@ fun createAutopilotSettings(context: Context) = listOf(
             name = def.title,
             key = def.key,
             default = Defaults.PREF_AUTOPILOT_STRENGTH,
-            // Six to sixty percent of a key's width. One is a couple of pixels and barely
-            // perceptible. Around five a favoured letter starts to reach into its neighbour
-            // rather than only into the gap; ten claims a good part of it, and from about eight
-            // upwards the effect applies to any press on a letter, not only ones near an edge.
+            // One is a few pixels and barely perceptible. Around five a favoured letter reaches
+            // past the gap into its neighbour; ten claims up to the edge of the neighbour's
+            // centre, which is never taken (see TouchScoring).
             range = 1f..10f,
             description = { it.toString() }
         )

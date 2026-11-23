@@ -345,31 +345,27 @@ public final class MainKeyboardView extends KeyboardView implements DrawingProxy
         final helium314.keyboard.latin.settings.SettingsValues autopilotValues = Settings.getValues();
         helium314.keyboard.keyboard.internal.AutopilotHints.getInstance()
                 .setEnabled(autopilotValues.mAutopilot);
-        // Strength 1 to 10 maps to a boundary shift of six to sixty percent of a key's width.
-        //
-        // Thirty was the old ceiling and it was quietly useless at the top: the gap between two
-        // keys is roughly a quarter of a key's width, so a thirty percent reach fills the gap and
-        // stops exactly at the neighbour's edge. A favoured letter could never actually claim
-        // ground from the letter beside it, which is the whole point of the feature.
-        //
-        // Past fifty percent the reach exceeds half a key's width, and applyAutopilot's first
-        // guard - a press deeper inside its own key than the reach is left alone - stops firing.
-        // From there every letter press is eligible for override rather than only ones near an
-        // edge. That is a real change in character, which is why it sits at the top of a slider
-        // that is off by default rather than being the default itself.
-        final float autopilotShiftRatio =
-                autopilotValues.mAutopilot ? autopilotValues.mAutopilotStrength * 0.06f : 0f;
-        mKeyDetector.setAutopilotShiftRatio(autopilotShiftRatio);
+        // Strength 1 to 10 sets how much what the dictionary expects counts against where the
+        // finger landed. At 10 a fully expected letter beside a fully unexpected one claims about
+        // half a key's width, up to the point where the neighbour's own centre stays untouchable.
+        final float autopilotLambda = autopilotValues.mAutopilot
+                ? helium314.keyboard.keyboard.internal.TouchScoring.INSTANCE.lambdaForStrength(
+                        autopilotValues.mAutopilotStrength)
+                : 0f;
+        mKeyDetector.setAutopilotLambda(autopilotLambda);
+        // Where this person lands on each key, learned from their typing. The map is the live one,
+        // so new samples count from the next touch without rebuilding the keyboard.
+        mKeyDetector.setTouchStats(autopilotValues.mLearnTouch
+                ? helium314.keyboard.keyboard.internal.TouchModel.INSTANCE.statsFor(keyboard.mId)
+                : null);
         mAutopilotDebugDrawingPreview.setPreviewEnabled(
                 autopilotValues.mAutopilot && autopilotValues.mAutopilotDebug);
-        mAutopilotDebugDrawingPreview.setShiftRatio(autopilotShiftRatio);
         mAutopilotDebugDrawingPreview.setStyle(
                 autopilotValues.mAutopilotDebugColor, autopilotValues.mAutopilotDebugShape);
-        mAutopilotDebugDrawingPreview.setKeyboard(keyboard);
-        // The one ratio, handed to all three. Drawing the key larger is a way of seeing what
-        // autopilot is doing, not a second effect with a size of its own, so there is nothing
-        // here to set independently and nothing that can drift from what it is describing.
-        setAutopilotVisualRatio(autopilotValues.mAutopilotVisual ? autopilotShiftRatio : 0f);
+        mAutopilotDebugDrawingPreview.setKeyboard(keyboard, mKeyDetector);
+        // The same weight, handed to the drawing. Drawing the key larger is a way of seeing what
+        // autopilot is doing, not a second effect with a size of its own.
+        setAutopilotVisualRatio(autopilotValues.mAutopilotVisual ? autopilotLambda : 0f);
         mKeyPressEffectDrawingPreview.setPreviewEnabled(autopilotValues.mKeyPressEffect);
         mKeyPressEffectDrawingPreview.reloadCustomImage(
                 Settings.getKeyPressEffectImageFile(getContext()));

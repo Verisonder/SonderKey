@@ -56,6 +56,20 @@ public final class TouchPositionCorrection {
         }
     }
 
+    /**
+     * Where this person lands on each key, code to (x, y) offset in key sizes, or null. Added on
+     * top of the fixed per-row correction when the suggestion engine's key geometry is built.
+     */
+    private java.util.Map<Integer, float[]> mLearnedOffsets;
+
+    public void setLearnedOffsets(final java.util.Map<Integer, float[]> offsets) {
+        mLearnedOffsets = offsets;
+    }
+
+    public java.util.Map<Integer, float[]> getLearnedOffsets() {
+        return mLearnedOffsets;
+    }
+
     public void setEnabled(final boolean enabled) {
         mEnabled = enabled;
     }

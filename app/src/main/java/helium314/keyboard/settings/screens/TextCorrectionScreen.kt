@@ -41,6 +41,8 @@ import helium314.keyboard.settings.dialogs.ConfirmationDialog
 import helium314.keyboard.settings.initPreview
 import helium314.keyboard.settings.preferences.ListPreference
 import helium314.keyboard.latin.dyslexia.DyslexiaSupport
+import helium314.keyboard.keyboard.internal.TouchModel
+import helium314.keyboard.latin.personalization.RefusedCorrections
 import helium314.keyboard.settings.preferences.SliderPreference
 import helium314.keyboard.settings.preferences.Preference
 import helium314.keyboard.settings.preferences.SwitchPreference
@@ -67,6 +69,8 @@ fun TextCorrectionScreen(
         SettingsWithoutKey.SCREEN_NAV_GESTURES,
         SettingsWithoutKey.SCREEN_NAV_VOICE_TYPING,
         "autopilot_entry",
+        Settings.PREF_LEARN_TOUCH,
+        if (prefs.getBoolean(Settings.PREF_LEARN_TOUCH, Defaults.PREF_LEARN_TOUCH)) LEARN_TOUCH_RESET else null,
         SettingsWithoutKey.SCREEN_NAV_TEXT_EXPANDER,
 
         R.string.settings_category_correction,
@@ -78,6 +82,9 @@ fun TextCorrectionScreen(
         if (autocorrectEnabled) Settings.PREF_MORE_AUTO_CORRECTION else null,
         if (autocorrectEnabled) Settings.PREF_AUTOCORRECT_SHORTCUTS else null,
         if (suggestionsEnabled || autocorrectEnabled) Settings.PREF_BACKSPACE_REVERTS_AUTOCORRECT else null,
+        if (autocorrectEnabled) Settings.PREF_LEARN_FROM_UNDONE_CORRECTIONS else null,
+        if (autocorrectEnabled && prefs.getBoolean(Settings.PREF_LEARN_FROM_UNDONE_CORRECTIONS,
+                Defaults.PREF_LEARN_FROM_UNDONE_CORRECTIONS)) REFUSED_CORRECTIONS_CLEAR else null,
         Settings.PREF_BLOCK_POTENTIALLY_OFFENSIVE,
 
         R.string.settings_category_capitals_spacing,
@@ -126,9 +133,66 @@ fun TextCorrectionScreen(
     )
 }
 
+private const val LEARN_TOUCH_RESET = "learn_touch_reset"
+private const val REFUSED_CORRECTIONS_CLEAR = "refused_corrections_clear"
+
 // Autopilot has a screen of its own, reached from the row below, but its settings are registered
 // here: a Setting must exist in the container for its key to resolve anywhere.
 fun createCorrectionSettings(context: Context) = createAutopilotSettings(context) + listOf(
+
+    Setting(context, Settings.PREF_LEARN_TOUCH, R.string.learn_touch, R.string.learn_touch_summary) {
+        // The key detector picks the learned map up when the keyboard is next built.
+        SwitchPreference(it, Defaults.PREF_LEARN_TOUCH) { KeyboardSwitcher.getInstance().setThemeNeedsReload() }
+    },
+    Setting(context, LEARN_TOUCH_RESET, R.string.learn_touch_reset) { def ->
+        val ctx = LocalContext.current
+        var showConfirm by rememberSaveable { mutableStateOf(false) }
+        var count by remember { mutableStateOf(TouchModel.learnedKeyCount(ctx)) }
+        Preference(
+            name = def.title,
+            description = stringResource(R.string.learn_touch_reset_summary, count),
+            onClick = { showConfirm = true }
+        )
+        if (showConfirm) {
+            ConfirmationDialog(
+                onDismissRequest = { showConfirm = false },
+                onConfirmed = {
+                    TouchModel.reset(ctx)
+                    count = 0
+                    KeyboardSwitcher.getInstance().setThemeNeedsReload()
+                },
+                content = { Text(stringResource(R.string.learn_touch_reset_confirm)) }
+            )
+        }
+    },
+    Setting(context, Settings.PREF_LEARN_FROM_UNDONE_CORRECTIONS,
+        R.string.learn_from_undone_corrections, R.string.learn_from_undone_corrections_summary
+    ) {
+        SwitchPreference(it, Defaults.PREF_LEARN_FROM_UNDONE_CORRECTIONS)
+    },
+    Setting(context, REFUSED_CORRECTIONS_CLEAR, R.string.refused_corrections_clear) { def ->
+        val ctx = LocalContext.current
+        var showConfirm by rememberSaveable { mutableStateOf(false) }
+        var count by remember {
+            RefusedCorrections.init(ctx)
+            mutableStateOf(RefusedCorrections.count())
+        }
+        Preference(
+            name = def.title,
+            description = stringResource(R.string.refused_corrections_clear_summary, count),
+            onClick = { showConfirm = true }
+        )
+        if (showConfirm) {
+            ConfirmationDialog(
+                onDismissRequest = { showConfirm = false },
+                onConfirmed = {
+                    RefusedCorrections.clear()
+                    count = 0
+                },
+                content = { Text(stringResource(R.string.refused_corrections_clear_confirm)) }
+            )
+        }
+    },
 
     Setting(context, "autopilot_entry", R.string.autopilot, R.string.autopilot_summary) {
         Preference(

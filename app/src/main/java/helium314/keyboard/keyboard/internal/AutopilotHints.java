@@ -36,9 +36,16 @@ public final class AutopilotHints {
     /** Weight of the first suggestion; each subsequent one counts for less. */
     private static final float RANK_DECAY = 0.72f;
 
+    /** Mid-word floor: see {@link #getFloor()}. */
+    private static final float MID_WORD_FLOOR = 0.05f;
+
+    /** Start-of-word floor: see {@link #getFloor()}. */
+    private static final float WORD_START_FLOOR = 0.25f;
+
     /** Weights by code point, always normalised so the strongest is exactly 1. */
     private final SparseArray<Float> mWeights = new SparseArray<>();
     private boolean mEnabled;
+    private float mFloor = MID_WORD_FLOOR;
 
     private AutopilotHints() {
     }
@@ -72,16 +79,30 @@ public final class AutopilotHints {
     }
 
     /**
+     * How expected a letter nobody predicted is, relative to the likeliest one at 1.
+     *
+     * Mid-word the dictionary knows a great deal, so an unpredicted letter is given little room.
+     * At the start of a word the guess comes from the words before it, which is much weaker
+     * evidence, so the floor is higher and the boundaries move about half as far.
+     */
+    public float getFloor() {
+        return mFloor;
+    }
+
+    /**
      * Rebuilds the hints from the suggestions for {@code typedWord}.
      *
-     * Only words that actually continue what has been typed count, and only the single character
-     * that would come next. Anything shorter than the typed word, or diverging from it, says
-     * nothing about the next keystroke.
+     * Mid-word, only words that actually continue what has been typed count, and only the single
+     * character that would come next. At the start of a word the suggestions are next-word
+     * predictions, and their first letters are the guess for the first keystroke.
      */
     public void update(@Nullable final SuggestedWords suggestedWords, @Nullable final String typedWord) {
         if (!mEnabled) return;
         mWeights.clear();
-        if (suggestedWords == null || typedWord == null || typedWord.isEmpty()) return;
+        if (suggestedWords == null || typedWord == null) return;
+        final boolean wordStart = typedWord.isEmpty();
+        if (wordStart && !suggestedWords.isPrediction()) return;
+        mFloor = wordStart ? WORD_START_FLOOR : MID_WORD_FLOOR;
 
         final String prefix = typedWord.toLowerCase();
         final int prefixLength = prefix.length();

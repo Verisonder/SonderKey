@@ -266,6 +266,8 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static final String PREF_AUTOPILOT_DEBUG = "autopilot_debug";
     public static final String PREF_AUTOPILOT_DEBUG_COLOR = "autopilot_debug_color";
     public static final String PREF_AUTOPILOT_DEBUG_SHAPE = "autopilot_debug_shape";
+    public static final String PREF_LEARN_TOUCH = "learn_touch";
+    public static final String PREF_LEARN_FROM_UNDONE_CORRECTIONS = "learn_from_undone_corrections";
     public static final String PREF_KEY_PRESS_EFFECT = "key_press_effect";
     public static final String PREF_KEY_PRESS_EFFECT_SHAPE = "key_press_effect_shape";
     public static final String PREF_KEY_PRESS_EFFECT_COUNT = "key_press_effect_count";

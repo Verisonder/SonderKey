@@ -1268,13 +1268,23 @@ New dictionary:
     <string name="autopilot_debug">Outline the touch areas</string>
     <!-- Description for "autopilot_debug" setting -->
     <string name="autopilot_debug_shape">Outline shape</string>
-    <string name="autopilot_debug_shape_rect">Rectangle (exact boundary)</string>
-    <string name="autopilot_debug_shape_dashed">Dashed rectangle</string>
-    <string name="autopilot_debug_shape_rounded">Rounded</string>
-    <string name="autopilot_debug_shape_oval">Oval</string>
-    <string name="autopilot_debug_shape_filled">Filled</string>
+    <string name="autopilot_debug_shape_rect">Line</string>
+    <string name="autopilot_debug_shape_dashed">Dashed line</string>
+    <string name="autopilot_debug_shape_rounded">Rounded line</string>
+    <string name="autopilot_debug_shape_oval">Dotted line</string>
+    <string name="autopilot_debug_shape_filled">Filled areas</string>
     <string name="autopilot_debug_color">Outline colour</string>
-    <string name="autopilot_debug_summary">Draw the exact boundary each expected letter has claimed, for tuning</string>
+    <string name="autopilot_debug_summary">Draw where each letter's touch area really ends right now, including what the keyboard has learned about your typing</string>
+    <string name="learn_touch">Learn how you type</string>
+    <string name="learn_touch_summary">Moves where each letter starts and ends to where you actually tap it. Only tap positions are kept, never words, and only on this device.</string>
+    <string name="learn_touch_reset">Reset what was learned</string>
+    <string name="learn_touch_reset_summary">%d keys adjusted to you so far</string>
+    <string name="learn_touch_reset_confirm">Forget where you tap each key? Every key goes back to its drawn size.</string>
+    <string name="learn_from_undone_corrections">Remember undone corrections</string>
+    <string name="learn_from_undone_corrections_summary">When you undo a correction and keep your word, that correction is not made again for it</string>
+    <string name="refused_corrections_clear">Forget undone corrections</string>
+    <string name="refused_corrections_clear_summary">%d remembered</string>
+    <string name="refused_corrections_clear_confirm">Allow every correction you have undone to be made again?</string>
     <!-- Option to scatter particles from a key as it is pressed -->
     <string name="key_press_effect">Key press effect</string>
     <!-- Description for "key_press_effect" setting -->

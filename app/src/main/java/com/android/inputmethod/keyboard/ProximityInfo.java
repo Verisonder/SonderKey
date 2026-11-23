@@ -173,6 +173,9 @@ public class ProximityInfo {
             sweetSpotCenterYs = new float[keyCount];
             sweetSpotRadii = new float[keyCount];
             final int rows = touchPositionCorrection.getRows();
+            // Where this person actually lands on each letter, so suggestions read their touches
+            // the same way the key detector does.
+            final java.util.Map<Integer, float[]> learnedOffsets = touchPositionCorrection.getLearnedOffsets();
             final float defaultRadius = DEFAULT_TOUCH_POSITION_CORRECTION_RADIUS
                     * (float)Math.hypot(mMostCommonKeyWidth, mMostCommonKeyHeight);
             for (int infoIndex = 0, keyIndex = 0; keyIndex < sortedKeys.size(); keyIndex++) {
@@ -196,6 +199,13 @@ public class ProximityInfo {
                             touchPositionCorrection.getY(row) * hitBoxHeight;
                     sweetSpotRadii[infoIndex] =
                             touchPositionCorrection.getRadius(row) * hitBoxDiagonal;
+                }
+                if (learnedOffsets != null) {
+                    final float[] offset = learnedOffsets.get(Character.toLowerCase(key.getCode()));
+                    if (offset != null) {
+                        sweetSpotCenterXs[infoIndex] += offset[0] * key.getWidth();
+                        sweetSpotCenterYs[infoIndex] += offset[1] * key.getHeight();
+                    }
                 }
                 if (DEBUG) {
                     Log.d(TAG, String.format(Locale.US,

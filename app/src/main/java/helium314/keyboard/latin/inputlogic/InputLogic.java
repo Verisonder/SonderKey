@@ -133,6 +133,12 @@ public final class InputLogic {
     private String mJustRevertedExpandedShortcut = null;
 
     private boolean mJustRevertedACommit = false;
+    // An auto-correction the user just undid. It is only remembered as refused once the typed
+    // word has evidently been kept, i.e. when the next word is committed without the user having
+    // deleted back into it first.
+    private String mPendingRefusalTyped = null;
+    private String mPendingRefusalCorrection = null;
+    private NgramContext mPendingRefusalContext = null;
 
     /**
      * Create a new instance of the input logic.
@@ -549,6 +555,12 @@ public final class InputLogic {
         final String currentKeyboardScript = settingsValues.mCurrentKeyboardScript;
         mWordBeingCorrectedByCursor = null;
         mJustRevertedACommit = false;
+        if (event.getKeyCode() == KeyCode.DELETE && !mWordComposer.isComposingWord()) {
+            // Deleting into what was just committed: neither its touches nor an undone correction
+            // before it can be trusted any more. A revert below may set a new pending refusal.
+            helium314.keyboard.latin.touch.TypingLearner.discardPending();
+            clearPendingRefusal();
+        }
         final Event processedEvent = mWordComposer.processEvent(event);
         final InputTransaction inputTransaction = new InputTransaction(settingsValues,
                 processedEvent, SystemClock.uptimeMillis(), mSpaceState,
@@ -2618,6 +2630,14 @@ public final class InputLogic {
             unlearnWord(committedWordString, inputTransaction.getSettingsValues(),
                     Constants.EVENT_REVERT);
         }
+        final SettingsValues revertValues = inputTransaction.getSettingsValues();
+        if (revertValues.mLearnFromUndoneCorrections && !revertValues.mIncognitoModeEnabled
+                && !TextUtils.isEmpty(originallyTypedWord) && !TextUtils.isEmpty(committedWord)
+                && !originallyTypedWord.toString().equalsIgnoreCase(committedWordString)) {
+            mPendingRefusalTyped = originallyTypedWord.toString();
+            mPendingRefusalCorrection = committedWordString;
+            mPendingRefusalContext = mLastComposedWord.mNgramContext;
+        }
         final String stringToCommit = originallyTypedWord +
                 (usePhantomSpace ? "" : separatorString);
         final SpannableString textToCommit = new SpannableString(stringToCommit);
@@ -3269,12 +3289,54 @@ public final class InputLogic {
         // what user typed. Note: currently this is done much later in
         // LastComposedWord#didCommitTypedWord by string equality of the remembered
         // strings.
+        learnFromCommit(settingsValues, chosenWord, commitType);
         mLastComposedWord = mWordComposer.commitWord(commitType, chosenWord, separatorString, ngramContext);
         if (DebugFlags.DEBUG_ENABLED) {
             long runTimeMillis = System.currentTimeMillis() - startTimeMillis;
             Log.d(TAG, "commitChosenWord() : " + runTimeMillis + " ms to run "
                     + "WordComposer.commitWord()");
         }
+    }
+
+    /**
+     * Learning that happens when a word is committed, while the composer still holds its touches.
+     * <p>
+     * An undone correction pending from the previous word is confirmed here: a new word is being
+     * committed and the typed word was not deleted first, so it was meant. The pair is remembered
+     * as refused and the kept word gets the use it never got, since it was committed as the
+     * correction and then unlearned. Picking a correction by hand forgets that it was refused.
+     * Then the touches of this word are handed to the touch model.
+     */
+    private void learnFromCommit(final SettingsValues settingsValues, final String chosenWord,
+            final int commitType) {
+        if (mPendingRefusalTyped != null) {
+            helium314.keyboard.latin.personalization.RefusedCorrections.INSTANCE.refuse(
+                    mPendingRefusalTyped, mPendingRefusalCorrection);
+            if (mPendingRefusalContext != null && !settingsValues.mIncognitoModeEnabled
+                    && settingsValues.isSuggestionsEnabledPerUserSettings()) {
+                final int timeStampInSeconds = (int) TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
+                mDictionaryFacilitator.addToUserHistory(mPendingRefusalTyped, false,
+                        mPendingRefusalContext, timeStampInSeconds, settingsValues.mBlockPotentiallyOffensive);
+            }
+            clearPendingRefusal();
+        }
+        final String typedWord = mWordComposer.getTypedWord();
+        if (commitType == LastComposedWord.COMMIT_TYPE_MANUAL_PICK && settingsValues.mLearnFromUndoneCorrections
+                && !TextUtils.isEmpty(typedWord) && !typedWord.equalsIgnoreCase(chosenWord)) {
+            helium314.keyboard.latin.personalization.RefusedCorrections.INSTANCE.allow(typedWord, chosenWord);
+        }
+        final boolean learnTouch = settingsValues.mLearnTouch && !settingsValues.mIncognitoModeEnabled;
+        final boolean isKnownWord = learnTouch && mDictionaryFacilitator != null
+                && (mDictionaryFacilitator.isValidSpellingWord(chosenWord)
+                    || mDictionaryFacilitator.isValidSpellingWord(chosenWord.toLowerCase(getDictionaryFacilitatorLocale())));
+        helium314.keyboard.latin.touch.TypingLearner.onWordCommitted(mWordComposer,
+                KeyboardSwitcher.getInstance().getKeyboard(), chosenWord, commitType, learnTouch, isKnownWord);
+    }
+
+    private void clearPendingRefusal() {
+        mPendingRefusalTyped = null;
+        mPendingRefusalCorrection = null;
+        mPendingRefusalContext = null;
     }
 
     /**
