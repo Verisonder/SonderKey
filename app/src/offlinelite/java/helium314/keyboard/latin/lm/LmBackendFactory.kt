@@ -5,7 +5,7 @@ import java.io.File
 
 /** This edition has no way to download the language model, so there is nothing to run. */
 object LmBackendFactory {
-    const val isAvailable = false
+    val isAvailable = false
 
     fun open(model: File): LmBackend? = null
 }

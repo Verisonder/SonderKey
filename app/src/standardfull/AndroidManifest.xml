@@ -4,7 +4,7 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <uses-sdk tools:overrideLibrary="com.google.mlkit.vision.digitalink.recognition,com.google.mlkit.digitalink.common" />
+    <uses-sdk tools:overrideLibrary="com.google.mlkit.vision.digitalink.recognition,com.google.mlkit.digitalink.common,ai.onnxruntime" />
 
     <application>
         <!-- Service for ML Kit component discovery.

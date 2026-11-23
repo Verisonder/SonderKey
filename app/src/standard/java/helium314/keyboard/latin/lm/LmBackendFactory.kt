@@ -12,7 +12,8 @@ import java.nio.LongBuffer
 object LmBackendFactory {
     private const val TAG = "LmBackend"
 
-    const val isAvailable = true
+    /** onnxruntime needs Android 7; the keyboard itself still runs on 6, without the model. */
+    val isAvailable = android.os.Build.VERSION.SDK_INT >= 24
 
     fun open(model: File): LmBackend? = try {
         OrtBackend(model)
