@@ -37,9 +37,12 @@ object LmModel {
 
     class Asset(val remoteName: String, val localName: String, val sha256: String, val approximateMegabytes: Int)
 
-    // Checksums and sizes come from the release itself; until they are filled in nothing downloads.
-    val MODEL = Asset("smollm2-135m-int8.onnx", "model.onnx", "", 140)
-    val TOKENIZER = Asset("smollm2-135m-tokenizer.txt", "tokenizer.txt", "", 2)
+    // Checksums and sizes from the release (SmolLM2-135M at 93efa2f, built by the language model
+    // workflow); a download that does not match is discarded.
+    val MODEL = Asset("smollm2-135m-int8.onnx", "model.onnx",
+        "24ef85c7a01952e55400a4318607535907dc58289bac85612a97fb98885f036e", 165)
+    val TOKENIZER = Asset("smollm2-135m-tokenizer.txt", "tokenizer.txt",
+        "a37fd780f3933d55b2682e67abdc66e7f9f7acd04c5567e4aa5e463ca891f2b5", 1)
     private val ASSETS = listOf(MODEL, TOKENIZER)
 
     val approximateMegabytes get() = ASSETS.sumOf { it.approximateMegabytes }
