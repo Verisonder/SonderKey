@@ -1,0 +1,79 @@
+name: Language model
+
+# Builds the on-device language model release (lm-smollm2-135m-en) from SmolLM2-135M, checks the
+# app's tokenizer against the reference one, and publishes the files as a pre-release, so the app
+# downloads from this repository and never from a third party. Does nothing once the release
+# exists; delete it to rebuild.
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'test/**'
+    paths:
+      - 'tools/lm/**'
+      - '.github/workflows/language-model.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      TAG: lm-smollm2-135m-en
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for an existing release
+        id: existing
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
+        run: |
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "exists=1" >> "$GITHUB_OUTPUT"
+            echo "Release $TAG already exists, nothing to do."
+          fi
+
+      - uses: actions/setup-python@v5
+        if: steps.existing.outputs.exists != '1'
+        with:
+          python-version: '3.11'
+
+      - name: Install
+        if: steps.existing.outputs.exists != '1'
+        run: |
+          pip install --index-url https://download.pytorch.org/whl/cpu torch==2.5.1
+          pip install transformers==4.46.3 onnx==1.17.0 onnxruntime==1.20.1 huggingface_hub numpy
+
+      - name: Export and quantise
+        if: steps.existing.outputs.exists != '1'
+        run: |
+          set -o pipefail
+          python tools/lm/export.py out 2>&1 | tee export.log || {
+            tail -n 8 export.log | sed 's/^/::error title=export::/'
+            exit 1
+          }
+
+      - name: Check the app's tokenizer
+        if: steps.existing.outputs.exists != '1'
+        run: |
+          curl -sSL -o kc.zip https://github.com/JetBrains/kotlin/releases/download/v2.2.21/kotlin-compiler-2.2.21.zip
+          unzip -q kc.zip
+          ./kotlinc/bin/kotlinc app/src/main/java/helium314/keyboard/latin/lm/LmTokenizer.kt \
+            app/src/main/java/helium314/keyboard/latin/lm/LmWords.kt tools/lm/TokenizerCheck.kt \
+            -include-runtime -d check.jar
+          java -jar check.jar out/smollm2-135m-tokenizer.txt out/samples.txt
+
+      - name: Publish
+        if: steps.existing.outputs.exists != '1'
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then echo "::error title=publish::RELEASE_PAT is not set"; exit 1; fi
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --prerelease --target "$GITHUB_SHA" \
+            --title "Language model: SmolLM2-135M (English)" --notes-file out/notes.md \
+            out/smollm2-135m-int8.onnx out/smollm2-135m-tokenizer.txt
+
+      - name: Annotate failure
+        if: failure()
+        run: echo "::error title=language model::a step failed, see the step list"

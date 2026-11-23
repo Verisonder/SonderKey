@@ -38,6 +38,11 @@ public abstract class Dictionary {
     public static final PhonyDictionary DICTIONARY_APPLICATION_DEFINED =
             new PhonyDictionary(TYPE_APPLICATION_DEFINED);
 
+    // Words offered by the on-device language model or learned phrases that no dictionary offered.
+    public static final String TYPE_PREDICTION_MODEL = "prediction_model";
+    public static final PhonyDictionary DICTIONARY_PREDICTION_MODEL =
+            new PhonyDictionary(TYPE_PREDICTION_MODEL);
+
     public static final String TYPE_HARDCODED = "hardcoded"; // punctuation signs and such
     public static final PhonyDictionary DICTIONARY_HARDCODED =
             new PhonyDictionary(TYPE_HARDCODED);

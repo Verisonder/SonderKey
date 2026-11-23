@@ -38,11 +38,6 @@ object PhraseMemory {
     private var unsaved = 0
     private val writer = Executors.newSingleThreadExecutor()
 
-    /** Changes whenever something is learned, so cached predictions know to go stale. */
-    @Volatile
-    var version = 0
-        private set
-
     fun init(context: Context) {
         synchronized(lock) {
             if (dir == null) dir = DeviceProtectedUtils.getFilesDir(context)
@@ -81,7 +76,6 @@ object PhraseMemory {
         synchronized(lock) {
             val m = loaded() ?: return
             m.learn(p2, p1, word, System.currentTimeMillis())
-            version++
             if (++unsaved >= SAVE_EVERY) saveLocked()
         }
     }
@@ -92,7 +86,6 @@ object PhraseMemory {
         synchronized(lock) {
             val m = loaded() ?: return
             m.unlearn(p2, p1, word, System.currentTimeMillis())
-            version++
             unsaved++
         }
     }
@@ -108,7 +101,6 @@ object PhraseMemory {
         synchronized(lock) {
             val m = loaded() ?: return
             m.clear()
-            version++
             saveLocked()
         }
     }
@@ -116,16 +108,17 @@ object PhraseMemory {
     /**
      * Moves the words this person usually types next to the front of [results].
      *
-     * With nothing typed yet, up to [MAX_PROMOTED] learned next words go ahead of the engine's own
-     * predictions, and are added if the engine did not think of them. Mid-word, only words that
-     * continue what has been typed are moved, and only on stronger evidence, since the first
-     * suggestion there is also what auto-correction would pick.
+     * With nothing typed yet, up to [MAX_PROMOTED] learned next words go ahead of everything
+     * else, and are added if nothing else thought of them. Mid-word, only words that continue
+     * what has been typed are moved, only on stronger evidence, and only up to just below the
+     * first suggestion: that one is what auto-correction would commit, and a habit is no reason
+     * to replace what was typed.
      *
-     * @param fallbackDict the dictionary a word the engine did not offer is credited to.
+     * @param fallbackDict the dictionary a word nobody else offered is credited to.
      */
     @JvmStatic
     fun promote(results: SuggestionResults, ngramContext: NgramContext?, typedWord: String,
-                fallbackDict: Dictionary?) {
+                fallbackDict: Dictionary) {
         val (p2, p1) = contextOf(ngramContext) ?: return
         val predictions = synchronized(lock) {
             loaded()?.predict(p2, p1, System.currentTimeMillis()) ?: return
@@ -134,28 +127,40 @@ object PhraseMemory {
         val prediction = typed.isEmpty()
         val chosen = predictions.filter {
             if (prediction) it.evidence >= MIN_EVIDENCE_PREDICTION && it.probability >= MIN_PROBABILITY_PREDICTION
-            else it.word.startsWith(typed) && it.evidence >= MIN_EVIDENCE_COMPLETION
-                    && it.probability >= MIN_PROBABILITY_COMPLETION
+            else it.word.length > typed.length && it.word.startsWith(typed)
+                    && it.evidence >= MIN_EVIDENCE_COMPLETION && it.probability >= MIN_PROBABILITY_COMPLETION
         }.take(MAX_PROMOTED)
         if (chosen.isEmpty()) return
 
-        val top = results.maxOfOrNull { it.mScore } ?: 0
-        // Highest first: each promoted word sits just above the engine's best, in learned order.
-        for ((i, p) in chosen.withIndex()) {
-            val existing = results.firstOrNull { it.mWord.equals(p.word, ignoreCase = true) }
-            val score = top + 1 + (chosen.size - i) * 10
-            if (existing != null) {
-                results.remove(existing)
-                results.add(SuggestedWordInfo(existing.mWord, existing.mPrevWordsContext, score,
-                    existing.mKindAndFlags, existing.mSourceDict, existing.mIndexOfTouchPointOfSecondWord,
-                    existing.mAutoCommitFirstWordConfidence))
-            } else if (fallbackDict != null) {
-                // Words the engine did not offer are only added for a clean prefix match mid-word;
-                // anything else would be guessing past a possible typo.
-                results.add(SuggestedWordInfo(p.word, "", score,
-                    if (prediction) SuggestedWordInfo.KIND_PREDICTION else SuggestedWordInfo.KIND_COMPLETION,
-                    fallbackDict, SuggestedWordInfo.NOT_AN_INDEX, SuggestedWordInfo.NOT_A_CONFIDENCE))
+        if (prediction) {
+            val top = results.maxOfOrNull { it.mScore } ?: 0
+            // Each promoted word sits just above everything else, in learned order.
+            for ((i, p) in chosen.withIndex())
+                place(results, p.word, top + 1 + (chosen.size - i) * 10, SuggestedWordInfo.KIND_PREDICTION,
+                    fallbackDict, raiseOnly = false)
+        } else {
+            val first = results.firstOrNull()
+            for ((i, p) in chosen.withIndex()) {
+                if (first != null && first.mWord.equals(p.word, ignoreCase = true)) continue
+                val score = if (first == null) chosen.size - i else first.mScore - 1 - i
+                place(results, p.word, score, SuggestedWordInfo.KIND_COMPLETION, fallbackDict, raiseOnly = true)
             }
+        }
+    }
+
+    /** Puts [word] at [score]; with [raiseOnly], an entry already ranked higher is left alone. */
+    private fun place(results: SuggestionResults, word: String, score: Int, kind: Int, fallbackDict: Dictionary,
+                      raiseOnly: Boolean) {
+        val existing = results.firstOrNull { it.mWord.equals(word, ignoreCase = true) }
+        if (existing != null) {
+            if (raiseOnly && existing.mScore >= score) return
+            results.remove(existing)
+            results.add(SuggestedWordInfo(existing.mWord, existing.mPrevWordsContext, score,
+                existing.mKindAndFlags, existing.mSourceDict, existing.mIndexOfTouchPointOfSecondWord,
+                existing.mAutoCommitFirstWordConfidence))
+        } else {
+            results.add(SuggestedWordInfo(word, "", score, kind, fallbackDict,
+                SuggestedWordInfo.NOT_AN_INDEX, SuggestedWordInfo.NOT_A_CONFIDENCE))
         }
     }
 

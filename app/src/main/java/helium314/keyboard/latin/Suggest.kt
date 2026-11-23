@@ -25,6 +25,7 @@ import helium314.keyboard.latin.utils.AutoCorrectionUtils
 import helium314.keyboard.latin.dyslexia.DyslexiaSupport
 import helium314.keyboard.latin.personalization.RefusedCorrections
 import helium314.keyboard.latin.personalization.PhraseMemory
+import helium314.keyboard.latin.lm.LmPredictor
 import helium314.keyboard.latin.utils.Log
 import helium314.keyboard.latin.utils.JniUtils
 import helium314.keyboard.latin.utils.SuggestionResults
@@ -52,7 +53,6 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
     // is guarded by `synchronized(this)` in shouldBeAutoCorrected() to make the update atomic
     // when called from multiple threads (e.g. main IME thread + SuggestionSpan / TextClassifier).
     @Volatile private var mCachedScoreLimitForAutocorrect = 0
-    @Volatile private var cachedPhrasesVersion = -1
     @Volatile private var mLastScoreLimitUpdateTime = 0L
 
     // cache cleared whenever LatinIME.loadSettings is called, notably on changing layout and switching input fields
@@ -96,10 +96,10 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
                       isCorrectionEnabled: Boolean, sequenceNumber: Int): SuggestedWords {
         val typedWordString = wordComposer.typedWord
         val resultsArePredictions = !wordComposer.isComposingWord
-        val suggestionResults = if (typedWordString.isEmpty())
+        val suggestionResults = personalized(if (typedWordString.isEmpty())
                 getNextWordSuggestions(ngramContext, keyboard, inputStyleIfNotPrediction, settingsValuesForSuggestion)
             else mDictionaryFacilitator.getSuggestionResults(wordComposer.composedDataSnapshot, ngramContext, keyboard,
-                settingsValuesForSuggestion, SESSION_ID_TYPING, inputStyleIfNotPrediction)
+                settingsValuesForSuggestion, SESSION_ID_TYPING, inputStyleIfNotPrediction), ngramContext, typedWordString)
         // ponytail: filter out multi-word suggestions if enabled
         if (Settings.getValues().mDisableMultiWordSuggestions) {
             suggestionResults.removeAll { it.mWord.contains(' ') }
@@ -505,15 +505,36 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
             false, false, inputStyle, sequenceNumber)
     }
 
+    /**
+     * The on-device language model's answer for the text before this word, then the words this
+     * person usually types after the last one or two, folded into what the dictionaries offered.
+     * Personal habit goes last, so it outranks the general model.
+     *
+     * Only for what is shown. The checks that decide whether to auto-correct keep reading the
+     * dictionaries' own scores, so neither can talk the keyboard into replacing a real word; and
+     * mid-word neither is allowed above the first suggestion, which is what auto-correction would
+     * commit. Predictions come from a shared cache, so they are copied rather than changed.
+     */
+    private fun personalized(results: SuggestionResults, ngramContext: NgramContext, typedWord: String): SuggestionResults {
+        val target = if (typedWord.isEmpty()) {
+            SuggestionResults(SuggestedWords.MAX_SUGGESTIONS, results.mIsBeginningOfSentence,
+                results.mFirstSuggestionExceedsConfidenceThreshold).also { copy ->
+                copy.addAll(results)
+                results.mRawSuggestions?.let { copy.mRawSuggestions?.addAll(it) }
+            }
+        } else results
+        val locale = mDictionaryFacilitator.mainLocale
+        LmPredictor.apply(target, typedWord, Dictionary.DICTIONARY_PREDICTION_MODEL) { w ->
+            mDictionaryFacilitator.isValidSpellingWord(w) || mDictionaryFacilitator.isValidSpellingWord(w.lowercase(locale))
+        }
+        if (Settings.getValues().mUsePersonalizedDicts)
+            PhraseMemory.promote(target, ngramContext, typedWord, Dictionary.DICTIONARY_PREDICTION_MODEL)
+        return target
+    }
+
     /** get suggestions based on the current ngram context, with an empty typed word (that's what next word suggestions do)  */
     private fun getNextWordSuggestions(ngramContext: NgramContext, keyboard: Keyboard, inputStyle: Int,
                                        settingsValuesForSuggestion: SettingsValuesForSuggestion): SuggestionResults {
-        // Learned phrases change what a context predicts; a cached answer from before is stale.
-        val phrasesVersion = PhraseMemory.version
-        if (phrasesVersion != cachedPhrasesVersion) {
-            nextWordSuggestionsCache.evictAll()
-            cachedPhrasesVersion = phrasesVersion
-        }
         val cachedResults = nextWordSuggestionsCache.get(ngramContext)
         if (cachedResults != null) return cachedResults
         val newResults = mDictionaryFacilitator.getSuggestionResults(ComposedData(InputPointers(1),

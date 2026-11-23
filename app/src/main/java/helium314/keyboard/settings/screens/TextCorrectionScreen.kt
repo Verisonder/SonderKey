@@ -44,6 +44,8 @@ import helium314.keyboard.latin.dyslexia.DyslexiaSupport
 import helium314.keyboard.keyboard.internal.TouchModel
 import helium314.keyboard.latin.personalization.RefusedCorrections
 import helium314.keyboard.latin.personalization.PhraseMemory
+import helium314.keyboard.latin.lm.LmBackendFactory
+import helium314.keyboard.latin.lm.LmModel
 import helium314.keyboard.settings.preferences.SliderPreference
 import helium314.keyboard.settings.preferences.Preference
 import helium314.keyboard.settings.preferences.SwitchPreference
@@ -105,6 +107,8 @@ fun TextCorrectionScreen(
             Settings.PREF_ALWAYS_SHOW_SUGGESTIONS_EXCEPT_WEB_TEXT else null,
         Settings.PREF_BIGRAM_PREDICTIONS,
         if (bigrams) Settings.PREF_FIRST_WORD_PREDICTIONS else null,
+        if (bigrams && LmBackendFactory.isAvailable && LmModel.isPublished) Settings.PREF_LM_PREDICTIONS else null,
+        if (bigrams && LmBackendFactory.isAvailable && LmModel.isDownloaded(LocalContext.current)) LM_DELETE else null,
         if (bigrams && prefs.getBoolean(Settings.PREF_KEY_USE_PERSONALIZED_DICTS, Defaults.PREF_KEY_USE_PERSONALIZED_DICTS))
             PHRASE_MEMORY_CLEAR else null,
         if (suggestionsEnabled || autocorrectEnabled) Settings.PREF_SUGGEST_EMOJIS else null,
@@ -139,6 +143,7 @@ fun TextCorrectionScreen(
 private const val LEARN_TOUCH_RESET = "learn_touch_reset"
 private const val REFUSED_CORRECTIONS_CLEAR = "refused_corrections_clear"
 private const val PHRASE_MEMORY_CLEAR = "phrase_memory_clear"
+private const val LM_DELETE = "lm_delete"
 
 // Autopilot has a screen of its own, reached from the row below, but its settings are registered
 // here: a Setting must exist in the container for its key to resolve anywhere.
@@ -173,6 +178,49 @@ fun createCorrectionSettings(context: Context) = createAutopilotSettings(context
         R.string.learn_from_undone_corrections, R.string.learn_from_undone_corrections_summary
     ) {
         SwitchPreference(it, Defaults.PREF_LEARN_FROM_UNDONE_CORRECTIONS)
+    },
+    Setting(context, Settings.PREF_LM_PREDICTIONS, R.string.lm_predictions, R.string.lm_predictions_summary) { def ->
+        val ctx = LocalContext.current
+        val state by LmModel.state.collectAsState()
+        var showConfirm by rememberSaveable { mutableStateOf(false) }
+        val downloaded = state is LmModel.State.Idle && LmModel.isDownloaded(ctx)
+        if (downloaded) {
+            SwitchPreference(def, Defaults.PREF_LM_PREDICTIONS)
+        } else {
+            val s = state
+            Preference(
+                name = def.title,
+                description = when (s) {
+                    is LmModel.State.Downloading -> stringResource(R.string.lm_predictions_downloading, s.percent)
+                    is LmModel.State.Failed -> stringResource(R.string.lm_predictions_failed, s.message)
+                    else -> stringResource(R.string.lm_predictions_download, LmModel.approximateMegabytes)
+                },
+                onClick = { if (s !is LmModel.State.Downloading) showConfirm = true }
+            )
+        }
+        if (showConfirm) {
+            ConfirmationDialog(
+                onDismissRequest = { showConfirm = false },
+                onConfirmed = { LmModel.startDownload(ctx) },
+                content = { Text(stringResource(R.string.lm_predictions_confirm, LmModel.approximateMegabytes)) }
+            )
+        }
+    },
+    Setting(context, LM_DELETE, R.string.lm_delete) { def ->
+        val ctx = LocalContext.current
+        var showConfirm by rememberSaveable { mutableStateOf(false) }
+        Preference(
+            name = def.title,
+            description = stringResource(R.string.lm_delete_summary, LmModel.approximateMegabytes),
+            onClick = { showConfirm = true }
+        )
+        if (showConfirm) {
+            ConfirmationDialog(
+                onDismissRequest = { showConfirm = false },
+                onConfirmed = { LmModel.delete(ctx) },
+                content = { Text(stringResource(R.string.lm_delete) + "?") }
+            )
+        }
     },
     Setting(context, PHRASE_MEMORY_CLEAR, R.string.phrase_memory_clear) { def ->
         val ctx = LocalContext.current

@@ -2410,6 +2410,8 @@ public final class InputLogic {
             return;
         }
 
+        requestLanguageModel(settingsValues);
+
         if (!mWordComposer.isComposingWord()) {
             final NgramContext ngramContext = getNgramContextFromNthPreviousWordForSuggestion(
                     settingsValues.mSpacingAndPunctuations, 1);
@@ -3341,6 +3343,34 @@ public final class InputLogic {
                     || mDictionaryFacilitator.isValidSpellingWord(chosenWord.toLowerCase(getDictionaryFacilitatorLocale())));
         helium314.keyboard.latin.touch.TypingLearner.onWordCommitted(mWordComposer,
                 KeyboardSwitcher.getInstance().getKeyboard(), chosenWord, commitType, learnTouch, isKnownWord);
+    }
+
+    /**
+     * Hands the text before the current word to the on-device language model, which answers in
+     * the background; suggestions are redrawn when it does. English only, for now, and never in
+     * password fields or while gesture typing.
+     */
+    private void requestLanguageModel(final SettingsValues settingsValues) {
+        final Locale locale = getDictionaryFacilitatorLocale();
+        if (!settingsValues.mLmPredictions || mWordComposer.isBatchMode()
+                || settingsValues.mInputAttributes.mIsPasswordField
+                || !"en".equals(locale.getLanguage())
+                || !helium314.keyboard.latin.lm.LmPredictor.isAvailable(mLatinIME)) {
+            helium314.keyboard.latin.lm.LmPredictor.forget();
+            return;
+        }
+        final CharSequence before = mConnection.getTextBeforeCursor(
+                helium314.keyboard.latin.lm.LmPredictor.CONTEXT_CHARS + 64, 0);
+        if (before == null) {
+            helium314.keyboard.latin.lm.LmPredictor.forget();
+            return;
+        }
+        String text = before.toString();
+        final String typed = mWordComposer.getTypedWord();
+        if (mWordComposer.isComposingWord() && text.endsWith(typed)) {
+            text = text.substring(0, text.length() - typed.length());
+        }
+        helium314.keyboard.latin.lm.LmPredictor.request(text);
     }
 
     private void clearPendingRefusal() {

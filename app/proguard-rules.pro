@@ -25,6 +25,9 @@
 -keep class helium314.keyboard.latin.utils.ProofreadHelper { *; }
 -keep class helium314.keyboard.latin.utils.ProofreadHelper$* { *; }
 
+# ONNX Runtime: its native side reaches the Java classes by name
+-keep class ai.onnxruntime.** { *; }
+
 # Keep java-llama.cpp classes
 -keep class de.kherud.llama.** { *; }
 -keep class org.nehuatl.llamacpp.** { *; }

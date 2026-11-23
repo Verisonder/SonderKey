@@ -256,6 +256,10 @@ dependencies {
     "standardfullImplementation"("com.google.ai.client.generativeai:generativeai:0.9.0")
     "standardfullImplementation"("androidx.security:security-crypto:1.1.0-alpha06")
 
+    // on-device language model for predictions (downloaded separately, runs only on the phone)
+    "standardImplementation"("com.microsoft.onnxruntime:onnxruntime-android:1.27.0")
+    "standardfullImplementation"("com.microsoft.onnxruntime:onnxruntime-android:1.27.0")
+
     // local llm proofreading (offline)
     "offlineImplementation"("io.github.ljcamargo:llamacpp-kotlin:0.4.0")
 

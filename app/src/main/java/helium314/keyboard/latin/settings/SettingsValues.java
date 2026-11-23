@@ -90,6 +90,7 @@ public class SettingsValues {
         public final String mAutopilotDebugShape;
         public final boolean mLearnTouch;
         public final boolean mLearnFromUndoneCorrections;
+        public final boolean mLmPredictions;
         public final boolean mKeyPressEffect;
         public final String mKeyPressEffectShape;
         public final int mKeyPressEffectCount;
@@ -307,6 +308,7 @@ public class SettingsValues {
                 mLearnTouch = prefs.getBoolean(Settings.PREF_LEARN_TOUCH, Defaults.PREF_LEARN_TOUCH);
                 mLearnFromUndoneCorrections = prefs.getBoolean(Settings.PREF_LEARN_FROM_UNDONE_CORRECTIONS,
                                 Defaults.PREF_LEARN_FROM_UNDONE_CORRECTIONS);
+                mLmPredictions = prefs.getBoolean(Settings.PREF_LM_PREDICTIONS, Defaults.PREF_LM_PREDICTIONS);
                 mKeyPressEffect = prefs.getBoolean(Settings.PREF_KEY_PRESS_EFFECT,
                                 Defaults.PREF_KEY_PRESS_EFFECT);
                 mKeyPressEffectShape = prefs.getString(Settings.PREF_KEY_PRESS_EFFECT_SHAPE,

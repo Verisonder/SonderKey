@@ -75,6 +75,7 @@ object Defaults {
     const val PREF_AUTOPILOT_DEBUG_SHAPE = "rect"
     const val PREF_LEARN_TOUCH = true
     const val PREF_LEARN_FROM_UNDONE_CORRECTIONS = true
+    const val PREF_LM_PREDICTIONS = true
     // not const (needs .toInt()), so @JvmField for SettingsValues to read it as a field
     @JvmField
     val PREF_AUTOPILOT_DEBUG_COLOR = 0xFF4CD964.toInt()

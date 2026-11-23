@@ -32,7 +32,6 @@ import helium314.keyboard.latin.permissions.PermissionsUtil
 import helium314.keyboard.latin.personalization.SessionWordBoost
 import helium314.keyboard.latin.personalization.LearnedWord
 import helium314.keyboard.latin.personalization.PersonalDictCandidates
-import helium314.keyboard.latin.personalization.PhraseMemory
 import helium314.keyboard.latin.personalization.UserHistoryDictionary
 import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.latin.settings.SettingsValuesForSuggestion
@@ -622,12 +621,6 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
         val boost = sessionWordBoost
         if (boost != null && composedData.mTypedWord.isNotEmpty()) {
             applySessionBoost(suggestionResults, boost)
-        }
-
-        // Words this person usually types after the last one or two go to the front.
-        if (Settings.getValues().mUsePersonalizedDicts && !composedData.mIsBatchMode) {
-            PhraseMemory.promote(suggestionResults, ngramContext, composedData.mTypedWord,
-                dictGroups[0].getDict(Dictionary.TYPE_USER_HISTORY) ?: dictGroups[0].getDict(Dictionary.TYPE_MAIN))
         }
 
         includeAtLeastTwoWordSuggestions(suggestionResults, suggestionsArray, composedData.mTypedWord)

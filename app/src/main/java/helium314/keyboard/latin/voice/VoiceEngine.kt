@@ -72,7 +72,18 @@ object VoiceEngine {
             val dir = libDir(context)
             // onnxruntime first: the JNI wrapper records it as a dependency, and the linker
             // resolves it from what is already loaded rather than searching a path.
-            System.load(File(dir, LIB_ONNXRUNTIME).absolutePath)
+            //
+            // Editions that run the language model carry a newer onnxruntime in the APK. Only one
+            // may be in the process: the language model's binding needs the version it was built
+            // for, while the voice wrapper works with any newer one. So the packaged copy is
+            // preferred, and the downloaded one is only used where there is none.
+            val packaged = try {
+                System.loadLibrary("onnxruntime")
+                true
+            } catch (_: Throwable) {
+                false
+            }
+            if (!packaged) System.load(File(dir, LIB_ONNXRUNTIME).absolutePath)
             System.load(File(dir, LIB_SHERPA_JNI).absolutePath)
             loaded = true
             Log.i(TAG, "voice engine loaded")

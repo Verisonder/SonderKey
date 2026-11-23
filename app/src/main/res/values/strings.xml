@@ -1287,6 +1287,14 @@ New dictionary:
     <string name="refused_corrections_clear_confirm">Allow every correction you have undone to be made again?</string>
     <string name="phrase_memory_clear">Forget learned phrases</string>
     <string name="phrase_memory_clear_summary">Words you often type after others are suggested first. %d remembered</string>
+    <string name="lm_predictions">Smarter predictions</string>
+    <string name="lm_predictions_summary">An English language model on this phone reads the sentence so far and suggests the next word. Nothing is sent anywhere.</string>
+    <string name="lm_predictions_download">Download a %d MB English language model that runs only on this phone</string>
+    <string name="lm_predictions_downloading">Downloading… %d%%</string>
+    <string name="lm_predictions_failed">Download failed: %s. Tap to try again.</string>
+    <string name="lm_predictions_confirm">Download about %d MB? Use Wi-Fi if your data is limited. The model is SmolLM2-135M (Apache-2.0) and runs only on this phone.</string>
+    <string name="lm_delete">Delete the language model</string>
+    <string name="lm_delete_summary">Frees about %d MB</string>
     <string name="phrase_memory_clear_confirm">Forget which words you usually type after others? The dictionaries and learned words are not touched.</string>
     <!-- Option to scatter particles from a key as it is pressed -->
     <string name="key_press_effect">Key press effect</string>
