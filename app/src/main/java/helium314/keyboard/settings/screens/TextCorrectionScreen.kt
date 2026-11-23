@@ -43,6 +43,7 @@ import helium314.keyboard.settings.preferences.ListPreference
 import helium314.keyboard.latin.dyslexia.DyslexiaSupport
 import helium314.keyboard.keyboard.internal.TouchModel
 import helium314.keyboard.latin.personalization.RefusedCorrections
+import helium314.keyboard.latin.personalization.PhraseMemory
 import helium314.keyboard.settings.preferences.SliderPreference
 import helium314.keyboard.settings.preferences.Preference
 import helium314.keyboard.settings.preferences.SwitchPreference
@@ -104,6 +105,8 @@ fun TextCorrectionScreen(
             Settings.PREF_ALWAYS_SHOW_SUGGESTIONS_EXCEPT_WEB_TEXT else null,
         Settings.PREF_BIGRAM_PREDICTIONS,
         if (bigrams) Settings.PREF_FIRST_WORD_PREDICTIONS else null,
+        if (bigrams && prefs.getBoolean(Settings.PREF_KEY_USE_PERSONALIZED_DICTS, Defaults.PREF_KEY_USE_PERSONALIZED_DICTS))
+            PHRASE_MEMORY_CLEAR else null,
         if (suggestionsEnabled || autocorrectEnabled) Settings.PREF_SUGGEST_EMOJIS else null,
         if (suggestionsEnabled || autocorrectEnabled) Settings.PREF_INLINE_EMOJI_SEARCH else null,
         Settings.PREF_SUGGEST_PUNCTUATION,
@@ -135,6 +138,7 @@ fun TextCorrectionScreen(
 
 private const val LEARN_TOUCH_RESET = "learn_touch_reset"
 private const val REFUSED_CORRECTIONS_CLEAR = "refused_corrections_clear"
+private const val PHRASE_MEMORY_CLEAR = "phrase_memory_clear"
 
 // Autopilot has a screen of its own, reached from the row below, but its settings are registered
 // here: a Setting must exist in the container for its key to resolve anywhere.
@@ -169,6 +173,29 @@ fun createCorrectionSettings(context: Context) = createAutopilotSettings(context
         R.string.learn_from_undone_corrections, R.string.learn_from_undone_corrections_summary
     ) {
         SwitchPreference(it, Defaults.PREF_LEARN_FROM_UNDONE_CORRECTIONS)
+    },
+    Setting(context, PHRASE_MEMORY_CLEAR, R.string.phrase_memory_clear) { def ->
+        val ctx = LocalContext.current
+        var showConfirm by rememberSaveable { mutableStateOf(false) }
+        var count by remember {
+            PhraseMemory.init(ctx)
+            mutableStateOf(PhraseMemory.count())
+        }
+        Preference(
+            name = def.title,
+            description = stringResource(R.string.phrase_memory_clear_summary, count),
+            onClick = { showConfirm = true }
+        )
+        if (showConfirm) {
+            ConfirmationDialog(
+                onDismissRequest = { showConfirm = false },
+                onConfirmed = {
+                    PhraseMemory.clear()
+                    count = 0
+                },
+                content = { Text(stringResource(R.string.phrase_memory_clear_confirm)) }
+            )
+        }
     },
     Setting(context, REFUSED_CORRECTIONS_CLEAR, R.string.refused_corrections_clear) { def ->
         val ctx = LocalContext.current

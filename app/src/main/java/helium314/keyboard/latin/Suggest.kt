@@ -24,6 +24,7 @@ import helium314.keyboard.latin.suggestions.SuggestionStripView
 import helium314.keyboard.latin.utils.AutoCorrectionUtils
 import helium314.keyboard.latin.dyslexia.DyslexiaSupport
 import helium314.keyboard.latin.personalization.RefusedCorrections
+import helium314.keyboard.latin.personalization.PhraseMemory
 import helium314.keyboard.latin.utils.Log
 import helium314.keyboard.latin.utils.JniUtils
 import helium314.keyboard.latin.utils.SuggestionResults
@@ -51,6 +52,7 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
     // is guarded by `synchronized(this)` in shouldBeAutoCorrected() to make the update atomic
     // when called from multiple threads (e.g. main IME thread + SuggestionSpan / TextClassifier).
     @Volatile private var mCachedScoreLimitForAutocorrect = 0
+    @Volatile private var cachedPhrasesVersion = -1
     @Volatile private var mLastScoreLimitUpdateTime = 0L
 
     // cache cleared whenever LatinIME.loadSettings is called, notably on changing layout and switching input fields
@@ -506,6 +508,12 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
     /** get suggestions based on the current ngram context, with an empty typed word (that's what next word suggestions do)  */
     private fun getNextWordSuggestions(ngramContext: NgramContext, keyboard: Keyboard, inputStyle: Int,
                                        settingsValuesForSuggestion: SettingsValuesForSuggestion): SuggestionResults {
+        // Learned phrases change what a context predicts; a cached answer from before is stale.
+        val phrasesVersion = PhraseMemory.version
+        if (phrasesVersion != cachedPhrasesVersion) {
+            nextWordSuggestionsCache.evictAll()
+            cachedPhrasesVersion = phrasesVersion
+        }
         val cachedResults = nextWordSuggestionsCache.get(ngramContext)
         if (cachedResults != null) return cachedResults
         val newResults = mDictionaryFacilitator.getSuggestionResults(ComposedData(InputPointers(1),

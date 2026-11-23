@@ -2086,6 +2086,11 @@ public final class InputLogic {
                 .getNgramContextFromNthPreviousWord(settingsValues.mSpacingAndPunctuations, 2);
         final long timeStampInSeconds = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
         mDictionaryFacilitator.unlearnFromUserHistory(word, ngramContext, timeStampInSeconds, eventType);
+        // A reverted word is already gone from the text here, so the context above is one word off;
+        // revertCommit unlearns the phrase with the context it was committed in instead.
+        if (eventType == Constants.EVENT_BACKSPACE) {
+            helium314.keyboard.latin.personalization.PhraseMemory.unlearn(ngramContext, word);
+        }
     }
 
     /**
@@ -2367,6 +2372,9 @@ public final class InputLogic {
         final int timeStampInSeconds = (int) TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
         mDictionaryFacilitator.addToUserHistory(word, wasAutoCapitalized, ngramContext,
                 timeStampInSeconds, settingsValues.mBlockPotentiallyOffensive);
+        if (settingsValues.mUsePersonalizedDicts) {
+            helium314.keyboard.latin.personalization.PhraseMemory.learn(ngramContext, word);
+        }
     }
 
     // strip word separators from end (may be necessary for urls, e.g. when the user
@@ -2629,6 +2637,8 @@ public final class InputLogic {
         if (!TextUtils.isEmpty(committedWord)) {
             unlearnWord(committedWordString, inputTransaction.getSettingsValues(),
                     Constants.EVENT_REVERT);
+            helium314.keyboard.latin.personalization.PhraseMemory.unlearn(
+                    mLastComposedWord.mNgramContext, committedWordString);
         }
         final SettingsValues revertValues = inputTransaction.getSettingsValues();
         if (revertValues.mLearnFromUndoneCorrections && !revertValues.mIncognitoModeEnabled

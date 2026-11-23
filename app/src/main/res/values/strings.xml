@@ -1285,6 +1285,9 @@ New dictionary:
     <string name="refused_corrections_clear">Forget undone corrections</string>
     <string name="refused_corrections_clear_summary">%d remembered</string>
     <string name="refused_corrections_clear_confirm">Allow every correction you have undone to be made again?</string>
+    <string name="phrase_memory_clear">Forget learned phrases</string>
+    <string name="phrase_memory_clear_summary">Words you often type after others are suggested first. %d remembered</string>
+    <string name="phrase_memory_clear_confirm">Forget which words you usually type after others? The dictionaries and learned words are not touched.</string>
     <!-- Option to scatter particles from a key as it is pressed -->
     <string name="key_press_effect">Key press effect</string>
     <!-- Description for "key_press_effect" setting -->

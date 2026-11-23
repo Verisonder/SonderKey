@@ -580,6 +580,7 @@ public class LatinIME extends InputMethodService implements
         KeyboardSwitcher.init(this);
         helium314.keyboard.keyboard.internal.TouchModel.INSTANCE.init(this);
         helium314.keyboard.latin.personalization.RefusedCorrections.INSTANCE.init(this);
+        helium314.keyboard.latin.personalization.PhraseMemory.INSTANCE.init(this);
         mFloatingKeyboardManager = new FloatingKeyboardManager(this, this);
         super.onCreate();
 
@@ -908,6 +909,7 @@ public class LatinIME extends InputMethodService implements
         StatsUtils.onFinishInputView();
         // Learned touches are written in batches; write what is left when the keyboard closes.
         helium314.keyboard.keyboard.internal.TouchModel.INSTANCE.flush();
+        helium314.keyboard.latin.personalization.PhraseMemory.flush();
         // A dictation turn belongs to the input session that started it. Nothing here used to
         // touch VoiceTyping, so the recorder — and in rolling mode the re-decode thread — kept
         // running after the user switched apps, leaving a live microphone open over someone
